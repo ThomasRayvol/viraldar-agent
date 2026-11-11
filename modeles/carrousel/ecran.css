@@ -1,0 +1,32 @@
+/* ecran — une capture ou une interface d'app, cadrée grand pour rester lisible sur un téléphone. */
+.m-ecran .toile { background: linear-gradient(165deg, color-mix(in srgb, var(--accent) 22%, var(--fond)) 0%, var(--fond) 55%); }
+.m-ecran .zone { justify-content: safe center; gap: calc(34px * var(--k)); }
+.m-ecran .titre { font-size: calc(76px * var(--k)); }
+.m-ecran .texte { font-size: calc(50px * var(--k)); }
+.m-ecran .cadre { flex: 1 1 0; min-height: calc(420px * var(--k)); width: 100%;
+  border-radius: 56px; border: 14px solid #15161a; background: #fff; color: #15161a;
+  box-shadow: 0 30px 80px rgba(20,16,50,.28); overflow: hidden; display: flex; flex-direction: column; }
+/* interface dessinée : le cadre suit son contenu ; capture : il prend toute la place */
+.m-ecran .cadre:not(.capture) { flex: 0 1 auto; min-height: 0; padding-bottom: 14px; }
+.m-ecran .cadre.capture { background: #15161a center top / cover no-repeat; }
+.m-ecran .statut { display: flex; justify-content: space-between; align-items: center; padding: 22px 40px 6px;
+  font: 700 30px/1 "Archivo", sans-serif; }
+.m-ecran .statut .icones { display: flex; gap: 10px; align-items: center; }
+.m-ecran .statut .icones i { display: block; width: 34px; height: 18px; border-radius: 5px; border: 3px solid #15161a; }
+.m-ecran .statut .icones b { display: block; width: 26px; height: 18px;
+  background: linear-gradient(90deg, #15161a 25%, transparent 25% 37%, #15161a 37% 62%, transparent 62% 75%, #15161a 75%); }
+.m-ecran .appli { padding: calc(26px * var(--k)) 40px calc(18px * var(--k)); display: flex; align-items: center; gap: 18px;
+  font: 800 calc(48px * var(--k))/1.1 var(--police-titre), sans-serif; }
+.m-ecran .appli::before { content: ""; width: 22px; height: 22px; border-radius: 50%; background: var(--accent); flex: none; }
+.m-ecran .cartes { list-style: none; padding: 6px 30px 30px; display: flex; flex-direction: column; gap: calc(20px * var(--k)); }
+.m-ecran .cartes li { display: flex; align-items: center; gap: calc(26px * var(--k)); padding: calc(26px * var(--k)) calc(30px * var(--k));
+  border-radius: 30px; background: #f2f1f6; font: 600 calc(42px * var(--k))/1.25 var(--police-texte), sans-serif; }
+.m-ecran .cartes li::before { content: ""; flex: none; width: calc(46px * var(--k)); height: calc(46px * var(--k)); border-radius: 50%;
+  border: 5px solid color-mix(in srgb, var(--accent) 55%, #ccc); }
+.m-ecran .cartes li.cochee::before { border-color: var(--accent); background: var(--accent)
+  url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M6 12.5l4 4 8-9' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/78% no-repeat; }
+.m-ecran .cartes li.cochee { color: #8a8a93; }
+.m-ecran .cartes li.vedette { background: var(--accent); color: #fff; }
+.m-ecran .cartes li.vedette::before { border-color: #fff; }
+.m-ecran .bulle { margin: 6px 30px 0; padding: calc(30px * var(--k)) calc(34px * var(--k)); border-radius: 30px;
+  background: color-mix(in srgb, var(--accent) 14%, #fff); font: 500 calc(42px * var(--k))/1.3 var(--police-texte), sans-serif; }

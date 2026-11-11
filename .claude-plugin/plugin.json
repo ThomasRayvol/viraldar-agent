@@ -1,0 +1,30 @@
+{
+  "name": "viraldar",
+  "version": "0.1.0",
+  "description": "viraldar for your agent: search a database of viral TikToks from small accounts, build carousels and edits on your machine, follow a proven content method (MCP server + skill).",
+  "author": { "name": "viraldar" },
+  "homepage": "https://viraldar.rayvol.net",
+  "repository": "https://github.com/ThomasRayvol/viraldar-agent",
+  "license": "Apache-2.0",
+  "keywords": ["tiktok", "content", "mcp", "carousel", "marketing"],
+  "userConfig": {
+    "dossier": {
+      "type": "directory",
+      "title": "Dossier de travail / Working folder",
+      "description": "Où ranger carrousels et montages (~/viraldar par défaut) / Where carousels and edits are saved.",
+      "required": false
+    },
+    "outils": {
+      "type": "string",
+      "title": "Familles d'outils / Tool families",
+      "description": "base,carrousel,montage par défaut ; ajouter publication, remotion, ou « tout ».",
+      "required": false
+    },
+    "lecture": {
+      "type": "string",
+      "title": "Lecture de fichiers en plus / Extra readable folders",
+      "description": "Vide (conseillé) : seul le dossier de travail est lu. Sinon des dossiers en plus (« : »), ou « partout » / Empty (recommended): only the working folder is read. Otherwise extra folders (\":\"-separated), or \"partout\" (anywhere but hidden folders).",
+      "required": false
+    }
+  }
+}

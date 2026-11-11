@@ -1,0 +1,47 @@
+/* natif — le texte de l'éditeur de TikTok posé sur une photo plein cadre, nette, sans voile : ce que font la plupart
+   des carrousels de petits comptes (une photo, une phrase) et ce qui ne ressemble pas à une pub.
+   Réglages relevés sur l'éditeur de TikTok (oct. 2026) : TikTok Sans graisse 560, 54 à 60 px sur 1080 de large,
+   interligne 1,22 (sans fond) à 1,32 (avec fond) ; « avec fond » = un pavé blanc par ligne, coins arrondis 0,28 em,
+   0,42 em de marge ; l'étiquette rouge (#E64041) pour un nom, à 0,72 du corps. */
+.m-natif .toile { background: var(--fond); }
+.m-natif .zone { gap: calc(24px * var(--k)); }
+.m-natif.pos-haut .zone { justify-content: flex-start; }
+.m-natif.pos-bas .zone { justify-content: flex-end; }
+
+.m-natif .zone > * { font-family: var(--police-titre), "Noto Color Emoji", sans-serif; font-weight: 560; font-style: normal;
+  letter-spacing: 0; text-transform: none; opacity: 1; line-height: 1.32; text-wrap: balance; }
+.m-natif .titre { font-size: calc(66px * var(--k)); }
+.m-natif .citation { font-size: calc(60px * var(--k)); }
+.m-natif .texte { font-size: calc(52px * var(--k)); text-wrap: pretty; }
+.m-natif .note { font-size: calc(40px * var(--k)); }
+.m-natif .etiquette { font-size: calc(40px * var(--k)); align-self: center; padding: 0; border-radius: 0; background: none; color: inherit; }
+.m-natif .auteur { font-size: calc(44px * var(--k)); }
+.m-natif .numero { font-size: calc(44px * var(--k)); font-weight: 700; }
+.m-natif .liste { align-self: center; text-align: center; gap: calc(18px * var(--k)); }
+.m-natif .liste li { font-size: calc(52px * var(--k)); padding-left: 0; }
+.m-natif .liste li::before { content: none; }
+
+/* « avec fond » : chaque ligne sur son pavé (box-decoration-break : un pavé par ligne, comme l'éditeur). */
+.m-natif.style-bandeau .zone span, .m-natif.style-bandeau_noir .zone span {
+  padding: .1em .42em; border-radius: .28em; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
+/* Le pavé déborde de la ligne : le bloc réserve sa marge, pour que le pavé reste dans la zone sûre. */
+.m-natif.style-bandeau .zone > *, .m-natif.style-bandeau_noir .zone > * { padding: .1em .42em; }
+.m-natif .zone > .auteur, .m-natif .zone > .numero { padding: .16em .7em; }
+.m-natif.style-bandeau .zone { color: #111; }
+.m-natif.style-bandeau .zone span { background: #fff; }
+.m-natif.style-bandeau_noir .zone { color: #fff; }
+.m-natif.style-bandeau_noir .zone span { background: rgba(0, 0, 0, .86); }
+.m-natif.style-bandeau mark { background: var(--accent); color: #fff; }
+
+/* « contour » : blanc, liseré noir fin et ombre douce (le « Classic » de l'éditeur, rendu un peu plus lisible). */
+.m-natif.style-contour .zone { color: #fff; }
+.m-natif.style-contour .zone span { -webkit-text-stroke: calc(6px * var(--k)) #000; paint-order: stroke fill;
+  text-shadow: 0 2px 16px rgba(0, 0, 0, .5); }
+/* Le surlignage natif : des mots en noir sur un pavé blanc. */
+.m-natif.style-contour mark { background: #fff; color: #111; -webkit-text-stroke: 0; text-shadow: none; padding: 0 .2em; border-radius: .2em; }
+
+/* L'auteur prend l'étiquette rouge ; le numéro, une pastille noire. */
+.m-natif .zone .auteur span { background: var(--accent2); color: #fff; border-radius: .22em; padding: .16em .42em;
+  -webkit-text-stroke: 0; text-shadow: none; }
+.m-natif .zone .numero span { background: #111; color: #fff; border-radius: 999px; padding: .12em .7em;
+  -webkit-text-stroke: 0; text-shadow: none; }

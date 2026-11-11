@@ -1,0 +1,33 @@
+/* notes — une page d'app de notes (variante « app ») ou de carnet manuscrit (variante « papier »). */
+.m-notes .zone { justify-content: flex-start; gap: calc(30px * var(--k)); }
+.m-notes .barre { position: absolute; left: var(--zg); right: var(--zd); top: var(--zh); height: 60px;
+  display: flex; align-items: center; justify-content: space-between;
+  font: 500 40px/1 "Archivo", sans-serif; color: var(--accent); }
+.m-notes .barre .points { letter-spacing: .1em; font-weight: 800; }
+.m-notes .date { align-self: center; font: 500 calc(32px * var(--k))/1 "Archivo", sans-serif; opacity: .5; margin-bottom: calc(8px * var(--k)); }
+.m-notes .zone { top: calc(var(--zh) + 80px); }
+.m-notes .titre { font-size: calc(90px * var(--k)); font-weight: 800; letter-spacing: -.01em; }
+.m-notes .texte, .m-notes .liste li { font-size: calc(56px * var(--k)); line-height: 1.34; }
+.m-notes .liste { gap: calc(22px * var(--k)); }
+.m-notes .liste li { padding-left: calc(70px * var(--k)); }
+.m-notes .liste li::before { color: var(--accent); }
+.m-notes .liste li.case::before { content: ""; top: .14em; width: .8em; height: .8em; border-radius: 50%;
+  border: 4px solid color-mix(in srgb, var(--texte) 35%, transparent); }
+.m-notes .liste li.cochee::before { border-color: var(--accent); background: var(--accent)
+  url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M6 12.5l4 4 8-9' fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/80% no-repeat; }
+.m-notes .liste li.cochee { opacity: .6; text-decoration: line-through; text-decoration-thickness: 3px; }
+.m-notes .illustration { flex: 0 1 auto; height: calc(420px * var(--k)); max-height: 40%; }
+
+/* variante papier : carnet ligné, écriture manuscrite (Caveat). */
+.m-notes.papier .toile { background-color: var(--fond);
+  background-image: repeating-linear-gradient(180deg, transparent 0 calc(var(--ligne) - 2px),
+    color-mix(in srgb, #4a78b8 28%, transparent) calc(var(--ligne) - 2px) var(--ligne));
+  background-position: 0 calc(var(--zh) + 40px); --ligne: 78px; }
+.m-notes.papier .marge { position: absolute; top: 0; bottom: 0; left: calc(var(--zg) - 26px); width: 3px;
+  background: color-mix(in srgb, var(--accent) 60%, transparent); }
+.m-notes.papier .barre { display: none; }
+.m-notes.papier .zone { top: var(--zh); }
+.m-notes.papier .date { align-self: flex-end; font-family: "Caveat", cursive; font-size: calc(46px * var(--k)); opacity: .65; }
+.m-notes.papier .titre { font-family: "Caveat", cursive; font-weight: 700; font-size: calc(116px * var(--k)); line-height: 1; letter-spacing: 0; }
+.m-notes.papier .texte, .m-notes.papier .liste li { font-family: "Caveat", cursive; font-size: calc(78px * var(--k)); line-height: 1.1; font-weight: 500; }
+.m-notes.papier mark { background: color-mix(in srgb, #ffe14d 75%, transparent); color: inherit; }

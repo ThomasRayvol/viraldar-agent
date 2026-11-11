@@ -1,0 +1,14 @@
+viraldar-agent
+Copyright 2026 Thomas Rayvol
+
+This product is licensed under the Apache License, Version 2.0 (see LICENSE).
+It covers the code of the viraldar MCP server, the Claude Code plugin, the
+Claude Desktop extension, the templates and the viraldar-creation skill.
+
+It does not cover the viraldar database (posts, statistics, lists) served by
+https://viraldar.rayvol.net, which stays behind an account and its terms of
+use (https://viraldar.rayvol.net/terms).
+
+The fonts in modeles/carrousel/polices/ (Archivo, Caveat, Lora, TikTok Sans) are not
+covered by this license: they keep the SIL Open Font License 1.1, whose text
+sits next to them (OFL-*.txt).

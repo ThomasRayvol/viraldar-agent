@@ -1,0 +1,62 @@
+{
+  "_lisezmoi": [
+    "Les zones sûres TikTok et les formats, en un seul fichier, lu par src/creation/zones.ts (carrousels, montage, aperçu) et copié dans le projet Remotion par remotion_modeles.",
+    "Repère : l'écran du téléphone ramené à 1080 × 1920 (9:16). Toutes les zones sont en fractions de cet écran (x de gauche à droite, y de haut en bas).",
+    "Mécanisme mesuré (relevé du 15/10/2026, à 1 px près) : TikTok met une image à la largeur de l'écran et la CENTRE verticalement. Une image 3:4 ou 4:5 s'affiche donc avec une marge en haut et en bas ; une zone de l'écran se reporte sur l'image par cette mise à l'échelle et ce centrage (zones.ts, zonePour).",
+    "Avec une description (légende), TikTok centre l'image entre la barre d'état et le haut du panneau de description : une image plus haute que cette fenêtre perd autant en haut qu'en bas, et ne s'affiche entière que si l'on ouvre la description. D'où une zone plus étroite en hauteur.",
+    "Chaque cas porte sa source et sa date. On ne change une valeur qu'avec un nouveau relevé (capture d'un vrai téléphone), en gardant le pire des relevés."
+  ],
+  "repere": { "largeur": 1080, "hauteur": 1920 },
+  "formats": {
+    "9:16": {
+      "largeur": 1080, "hauteur": 1920,
+      "usage": "Plein écran : vidéo, et carrousel quand l'image doit remplir l'écran. Avec une description, le haut et le bas de l'image sont rognés (relevé : visible de 13,7 % à 86,3 % de sa hauteur avec une description longue)."
+    },
+    "3:4": {
+      "largeur": 1080, "hauteur": 1440,
+      "usage": "Carrousel qui reste presque entier même sous une description longue (relevé : visible de 1,6 % à 98,4 % de sa hauteur). Le ratio de la plupart des comptes de carrousels à texte relevés (rapport hauteur/largeur médian 1,25 à 1,41, n = 46 premières vues de 3 comptes)."
+    },
+    "4:5": {
+      "largeur": 1080, "hauteur": 1350,
+      "usage": "Carrousel entièrement visible même sous une description longue ; bandes en haut et en bas dans le fil."
+    }
+  },
+  "defaut": "description",
+  "cas": {
+    "description": {
+      "titre": "Post avec description (légende), carrousel ou vidéo",
+      "quand": "Par défaut : presque tout post porte une légende et des hashtags. Vaut aussi pour la vidéo, où la légende recouvre le bas de l'image.",
+      "zone": { "x0": 0.08, "x1": 0.84, "y0": 0.21, "y1": 0.72 },
+      "eviter": [
+        { "quoi": "avatars « aimé par », à gauche", "x0": 0, "x1": 0.16, "y0": 0.45, "y1": 0.69 }
+      ],
+      "source": "Deux relevés sur captures de vrais téléphones, description longue, le pire des deux gardé : 26/09/2026 (Android 945 × 2048 : bas du texte à 0,72, au-dessus du nom du compte et de la description) et 15/10/2026 (Android 1080 × 2340 : barre de recherche jusqu'à 0,21). Colonne d'actions à partir de x ≈ 0,86 ; avatars « aimé par » pour x < 0,16 entre 45 et 69 % de la hauteur.",
+      "date": "2026-10-15",
+      "releve": {
+        "capture": "1080 × 2340, vue créateur, description de 5 lignes repliée",
+        "barre_etat": [0, 97], "barre_recherche": [120, 220], "avatars_x_max": 175, "avatars_y": [700, 1165],
+        "colonne_actions_x_min": 930, "points_pagination_y": 1378, "nom_du_compte_y": [1433, 1480],
+        "panneau_description_y_min": 1491,
+        "visible_selon_format": { "9:16": [0.137, 0.863], "3:4": [0.016, 0.984], "4:5": [0, 1] }
+      }
+    },
+    "sans_description": {
+      "titre": "Carrousel sans description",
+      "quand": "Un carrousel posté sans légende (certains comptes de listes n'en mettent aucune). Non mesuré pour la vidéo : pour une vidéo, garder « description ».",
+      "zone": { "x0": 0.07, "x1": 0.86, "y0": 0.20, "y1": 0.80 },
+      "eviter": [],
+      "source": "Relevé du 29/10/2026 sur un carrousel 3:4 sans description : barre de recherche jusqu'à 10 % de l'image (0,20 de l'écran), points de pagination à 90,6 % de l'image (0,80 de l'écran), colonne d'actions à partir de x = 0,86. Pas d'avatars « aimé par » : ils n'apparaissent qu'avec la description dépliée. Mesuré sur une image 3:4, reporté sur l'écran.",
+      "date": "2026-10-29"
+    },
+    "pub": {
+      "titre": "Publicité TikTok (in-feed, Spark Ads)",
+      "quand": "Une créa diffusée en publicité : la colonne d'icônes et le bandeau d'appel à l'action prennent tout le bas à droite.",
+      "zone": { "x0": 0.056, "x1": 0.944, "y0": 0.129, "y1": 0.642 },
+      "eviter": [
+        { "quoi": "colonne des icônes et bouton de la pub (un L à l'envers : sous y = 0,428, tout ce qui dépasse x = 0,711)", "x0": 0.711, "x1": 1, "y0": 0.428, "y1": 1 }
+      ],
+      "source": "Relevé du 17/10/2026 sur l'aperçu du gestionnaire de publicités TikTok (le cadre rouge de la zone sûre), rapporté à 1080 × 1920.",
+      "date": "2026-10-17"
+    }
+  }
+}

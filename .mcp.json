@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "viraldar": {
+      "command": "node",
+      "args": ["${CLAUDE_PLUGIN_ROOT}/js/index.js"],
+      "env": {
+        "VIRALDAR_DOSSIER": "${user_config.dossier}",
+        "VIRALDAR_OUTILS": "${user_config.outils}",
+        "VIRALDAR_LECTURE": "${user_config.lecture}"
+      }
+    }
+  }
+}

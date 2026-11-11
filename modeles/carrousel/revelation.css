@@ -1,0 +1,13 @@
+/* revelation — accroche et tension sur les premières diapositives, la réponse sur la dernière. */
+.m-revelation .zone { justify-content: safe center; gap: calc(40px * var(--k)); }
+.m-revelation .titre { font-size: calc(104px * var(--k)); font-weight: 900; line-height: 1.02; letter-spacing: -.025em; }
+.m-revelation .texte { font-size: calc(52px * var(--k)); opacity: .9; }
+.m-revelation .suite { position: absolute; right: var(--zd); bottom: var(--zb); transform: translateY(-10px);
+  font: 800 92px/1 "Archivo", sans-serif; color: var(--accent); }
+.m-revelation.derniere .toile { background: var(--accent); color: var(--fond); }
+.m-revelation.derniere .etiquette { background: var(--fond); color: var(--accent); }
+.m-revelation.derniere mark { background: var(--fond); color: var(--accent); }
+.m-revelation.derniere .titre { font-size: calc(118px * var(--k)); }
+.m-revelation .illustration { flex: 0 1 auto; height: calc(520px * var(--k)); max-height: 42%; width: auto; aspect-ratio: 1;
+  align-self: flex-start; border-radius: 22%; }
+.m-revelation .illustration.large { aspect-ratio: auto; width: 100%; border-radius: 36px; }

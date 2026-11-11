@@ -1,0 +1,55 @@
+{
+  "manifest_version": "0.3",
+  "name": "viraldar",
+  "display_name": "viraldar",
+  "version": "0.1.0",
+  "description": "Cherche dans la base viraldar des TikTok viraux de petits comptes, crée carrousels et montages sur ton ordinateur, suit la méthode viraldar.",
+  "long_description": "viraldar branche ton Claude sur une base de posts TikTok viraux, relevés dans ta niche (vues, outliers, vues ÷ abonnés, commentaires qui demandent le nom de l'app). Ton agent y cherche les formats prouvés, les décortique, puis fabrique tes carrousels (Chrome) et tes montages (ffmpeg, facultatif) sur ta machine : rien de ce que tu crées n'est envoyé chez viraldar. La connexion se fait dans ton navigateur ; ton mot de passe ne passe jamais par l'agent. La méthode de création est fournie (outil `methode`, prompt methode_viraldar).",
+  "author": { "name": "viraldar", "url": "https://viraldar.rayvol.net" },
+  "homepage": "https://viraldar.rayvol.net",
+  "repository": { "type": "git", "url": "https://github.com/ThomasRayvol/viraldar-agent" },
+  "license": "Apache-2.0",
+  "keywords": ["tiktok", "contenu", "carrousel", "marketing", "mcp"],
+  "server": {
+    "type": "node",
+    "entry_point": "js/index.js",
+    "mcp_config": {
+      "command": "node",
+      "args": ["${__dirname}/js/index.js"],
+      "env": {
+        "VIRALDAR_DOSSIER": "${user_config.dossier}",
+        "VIRALDAR_OUTILS": "${user_config.outils}",
+        "VIRALDAR_LECTURE": "${user_config.lecture}"
+      }
+    }
+  },
+  "tools_generated": true,
+  "prompts_generated": true,
+  "user_config": {
+    "dossier": {
+      "type": "directory",
+      "title": "Dossier de travail",
+      "description": "Où ranger carrousels et montages. Seules les vidéos de ce dossier peuvent partir en brouillon TikTok.",
+      "required": false,
+      "default": "${HOME}/viraldar"
+    },
+    "outils": {
+      "type": "string",
+      "title": "Familles d'outils",
+      "description": "base,carrousel,montage par défaut ; ajouter publication (brouillons TikTok, testeurs) ou remotion, ou « tout ».",
+      "required": false,
+      "default": "base,carrousel,montage"
+    },
+    "lecture": {
+      "type": "string",
+      "title": "Lecture de fichiers en plus",
+      "description": "Vide (conseillé) : les outils ne lisent que le dossier de travail. Sinon des dossiers en plus, séparés par « : » (« ; » sous Windows), ou « partout » (tout le disque hors dossiers cachés).",
+      "required": false,
+      "default": ""
+    }
+  },
+  "compatibility": {
+    "platforms": ["darwin", "win32", "linux"],
+    "runtimes": { "node": ">=20" }
+  }
+}

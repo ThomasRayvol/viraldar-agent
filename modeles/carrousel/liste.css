@@ -1,0 +1,10 @@
+/* liste — « X choses que… » : une couverture, puis un point par diapositive. */
+.m-liste .zone { justify-content: safe center; gap: calc(34px * var(--k)); }
+.m-liste.premiere .titre { font-size: calc(124px * var(--k)); font-weight: 900; line-height: 1; letter-spacing: -.025em; }
+.m-liste.premiere .texte { font-size: calc(52px * var(--k)); opacity: .8; }
+.m-liste .numero { font: 900 calc(230px * var(--k))/.8 var(--police-titre), sans-serif; color: var(--accent);
+  letter-spacing: -.04em; }
+.m-liste .titre { font-size: calc(84px * var(--k)); }
+.m-liste .texte { font-size: calc(54px * var(--k)); opacity: .88; }
+.m-liste .liste li { font-weight: 600; }
+.m-liste .bande { position: absolute; left: 0; top: 0; bottom: 0; width: 22px; background: var(--accent); }

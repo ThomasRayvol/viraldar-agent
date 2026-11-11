@@ -1,0 +1,299 @@
+{
+  "citation": {
+    "description": "Une phrase forte par diapositive, en grand, sur une photo floutée et assombrie ou sur un fond uni. Le format des comptes de citations, d'affirmations et de self-care.",
+    "quand": "Citations, affirmations, « rappel du jour », phrases à enregistrer. 3 à 8 diapositives ; la première peut être un titre (« 5 phrases à relire quand ça ne va pas »).",
+    "champs": "titre (couverture) ou citation + auteur ; texte (court, sous la citation) ; etiquette ; image = photo de fond (floutée selon theme.flou) ; note.",
+    "image": "fond",
+    "theme": {
+      "fond": "#1F2A2E",
+      "texte": "#F6F1E9",
+      "accent": "#E9B872",
+      "police_titre": "lora",
+      "police_texte": "archivo",
+      "flou": 14
+    },
+    "variantes": {},
+    "exemple": {
+      "nom": "phrases-a-relire",
+      "modele": "citation",
+      "format": "9:16",
+      "signature": "@moncompte",
+      "diapositives": [
+        {
+          "etiquette": "à enregistrer",
+          "titre": "5 phrases à relire quand tout va trop vite"
+        },
+        {
+          "citation": "Tu n'as pas besoin de tout régler aujourd'hui.",
+          "auteur": "Rappel du soir"
+        },
+        {
+          "citation": "Ce que tu ressens est réel, mais ce n'est pas **définitif**.",
+          "auteur": "Anonyme"
+        },
+        {
+          "citation": "Le repos n'est pas une récompense. C'est une nécessité.",
+          "auteur": "Alex Elle",
+          "image": "/chemin/vers/photo-plage.jpg"
+        }
+      ]
+    }
+  },
+  "liste": {
+    "description": "« X choses que… » : une couverture avec l'accroche, puis un point par diapositive avec un grand numéro. Le format le plus enregistré dans les niches conseils, habitudes, santé mentale.",
+    "quand": "Listes de conseils, habitudes, signes, erreurs. Couverture = promesse chiffrée ; un point par diapositive (titre court + 1 à 3 phrases) ; dernière = appel à l'action avec numero: false.",
+    "champs": "Première diapositive : etiquette, titre, texte. Suivantes : numero (auto 1, 2, 3… ; false pour ne pas numéroter ; un nombre ou un texte pour forcer), titre, texte, liste (puces), image (illustration en haut), note.",
+    "image": "illustration",
+    "theme": {
+      "fond": "#F3EEE6",
+      "texte": "#1A1A1A",
+      "accent": "#E4572E",
+      "police_titre": "archivo",
+      "police_texte": "archivo"
+    },
+    "variantes": {},
+    "exemple": {
+      "nom": "5-habitudes-anxiete",
+      "modele": "liste",
+      "format": "4:5",
+      "diapositives": [
+        {
+          "etiquette": "santé mentale",
+          "titre": "5 habitudes qui calment l'anxiété (vraiment)",
+          "texte": "La 3 a tout changé pour moi"
+        },
+        {
+          "titre": "Sortir avant de regarder ton téléphone",
+          "texte": "10 minutes de lumière du jour le matin régulent ton rythme et ton humeur."
+        },
+        {
+          "titre": "Écrire ce qui tourne en boucle",
+          "texte": "Sur papier, pas dans ta tête. 5 lignes suffisent."
+        },
+        {
+          "titre": "La respiration 4-7-8",
+          "liste": [
+            "Inspire 4 secondes",
+            "Retiens 7 secondes",
+            "Expire 8 secondes"
+          ]
+        },
+        {
+          "numero": false,
+          "titre": "Enregistre pour la prochaine fois 🤍",
+          "texte": "Et dis-moi en commentaire laquelle tu essaies d'abord."
+        }
+      ]
+    }
+  },
+  "notes": {
+    "description": "Une page de notes : façon app de notes du téléphone (variante « app ») ou carnet ligné manuscrit (variante « papier »). Ça se lit comme un écrit personnel, pas comme une pub.",
+    "quand": "Journal, réflexions, « ce que j'aurais aimé savoir », routines, to-do. Texte à la première personne, phrases courtes. Listes : préfixe « [ ] » pour une case vide, « [x] » pour une case cochée.",
+    "champs": "titre, texte, liste (« [ ] » / « [x] » = cases), date (ligne en haut, ex. « 12 novembre »), image (insérée sous le titre), note.",
+    "image": "illustration",
+    "theme": {
+      "fond": "#FFFFFF",
+      "texte": "#1C1C1E",
+      "accent": "#D9A000",
+      "police_titre": "archivo",
+      "police_texte": "archivo"
+    },
+    "variantes": {
+      "app": "page blanche d'app de notes, barre jaune en haut (par défaut)",
+      "papier": "carnet ligné crème, marge rouge, écriture Caveat ; theme conseillé : fond #FBF6EA, accent #D9534F"
+    },
+    "exemple": {
+      "nom": "notes-routine-du-soir",
+      "modele": "notes",
+      "variante": "app",
+      "format": "9:16",
+      "diapositives": [
+        {
+          "date": "12 novembre",
+          "titre": "ma routine du soir quand mon cerveau ne s'arrête pas",
+          "texte": "(ça m'a pris 2 ans à trouver)"
+        },
+        {
+          "date": "12 novembre",
+          "titre": "21h30",
+          "liste": [
+            "[x] téléphone dans une autre pièce",
+            "[x] douche chaude",
+            "[ ] 3 lignes dans mon carnet",
+            "[ ] lumière tamisée"
+          ]
+        },
+        {
+          "date": "12 novembre",
+          "titre": "ce que j'écris",
+          "texte": "Une chose qui m'a pesé.\nUne chose que j'ai réussie.\nUne chose que je laisse à **demain**."
+        }
+      ]
+    }
+  },
+  "contraste": {
+    "description": "Deux moitiés empilées sur la même diapositive : mythe / réalité, avant / après, ce qu'on croit / ce qui est. Chaque moitié a son étiquette et peut avoir sa photo.",
+    "quand": "Idées reçues, transformations, comparaisons. Une paire par diapositive ; une couverture (titre seul) et une conclusion sont possibles.",
+    "champs": "avant: { etiquette, texte, image, note } et apres: { etiquette, texte, image, note } ; ou, pour une diapositive simple : etiquette, titre, texte, note.",
+    "image": "fond de chaque moitié",
+    "theme": {
+      "fond": "#F4F7F2",
+      "texte": "#151515",
+      "accent": "#23935F",
+      "accent2": "#D64545",
+      "fond_haut": "#1D1D1F",
+      "texte_haut": "#FFFFFF",
+      "police_titre": "archivo",
+      "police_texte": "archivo"
+    },
+    "variantes": {},
+    "exemple": {
+      "nom": "mythes-sommeil",
+      "modele": "contraste",
+      "format": "9:16",
+      "diapositives": [
+        {
+          "etiquette": "sommeil",
+          "titre": "4 idées reçues qui t'empêchent de dormir"
+        },
+        {
+          "avant": {
+            "etiquette": "mythe",
+            "texte": "Il faut 8 heures de sommeil pour tout le monde."
+          },
+          "apres": {
+            "etiquette": "réalité",
+            "texte": "Entre 7 et 9 heures selon les personnes. La **régularité** compte plus."
+          }
+        },
+        {
+          "avant": {
+            "etiquette": "mythe",
+            "texte": "Un verre aide à dormir."
+          },
+          "apres": {
+            "etiquette": "réalité",
+            "texte": "Tu t'endors plus vite, mais tu te réveilles plus souvent."
+          }
+        }
+      ]
+    }
+  },
+  "ecran": {
+    "description": "Une capture d'app (image) ou une interface d'app dessinée (cartes à cocher), cadrée en grand sous un titre. Montre le produit sans faire pub : « l'app qui m'a aidé à… ».",
+    "quand": "Démo d'app, fonctionnalité, résultat chiffré, routine dans une app. Capture : une vraie capture d'écran du téléphone (PNG/JPG), le haut de l'écran est gardé.",
+    "champs": "titre (au-dessus), texte (sous l'écran), image = capture d'écran (sinon interface dessinée), etiquette = nom de l'écran dans l'app, liste = cartes (« [x] » cochée, « * » en vedette), citation = bulle de message, note.",
+    "image": "capture",
+    "theme": {
+      "fond": "#F1EEFF",
+      "texte": "#17132B",
+      "accent": "#6C4CF5",
+      "police_titre": "archivo",
+      "police_texte": "archivo"
+    },
+    "variantes": {},
+    "exemple": {
+      "nom": "app-habitudes",
+      "modele": "ecran",
+      "format": "9:16",
+      "diapositives": [
+        {
+          "titre": "l'app qui m'a fait tenir mes habitudes 30 jours d'affilée",
+          "etiquette": "Aujourd'hui",
+          "liste": [
+            "[x] Boire un grand verre d'eau",
+            "[x] 10 min de marche",
+            "* Lire 5 pages",
+            "Méditer 3 minutes"
+          ]
+        },
+        {
+          "titre": "le soir, elle me pose une seule question",
+          "etiquette": "Journal",
+          "citation": "Qu'est-ce qui t'a fait du bien aujourd'hui ?",
+          "texte": "Et c'est tout. 30 secondes."
+        }
+      ]
+    }
+  },
+  "revelation": {
+    "description": "Accroche + tension sur les premières diapositives (gros texte, flèche « suite »), la réponse sur la dernière, en couleur d'accent. Pousse à faire défiler jusqu'au bout.",
+    "quand": "« Le truc que personne ne te dit sur… », énigme, histoire en 3 temps, révélation d'un nom d'app ou d'une méthode. La dernière diapositive est toujours la révélation.",
+    "champs": "titre (gros), texte, etiquette, ==mots== surlignés. image : fond flouté sur les premières, vignette (icône d'app, capture) sur la dernière ; image_large: true pour une capture en pleine largeur.",
+    "image": "fond, puis vignette sur la dernière",
+    "theme": {
+      "fond": "#111111",
+      "texte": "#FFFFFF",
+      "accent": "#FFD23F",
+      "police_titre": "archivo",
+      "police_texte": "archivo"
+    },
+    "variantes": {},
+    "exemple": {
+      "nom": "astuce-procrastination",
+      "modele": "revelation",
+      "format": "9:16",
+      "diapositives": [
+        {
+          "titre": "J'ai arrêté de procrastiner avec ==une seule== règle"
+        },
+        {
+          "titre": "Pas une app de productivité.",
+          "texte": "Pas un réveil à 5h. Pas de to-do list de 30 lignes."
+        },
+        {
+          "etiquette": "la règle",
+          "titre": "Si ça prend moins de ==2 minutes==, je le fais maintenant.",
+          "texte": "Le reste, je l'écris. Et je n'y pense plus."
+        }
+      ]
+    }
+  },
+  "natif": {
+    "description": "Le texte de l'éditeur de TikTok posé sur une photo plein cadre, nette et sans voile : pavés blancs par ligne (« avec fond »), blanc à liseré noir (« contour ») ou pavés noirs. Le format de la plupart des carrousels de petits comptes : il se lit comme un post, pas comme une pub.",
+    "quand": "Récit en 3 à 4 diapositives sur une même photo ou une même série (situation → tension → révélation), listes numérotées longues (couverture : étiquette + titre chiffré + « >>> » ; puis une diapositive par élément avec `numero`), citations signées (l'auteur prend l'étiquette rouge). Garder la même `position` et le même style sur toute la série ; un `etalonnage` commun unifie des photos disparates.",
+    "champs": "titre, texte, citation, auteur (étiquette rouge), etiquette (petit pavé au-dessus), numero (pastille noire, ex. « N°3 »), liste, note ; image = photo plein cadre (nette ; theme.flou pour la flouter) ; position = haut, centre ou bas dans la zone sûre. ==mot== = surlignage (pavé blanc en « contour », accent en « bandeau »).",
+    "image": "fond",
+    "theme": {
+      "fond": "#16181D",
+      "texte": "#FFFFFF",
+      "accent": "#FE2C55",
+      "accent2": "#E64041",
+      "police_titre": "tiktok",
+      "police_texte": "tiktok",
+      "flou": 0
+    },
+    "variantes": {
+      "bandeau": "pavés blancs par ligne, texte noir (« avec fond » de l'éditeur ; par défaut) : lisible sur toute photo",
+      "contour": "texte blanc, liseré noir fin et ombre douce (« Classic ») : sur une photo sombre ou peu chargée",
+      "bandeau_noir": "pavés noirs, texte blanc : pour faire ressortir une phrase (la suite d'une citation, la chute)"
+    },
+    "exemple": {
+      "nom": "recit-reveil",
+      "modele": "natif",
+      "variante": "bandeau",
+      "format": "3:4",
+      "zone": "description",
+      "theme": {
+        "etalonnage": "chaud"
+      },
+      "diapositives": [
+        {
+          "image": "/chemin/vers/photo-lit.jpg",
+          "titre": "Pendant 2 ans je me suis réveillée déjà fatiguée.",
+          "position": "haut"
+        },
+        {
+          "image": "/chemin/vers/photo-lit.jpg",
+          "texte": "J'ai tout essayé : coucher plus tôt, plus de café, moins d'écran.\nRien.",
+          "position": "haut"
+        },
+        {
+          "image": "/chemin/vers/photo-fenetre.jpg",
+          "texte": "Puis j'ai noté ==une seule chose== chaque soir.",
+          "position": "haut"
+        }
+      ]
+    }
+  }
+}

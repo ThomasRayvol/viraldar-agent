@@ -1,0 +1,10 @@
+{
+  "name": "viraldar-mcp-outils",
+  "private": true,
+  "description": "Les outils de construction du MCP (TypeScript), à part : le plugin et l'extension n'en ont pas besoin.",
+  "devDependencies": {
+    "@anthropic-ai/mcpb": "2.1.2",
+    "@types/node": "26.6.6",
+    "typescript": "7.0.2"
+  }
+}

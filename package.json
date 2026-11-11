@@ -1,0 +1,48 @@
+{
+  "name": "viraldar-mcp",
+  "version": "0.1.0",
+  "private": true,
+  "license": "Apache-2.0",
+  "repository": { "type": "git", "url": "git+https://github.com/ThomasRayvol/viraldar-agent.git" },
+  "description": "viraldar pour ton propre agent (MCP + skill) : chercher dans la base viraldar des TikTok viraux, créer carrousels et montages sur ta machine, envoyer en brouillon TikTok",
+  "type": "module",
+  "main": "js/index.js",
+  "bin": {
+    "viraldar-mcp": "js/index.js"
+  },
+  "files": [
+    "js/",
+    "modeles/",
+    "skills/",
+    "README.md",
+    "README.en.md",
+    "SECURITY.md",
+    "LICENSE",
+    "NOTICE"
+  ],
+  "scripts": {
+    "start": "node js/index.js",
+    "dev": "node src/index.ts",
+    "outils": "npm --prefix outils ci",
+    "construire": "node outils/node_modules/typescript/bin/tsc -p tsconfig.build.json",
+    "verifier": "node outils/node_modules/typescript/bin/tsc --noEmit && node outils/verifier-construit.mjs",
+    "paquet": "node outils/paquet.mjs"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "keywords": [
+    "mcp",
+    "tiktok",
+    "claude",
+    "skill",
+    "carousel",
+    "ffmpeg"
+  ],
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "1.32.2",
+    "@supabase/supabase-js": "2.119.0",
+    "playwright-core": "1.65.0",
+    "zod": "4.6.7"
+  }
+}

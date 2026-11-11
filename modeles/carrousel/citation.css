@@ -1,0 +1,11 @@
+/* citation — une phrase forte sur une photo floutée ou un fond uni. */
+.m-citation .toile { background:
+  radial-gradient(120% 80% at 50% 30%, color-mix(in srgb, var(--fond) 82%, #fff) 0%, var(--fond) 60%); }
+.m-citation .zone { gap: calc(40px * var(--k)); }
+.m-citation .guillemet { font-family: "Lora", serif; font-size: calc(220px * var(--k)); line-height: .6;
+  height: calc(110px * var(--k)); color: var(--accent); }
+.m-citation .citation { font-style: italic; font-weight: 500; }
+.m-citation .auteur { color: var(--accent); }
+.m-citation .sur-image .auteur, .m-citation.sur-image .auteur { color: #fff; }
+.m-citation .titre { font-size: calc(96px * var(--k)); }
+.m-citation .filet { width: calc(120px * var(--k)); height: 6px; border-radius: 3px; background: var(--accent); }

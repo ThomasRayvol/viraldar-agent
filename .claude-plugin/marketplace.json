@@ -1,0 +1,12 @@
+{
+  "name": "viraldar",
+  "owner": { "name": "viraldar" },
+  "metadata": { "description": "The viraldar plugin for Claude Code." },
+  "plugins": [
+    {
+      "name": "viraldar",
+      "source": "./",
+      "description": "Search viraldar's database of viral TikToks, build carousels and edits locally, follow the viraldar content method."
+    }
+  ]
+}

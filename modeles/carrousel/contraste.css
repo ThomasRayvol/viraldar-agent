@@ -1,0 +1,18 @@
+/* contraste — mythe / réalité, avant / après : deux moitiés empilées, la coupure au milieu de la zone sûre. */
+.m-contraste .moitie { position: absolute; left: 0; right: 0; overflow: hidden; }
+.m-contraste .moitie.haut { top: 0; height: var(--coupure); background: var(--fond-haut); }
+.m-contraste .moitie.bas { top: var(--coupure); bottom: 0; background: var(--fond); }
+.m-contraste .moitie.haut .zone { top: var(--zh); bottom: 36px; }
+.m-contraste .moitie.bas .zone { top: 36px; bottom: var(--zb); }
+.m-contraste .avec-entete .moitie.haut .zone { top: calc(var(--zh) + 84px); }
+.m-contraste .moitie .zone { justify-content: safe center; gap: calc(26px * var(--k)); }
+.m-contraste .moitie.haut { color: var(--texte-haut); }
+.m-contraste .moitie.haut .etiquette { background: var(--accent2); color: #fff; }
+.m-contraste .moitie.bas .etiquette { background: var(--accent); color: #fff; }
+.m-contraste .moitie .texte { font-size: calc(70px * var(--k)); line-height: 1.2; font-weight: 700; letter-spacing: -.01em; }
+.m-contraste .moitie .note { font-size: calc(38px * var(--k)); }
+.m-contraste .moitie.sur-image { color: #fff; }
+.m-contraste .moitie.sur-image .zone { text-shadow: 0 2px 18px rgba(0,0,0,.5); }
+.m-contraste .moitie .fond-image + .voile { background: rgba(0,0,0,.42); }
+/* diapositive simple (couverture, conclusion) */
+.m-contraste .titre { font-size: calc(104px * var(--k)); font-weight: 900; }

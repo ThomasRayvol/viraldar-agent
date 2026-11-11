@@ -1,0 +1,23 @@
+{
+  "ViraldarTexteSurVideo": {
+    "video": "/chemin/absolu/plan.mp4 (copié dans public/ par remotion_rendre) ou une URL ; sinon image ou fond",
+    "musique": "/chemin/absolu/son.mp3 (facultatif)",
+    "textes": [
+      { "texte": "Accroche en 1 ligne", "debut": 0, "fin": 2.5, "position": "haut", "boite": true },
+      { "texte": "Le message", "debut": 2.5, "fin": 6, "position": "centre", "taille": 80 }
+    ],
+    "duree": 7
+  },
+  "ViraldarListeDefile": {
+    "titre": "5 choses que…",
+    "elements": ["un", "deux", "trois"],
+    "secondesParElement": 1.6, "delaiTitre": 1.2, "pause": 2,
+    "fond": "#101018", "accent": "#fe2c55", "numeroter": true
+  },
+  "ViraldarCitation": {
+    "citation": "La citation, écrite mot à mot.",
+    "auteur": "Auteur",
+    "motsParSeconde": 3, "pause": 2.5,
+    "imageFond": "/chemin/absolu/fond.jpg (facultatif)", "accent": "#f5c542"
+  }
+}
