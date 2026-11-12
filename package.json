@@ -1,6 +1,6 @@
 {
   "name": "viraldar-mcp",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "private": true,
   "license": "Apache-2.0",
   "repository": { "type": "git", "url": "git+https://github.com/ThomasRayvol/viraldar-agent.git" },

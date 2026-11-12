@@ -170,8 +170,8 @@ export const outilsPlan: Module = (serveur, ctx: Contexte) => {
     for (const [nom, r] of [["accueil", acc], ["strategies", st], ["ma_selection", sel]] as const)
       if (r.error) throw new Error(`${nom} : ${r.error.message}`);
     const themes: string[] = sel.data?.etiquettes || [];
+    // Les repères ne doivent jamais empêcher de lire la stratégie rédigée : leur erreur (délai de la base…) est dite, pas levée.
     const { data: rep, error: er } = await c.rpc("strategie_reperes", { p_etiquettes: themes });
-    if (er) throw new Error("strategie_reperes : " + er.message);
     const a = acc.data, s = st.data?.strategie;
     const l: string[] = [];
     const profil = a ? `Profil (accueil) : vues visées ${a.vues_visees || "—"} · qui produit ${a.qui_filme || "—"} · objectifs ${(a.objectifs || []).join(", ") || "—"} · ce qui bloque ${(a.problemes || []).join(", ") || "—"}` : "Profil : accueil pas rempli.";
@@ -206,6 +206,12 @@ export const outilsPlan: Module = (serveur, ctx: Contexte) => {
     }
 
     // ---------- les repères (agrégats, chaque médiane avec son n) ----------
+    if (er || !rep) {
+      l.push("", `Repères chiffrés indisponibles pour l'instant (la base a répondu : ${er?.message || "rien"}). `
+        + (s ? "La stratégie ci-dessus est complète sans eux ; rappeler `ma_strategie` plus tard pour les chiffres."
+          : "Rappeler `ma_strategie` dans une minute ; en attendant, `petits_comptes_viraux` donne les posts qui ont marché."));
+      return texte(l.join("\n"));
+    }
     const rc = R.recommandes || {}, noms = (k: string) => R.etiquettes?.[k]?.nom || k;
     l.push(`Repères de ${themes.length ? `ses thèmes (${themes.join(", ")})` : "toute la base (aucun thème choisi : `mes_themes`)"} : `
       + `${entier(rep.total)} posts de ${entier(rep.comptes)} comptes.`);
