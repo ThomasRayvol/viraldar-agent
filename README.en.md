@@ -54,11 +54,14 @@ after `npm ci --omit=dev` in the folder. (An npm package for `npx -y viraldar-mc
 
 ## Sign in
 
-Tell your agent "connect to viraldar". It opens **viraldar.rayvol.net/agent** in your browser; you sign in (Google,
+Tell your agent "connect to viraldar". It immediately gives you a **viraldar.rayvol.net/agent** link (and tries to
+open it in your default browser): open it in the browser of your choice, for instance the one where you are signed in
+to viraldar. If your browser asks for access to devices on your local network, allow it: that is your agent, on your
+machine (127.0.0.1). You sign in (Google,
 or email and password) and authorize the agent. **Your password never goes through the agent.** The agent gets its
 own session, separate from your browser's, stored in `~/.config/viraldar/session.json` (readable by you only).
 `deconnexion` revokes it. Every connected agent is listed on viraldar.rayvol.net under
-the **Ton agent** tab, where you can revoke it: the agent can no longer renew its session and asks you to
+the **Agentique** tab, where you can revoke it: the agent can no longer renew its session and asks you to
 reconnect it (within 30 minutes at most).
 
 ## Settings

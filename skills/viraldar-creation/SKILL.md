@@ -33,7 +33,7 @@ Références, à charger quand l'étape le demande (pas toutes d'un coup) :
 
 | famille | outil | ce qu'il fait |
 |---|---|---|
-| session | `qui_suis_je` / `connexion` / `deconnexion` | état de la session viraldar ; sans session, rien ne marche : lance `connexion` (elle ouvre le navigateur, l'utilisateur autorise) |
+| session | `qui_suis_je` / `connexion` / `deconnexion` | état de la session viraldar ; sans session, rien ne marche : lance `connexion` : elle rend tout de suite un lien (et essaie de l'ouvrir) ; montre-le à l'utilisateur, qui l'ouvre dans le navigateur où il est connecté et autorise ; puis `connexion` avec `attendre: true` |
 | base | `infos_base` | thèmes (avec leur nombre de posts), langues, règles ; hors quota : commence par là |
 | base | `chercher_posts` | recherche dans la base (mots, thèmes, `mes_themes`, langue, format, publié depuis, vues, outlier, likes ≥ 2 %, 📲), 24 par page |
 | base | `petits_comptes_viraux` | les « petits comptes viraux » (règles plus bas), pour ses thèmes, des thèmes ou une langue |

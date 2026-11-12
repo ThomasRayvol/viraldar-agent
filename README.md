@@ -55,11 +55,13 @@ après `npm ci --omit=dev` dans le dossier. (Un paquet npm, pour `npx -y viralda
 
 ## Se connecter
 
-Dis à ton agent « connecte-toi à viraldar ». Il ouvre **viraldar.rayvol.net/agent** dans ton navigateur ; tu te
-connectes (Google, ou e-mail et mot de passe) et autorises l'agent. **Ton mot de passe ne passe jamais par l'agent.**
+Dis à ton agent « connecte-toi à viraldar ». Il te donne aussitôt un lien **viraldar.rayvol.net/agent** (et essaie de
+l'ouvrir dans ton navigateur par défaut) : ouvre-le dans le navigateur de ton choix, celui où tu es connecté à
+viraldar par exemple. Si ton navigateur demande l'accès aux appareils du réseau local, accepte : c'est ton agent, sur
+ta machine (127.0.0.1). Tu te connectes (Google, ou e-mail et mot de passe) et autorises l'agent. **Ton mot de passe ne passe jamais par l'agent.**
 L'agent reçoit une session à lui, distincte de celle de ton navigateur, gardée dans `~/.config/viraldar/session.json`
 (lisible par toi seul). `deconnexion` la révoque. Chaque agent connecté apparaît sur viraldar.rayvol.net, dans
-l'onglet **Ton agent**, d'où tu peux le révoquer : l'agent ne peut plus renouveler sa session et te demande de
+l'onglet **Agentique**, d'où tu peux le révoquer : l'agent ne peut plus renouveler sa session et te demande de
 le reconnecter (au plus tard 30 minutes après).
 
 ## Réglages

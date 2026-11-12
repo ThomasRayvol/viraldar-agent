@@ -2,7 +2,7 @@
   "manifest_version": "0.3",
   "name": "viraldar",
   "display_name": "viraldar",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Cherche dans la base viraldar des TikTok viraux de petits comptes, lit ta stratégie et ton planning, crée carrousels et montages sur ton ordinateur, suit la méthode viraldar.",
   "long_description": "viraldar branche ton Claude sur une base de posts TikTok viraux, relevés dans ta niche (vues, outliers, vues ÷ abonnés, commentaires qui demandent le nom de l'app). Ton agent y cherche les formats prouvés, les décortique, lit ta stratégie et ton planning (quoi produire, pour quel compte, pour quand), puis fabrique tes carrousels (Chrome) et tes montages (ffmpeg, facultatif) sur ta machine : rien de ce que tu crées n'est envoyé chez viraldar. La connexion se fait dans ton navigateur ; ton mot de passe ne passe jamais par l'agent. La méthode de création est fournie (outil `methode`, prompt methode_viraldar).",
   "author": { "name": "viraldar", "url": "https://viraldar.rayvol.net" },
