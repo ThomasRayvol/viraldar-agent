@@ -29,14 +29,14 @@ type Compte = { open_id: string; username: string; display_name?: string; scopes
 export const outilsPublication: Module = (serveur, ctx: Contexte) => {
   async function tiktok(corps: Record<string, unknown>): Promise<any> {
     const c: SupabaseClient | null = await ctx.supabase();
-    if (!c) throw new Error("Pas connecté à viraldar : appelle l'outil `connexion`, puis recommence.");
+    if (!c) throw new Error(ctx.pasConnecte());
     // invoke pose Authorization (jeton de session) et apikey, comme fonctionTiktok dans site/js/commun.js.
     const { data, error } = await c.functions.invoke("tiktok", { body: corps });
     if (!error) return data;
     let r: any = {};
     try { r = await (error as any).context.json(); } catch { /* corps illisible */ }
     throw new Error((r.erreur || error.message) + (r.reconnecter
-      ? " — le compte TikTok doit être relié à nouveau sur viraldar.rayvol.net (Mon espace)." : ""));
+      ? " — le compte TikTok doit être relié à nouveau sur viraldar.rayvol.net (Mon produit → Mon TikTok)." : ""));
   }
   async function compte(choix?: string): Promise<Compte> {
     const { comptes } = await tiktok({ action: "comptes" }) as { comptes: Compte[] };
@@ -51,7 +51,7 @@ export const outilsPublication: Module = (serveur, ctx: Contexte) => {
     return t;
   }
   const outil = <A,>(fn: (a: A) => Promise<ReturnType<typeof texte>>) => async (a: A) => {
-    try { return await fn(a); } catch (e) { return erreur((e as Error).message); }
+    try { return await fn(a); } catch (e) { return erreur(ctx.expliquer((e as Error).message)); }
   };
   const champCompte = z.string().optional().describe("@username ou open_id du compte TikTok (facultatif s'il n'y en a qu'un ; voir `comptes_tiktok`).");
 

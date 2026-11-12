@@ -1,7 +1,7 @@
 {
   "name": "viraldar",
-  "version": "0.1.0",
-  "description": "viraldar for your agent: search a database of viral TikToks from small accounts, build carousels and edits on your machine, follow a proven content method (MCP server + skill).",
+  "version": "0.2.0",
+  "description": "viraldar for your agent: search a database of viral TikToks from small accounts, read your strategy and schedule, build carousels and edits on your machine, follow a proven content method (MCP server + skill).",
   "author": { "name": "viraldar" },
   "homepage": "https://viraldar.rayvol.net",
   "repository": "https://github.com/ThomasRayvol/viraldar-agent",

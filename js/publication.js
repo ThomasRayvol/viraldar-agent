@@ -16,7 +16,7 @@ export const outilsPublication = (serveur, ctx) => {
     async function tiktok(corps) {
         const c = await ctx.supabase();
         if (!c)
-            throw new Error("Pas connecté à viraldar : appelle l'outil `connexion`, puis recommence.");
+            throw new Error(ctx.pasConnecte());
         // invoke pose Authorization (jeton de session) et apikey, comme fonctionTiktok dans site/js/commun.js.
         const { data, error } = await c.functions.invoke("tiktok", { body: corps });
         if (!error)
@@ -27,7 +27,7 @@ export const outilsPublication = (serveur, ctx) => {
         }
         catch { /* corps illisible */ }
         throw new Error((r.erreur || error.message) + (r.reconnecter
-            ? " — le compte TikTok doit être relié à nouveau sur viraldar.rayvol.net (Mon espace)." : ""));
+            ? " — le compte TikTok doit être relié à nouveau sur viraldar.rayvol.net (Mon produit → Mon TikTok)." : ""));
     }
     async function compte(choix) {
         const { comptes } = await tiktok({ action: "comptes" });
@@ -49,7 +49,7 @@ export const outilsPublication = (serveur, ctx) => {
             return await fn(a);
         }
         catch (e) {
-            return erreur(e.message);
+            return erreur(ctx.expliquer(e.message));
         }
     };
     const champCompte = z.string().optional().describe("@username ou open_id du compte TikTok (facultatif s'il n'y en a qu'un ; voir `comptes_tiktok`).");

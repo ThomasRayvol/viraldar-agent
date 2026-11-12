@@ -4,11 +4,13 @@
 
 Plug your Claude into **viraldar**: it searches a database of viral TikTok posts collected in your niche (mostly from
 small accounts, with their numbers), explains why they worked, then builds your carousels and video edits **on your
-own computer**, following a proven content method. Nothing you create is sent to viraldar.
+own computer**, following a proven content method. It also reads your viraldar strategy and schedule: it knows what
+to make, for which account and when, and moves slots forward up to "ready" (you publish). Nothing you create is sent
+to viraldar.
 
 This folder holds three things, built from the same code:
 
-- a local **MCP server** (`js/index.js`, Node 22+): the database, carousels, video editing;
+- a local **MCP server** (`js/index.js`, Node 22+): the database, your strategy and schedule, carousels, video editing;
 - the **skill** `viraldar-creation` (`skills/`): the method your agent follows, also served by the MCP server (tool
   `methode`, prompt `methode_viraldar`) for clients that do not read skills;
 - packaging for **Claude Code** (plugin) and **Claude Desktop** (`.mcpb` extension).
@@ -25,7 +27,8 @@ claude plugin marketplace add ThomasRayvol/viraldar-agent
 claude plugin install viraldar@viraldar
 ```
 
-Or inside Claude Code: `/plugin install viraldar --marketplace ThomasRayvol/viraldar-agent`. Claude Code installs the
+Or inside Claude Code: `/plugin marketplace add ThomasRayvol/viraldar-agent`, then `/plugin install viraldar@viraldar`.
+Claude Code installs the
 dependencies itself (from `package-lock.json`, no install scripts). Optional settings:
 `claude plugin configure viraldar@viraldar` (working folder, tool families, extra readable folders).
 It also installs from the git URL: `claude plugin marketplace add https://github.com/ThomasRayvol/viraldar-agent.git`.
@@ -54,7 +57,9 @@ after `npm ci --omit=dev` in the folder. (An npm package for `npx -y viraldar-mc
 Tell your agent "connect to viraldar". It opens **viraldar.rayvol.net/agent** in your browser; you sign in (Google,
 or email and password) and authorize the agent. **Your password never goes through the agent.** The agent gets its
 own session, separate from your browser's, stored in `~/.config/viraldar/session.json` (readable by you only).
-`deconnexion` revokes it.
+`deconnexion` revokes it. Every connected agent is listed on viraldar.rayvol.net under
+the **Ton agent** tab, where you can revoke it: the agent can no longer renew its session and asks you to
+reconnect it (within 30 minutes at most).
 
 ## Settings
 

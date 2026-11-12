@@ -1,7 +1,7 @@
 ---
 name: viraldar-creation
 license: Apache-2.0 (LICENSE et NOTICE à la racine du dépôt viraldar-agent)
-description: Méthode de création de contenu TikTok avec le MCP viraldar, de zéro à une stratégie exécutée — comprendre le produit et sa cible, trouver dans la base viraldar les formats prouvés de sa niche (petits comptes viraux, outliers, posts où l'on demande le nom de l'app), décortiquer un post gagnant, l'adapter sans le copier, produire un carrousel ou un montage, l'envoyer en brouillon TikTok, planifier la cadence sur un ou plusieurs comptes, mesurer et itérer. À déclencher dès que l'utilisateur veut des idées de vidéos ou de diaporamas TikTok, une stratégie de contenu, des accroches, un calendrier de publication, faire connaître son app ou son produit sur TikTok, reproduire un post viral, ou qu'il utilise un outil viraldar (recherche dans la base, recommandés, À reproduire, carrousel, montage, brouillon TikTok). Triggers aussi en anglais (TikTok content strategy, hooks, slideshow, UGC, app marketing).
+description: Méthode de création de contenu TikTok avec le MCP viraldar, de zéro à une stratégie exécutée — comprendre le produit et sa cible, trouver dans la base viraldar les formats prouvés de sa niche (petits comptes viraux, outliers, posts où l'on demande le nom de l'app), décortiquer un post gagnant, l'adapter sans le copier, produire un carrousel ou un montage, l'envoyer en brouillon TikTok, planifier la cadence sur un ou plusieurs comptes, produire les créneaux de son planning viraldar d'après sa stratégie, mesurer et itérer. À déclencher dès que l'utilisateur veut des idées de vidéos ou de diaporamas TikTok, une stratégie de contenu, des accroches, un calendrier de publication, faire connaître son app ou son produit sur TikTok, reproduire un post viral, ou qu'il utilise un outil viraldar (recherche dans la base, recommandés, À reproduire, stratégie, planning, idées, carrousel, montage, brouillon TikTok), ou demande « qu'est-ce que je dois produire aujourd'hui ». Triggers aussi en anglais (TikTok content strategy, hooks, slideshow, UGC, app marketing).
 ---
 
 # viraldar — de zéro à une stratégie de contenu exécutée
@@ -24,7 +24,7 @@ Références, à charger quand l'étape le demande (pas toutes d'un coup) :
 | `references/formats.md` | étapes 2-5, les formats, quand les choisir, comment les produire avec nos outils |
 | `references/brief.md` | étape 4, le gabarit de brief à remplir avant de produire |
 | `references/production.md` | étapes 4, 5 et 8 : écrire un carrousel, choisir format et zone sûre, rendre, contrôler, varier et apprendre (le process rodé, avec ses chiffres) |
-| `references/calendrier.md` | étape 7, cadence et plusieurs comptes |
+| `references/calendrier.md` | étape 7, cadence et plusieurs comptes ; « Travailler depuis le planning » |
 | `references/sources.md` | si l'utilisateur demande d'où vient une règle |
 
 ---
@@ -43,6 +43,10 @@ Références, à charger quand l'étape le demande (pas toutes d'un coup) :
 | base | `trier_post` / `noter_post` | garder un post (→ À reproduire), le passer ou le retirer ; noter le format et la raison |
 | base | `a_reproduire` | sa liste À reproduire, avec ses notes |
 | base | `ma_fiche` | sa fiche produit (produit, clients, problèmes, positionnement, angles) |
+| base | `ma_strategie` | sa stratégie rédigée (cap, piliers, formats retenus, cadence, premiers posts, jalons) ; sinon les repères calculés de ses thèmes et le format que suggèrent les chiffres |
+| base | `mon_planning` | ses plans, comptes et créneaux (aujourd'hui + 7 jours par défaut ; `a_produire` : ce qui reste à produire), chacun avec son modèle (post gardé) et/ou son idée (brief) |
+| base | `maj_creneaux` | fait avancer des créneaux : statut, titre, légende, format, modèle, idée liée |
+| base | `mes_idees` / `ecrire_idee` | ses idées à produire (Bibliothèque → Créer) : lire, créer, modifier le brief et le statut |
 | création | `carrousel_modeles` / `carrousel_rendre` / `carrousel_apercu` | modèles HTML (citation, liste, notes, contraste, ecran, revelation, natif = texte de l'éditeur TikTok sur photo) → images 9:16, 3:4 ou 4:5 ; le texte est posé et **vérifié** dans la zone sûre du cas `zone` (`description` par défaut, `sans_description`, `pub`) ; **regarde toujours l'aperçu** avant de proposer |
 | création | `montage_infos`, `montage_format_tiktok`, `montage_decouper`, `montage_assembler`, `montage_diaporama`, `montage_texte`, `montage_couverture` | montage ffmpeg : mise au format 9:16, découpe, enchaînement, diaporama vidéo, texte à l'écran et sous-titres (SRT ou segments) dans la zone sûre du cas `zone`, avec temps de lecture contrôlé et planche de contrôle, couverture |
 | création | `remotion_detecter` / `remotion_modeles` / `remotion_rendre` | Remotion **seulement si l'utilisateur l'a** (`remotion_detecter` te dit de lui demander) |
@@ -72,7 +76,9 @@ raccourcir s'il arrive avec un besoin précis (« décortique ce post », « fai
 
 ### 1. Comprendre le produit et la cible
 
-Lis `ma_fiche`. Si elle existe, résume-la en 5 lignes et demande ce qui a changé. Sinon, pose **en un seul message**,
+Lis `ma_fiche` et `ma_strategie`. Si la fiche existe, résume-la en 5 lignes et demande ce qui a changé ; si une
+stratégie est rédigée, elle fixe déjà les formats, la cadence et les premiers posts : pars d'elle plutôt que de refaire
+les étapes 2 et 7. Sinon, pose **en un seul message**,
 au plus 6 questions :
 
 1. Que vends-tu (app, produit, service) et son lien ?
@@ -188,7 +194,9 @@ Charge `references/calendrier.md`. Fixe avec l'utilisateur, d'après le temps qu
 - plusieurs comptes seulement s'il le demande et s'il peut les tenir : chacun avec une identité vraie et distincte
   (angle, voix, public), jamais pour se faire passer pour des clients indépendants ni pour gonfler l'engagement.
 
-**Livrable** : `calendrier.md` sur 2 semaines.
+**Livrable** : `calendrier.md` sur 2 semaines. S'il a un plan sur viraldar (`mon_planning`), c'est **son**
+calendrier : ne tiens pas un `calendrier.md` en double, travaille depuis le planning (section suivante). Les plans se
+créent et se suppriment sur le site (Planning → Nouveau plan), pas par toi.
 
 ### 8. Mesurer et itérer
 
@@ -210,6 +218,38 @@ seule chose à la fois** ; attends-toi à ce que la variante retombe vers × 1,3
 n'est pas un échec. Écris les leçons (pour, contre, statut) dans `journal.md`.
 Chaque semaine : une ligne de bilan, ce qu'on garde, ce qu'on arrête, le prochain test ; reviens à l'étape 2 pour
 chercher un nouveau format quand un format baisse sur 3 posts de suite.
+
+---
+
+## Travailler depuis le planning
+
+Quand l'utilisateur a un plan sur viraldar (page Planning), c'est lui qui dit quoi produire, pour quel compte et pour
+quand. Un créneau = un contenu, à une heure, sur un compte. Son statut suit le flux : **à créer → en production → prêt**
+(c'est ton travail), puis **en brouillon → publié** (c'est le sien).
+
+1. **Lire.** `ma_strategie` (formats retenus, piliers, cadence, ce qu'il faut éviter), puis `mon_planning` avec
+   `a_produire: true` : les créneaux du jour ou de la semaine qui restent à produire. Un créneau « à créer » est un
+   contenu qui **n'existe pas encore** : son modèle (le post gardé, `M1`…) dit quoi reproduire, l'idée (`I1`…) donne le
+   brief s'il y en a un. Un créneau sans modèle ni idée : propose un post gardé (`a_reproduire`) ou une idée
+   (`mes_idees`) qui colle à la stratégie, et lie-le avec `maj_creneaux` (`post`, `idee`) **après son accord**.
+2. **Choisir le lot avec lui.** Dis ce que tu vas produire (« les 4 créneaux de demain : 3 diaporamas d'après M1, 1
+   vidéo d'après M2 ») et attends son « oui ». Mêmes règles que plus haut : un post modèle se reprend **tel qu'il a
+   marché** (format, longueur, nombre d'images, place du produit), avec le contenu du produit, jamais une copie ; jamais
+   le même contenu sur deux comptes le même jour.
+3. **Passer « en production »** les créneaux que tu commences (`maj_creneaux`, en lot), avec leur `titre` et leur
+   `format` précis. S'il n'y a pas de brief, écris-le (étape 4) : dans `briefs/` et, pour qu'il le retrouve sur le site,
+   dans l'idée (`ecrire_idee` : nouvelle idée avec `post`, `compte_cible` et `brief`, puis `maj_creneaux` avec `idee`).
+4. **Produire** (étape 5), dans `production/<date>-<compte>-<créneau>/` ; montre le rendu, corrige.
+5. **Passer « prêt »** quand les fichiers sont finis **et validés par lui**, avec la `legende` prête à coller (TikTok
+   ne garde pas la légende d'un brouillon vidéo : elle se copie depuis le Planning). Dis-lui où sont les fichiers et ce
+   qu'il lui reste à faire : ajouter le son, cocher « Contenu promotionnel », publier à l'heure prévue.
+6. **T'arrêter là.** Tu ne publies pas et tu n'envoies rien en brouillon depuis le planning. Tu ne passes un créneau
+   « en brouillon » ou « publié » que si l'utilisateur te dit l'avoir fait lui-même (un créneau publié publie aussi son
+   idée). Un créneau passé et non produit : signale-le, propose de le produire ou qu'il le déplace sur le site ; ne
+   change jamais une heure toi-même.
+
+Aucun fichier ni média ne part chez viraldar : le planning ne garde que du texte (titres, légendes, briefs) et des
+références ; les fichiers restent dans le dossier de travail.
 
 ---
 
@@ -260,7 +300,8 @@ chercher un nouveau format quand un format baisse sur 3 posts de suite.
   chiffres de praticiens cités dans les références sont des anecdotes, présentées comme telles.
 - **Copier un post.** On reprend une mécanique, jamais un contenu.
 - **Publier ou envoyer sans accord.** Aucun brouillon envoyé sans un « oui » explicite pour ce post-là ; aucune
-  modification de ses thèmes ou de sa liste À reproduire sans le lui dire.
+  modification de ses thèmes ou de sa liste À reproduire sans le lui dire ; aucun créneau marqué « en brouillon » ou
+  « publié » qu'il n'a pas publié lui-même.
 - **Lancer une recherche TikTok**, télécharger des vidéos ou aspirer la base (pas de pagination systématique).
 - **Contourner une limite** (quota viraldar, 5 brouillons en attente, erreur TikTok, compte restreint).
 - **Promettre la viralité.** Un format fiable augmente les chances ; on le dit en ces termes.

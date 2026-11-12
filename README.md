@@ -4,12 +4,14 @@
 
 Branche ton Claude sur **viraldar** : il cherche dans une base de posts TikTok viraux relevés dans ta niche (surtout
 de petits comptes, avec leurs chiffres), te dit pourquoi ils ont marché, puis fabrique tes carrousels et tes montages
-**sur ton ordinateur**, en suivant une méthode de création éprouvée. Rien de ce que tu crées n'est envoyé chez
-viraldar.
+**sur ton ordinateur**, en suivant une méthode de création éprouvée. Il lit aussi ta stratégie et ton planning
+viraldar : il sait quoi produire, pour quel compte et pour quand, et fait avancer les créneaux jusqu'à « prêt » (c'est
+toi qui publies). Rien de ce que tu crées n'est envoyé chez viraldar.
 
 Ce dossier contient trois choses, construites depuis le même code :
 
-- un **serveur MCP** local (`js/index.js`, Node 22 ou plus) : la base, les carrousels, le montage ;
+- un **serveur MCP** local (`js/index.js`, Node 22 ou plus) : la base, ta stratégie et ton planning, les carrousels,
+  le montage ;
 - le **skill** `viraldar-creation` (`skills/`) : la méthode que suit ton agent, aussi servie par le MCP (outil
   `methode`, prompt `methode_viraldar`) pour les clients qui ne lisent pas les skills ;
 - l'emballage pour **Claude Code** (plugin) et **Claude Desktop** (extension `.mcpb`).
@@ -25,7 +27,8 @@ claude plugin marketplace add ThomasRayvol/viraldar-agent
 claude plugin install viraldar@viraldar
 ```
 
-Ou dans Claude Code : `/plugin install viraldar --marketplace ThomasRayvol/viraldar-agent`. Claude Code installe lui-même
+Ou dans Claude Code : `/plugin marketplace add ThomasRayvol/viraldar-agent`, puis `/plugin install viraldar@viraldar`.
+Claude Code installe lui-même
 les dépendances (d'après `package-lock.json`, sans script). Réglages facultatifs :
 `claude plugin configure viraldar@viraldar` (dossier de travail, familles d'outils, lecture de fichiers en plus).
 On peut aussi l'installer par l'URL git : `claude plugin marketplace add https://github.com/ThomasRayvol/viraldar-agent.git`.
@@ -55,7 +58,9 @@ après `npm ci --omit=dev` dans le dossier. (Un paquet npm, pour `npx -y viralda
 Dis à ton agent « connecte-toi à viraldar ». Il ouvre **viraldar.rayvol.net/agent** dans ton navigateur ; tu te
 connectes (Google, ou e-mail et mot de passe) et autorises l'agent. **Ton mot de passe ne passe jamais par l'agent.**
 L'agent reçoit une session à lui, distincte de celle de ton navigateur, gardée dans `~/.config/viraldar/session.json`
-(lisible par toi seul). `deconnexion` la révoque.
+(lisible par toi seul). `deconnexion` la révoque. Chaque agent connecté apparaît sur viraldar.rayvol.net, dans
+l'onglet **Ton agent**, d'où tu peux le révoquer : l'agent ne peut plus renouveler sa session et te demande de
+le reconnecter (au plus tard 30 minutes après).
 
 ## Réglages
 
@@ -119,6 +124,19 @@ s'appliquent (600 posts distincts par jour, 30 appels par minute) ; un post revu
 | `trier_post` / `noter_post` | garder, passer, retirer un post ; noter ce qu'on en reprend |
 | `a_reproduire` | tous les posts gardés, avec leur note |
 | `ma_fiche` | l'accueil et la fiche produit |
+
+## Stratégie, planning et idées
+
+Ton travail tel que tu le vois sur viraldar (pages Stratégie, Planning, Bibliothèque), avec ta session : rien que tes
+lignes, hors quota. Du texte seulement (titres, légendes, briefs) : aucun fichier ni média ne part chez viraldar.
+Aucun outil ne publie ni n'envoie en brouillon depuis le planning : c'est toi qui publies.
+
+| outil | ce qu'il fait |
+|---|---|
+| `ma_strategie` | ta stratégie rédigée (cap, piliers, formats retenus, cadence, premiers posts, jalons) ; sinon les repères calculés de tes thèmes (critères, petits comptes viraux, diaporama contre vidéo, chaque médiane avec son n) et le format que suggèrent les chiffres |
+| `mon_planning` | tes plans, leurs comptes et les créneaux d'une période (par défaut aujourd'hui et les 7 jours suivants, à l'heure du plan) : heure, compte, statut, et ce qu'il faut reproduire (le post gardé qui sert de modèle, l'idée et son brief) ; `a_produire` : ce qui reste à produire |
+| `maj_creneaux` | fait avancer un ou plusieurs créneaux : statut (à créer → en production → prêt), titre, légende, format, modèle, idée liée |
+| `mes_idees` / `ecrire_idee` | lire, créer et modifier les idées à produire de la Bibliothèque (brief, statut, format, compte, post modèle) |
 
 ## Brouillons TikTok
 

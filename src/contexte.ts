@@ -6,6 +6,10 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 export interface Contexte {
   /** Le client Supabase de viraldar, avec la session de l'utilisateur (null tant qu'il n'est pas connecté). */
   supabase: () => Promise<SupabaseClient | null>;
+  /** Le message à rendre quand `supabase()` donne null : « connecte-toi », ou « ta session a été révoquée ». */
+  pasConnecte: () => string;
+  /** Le message d'une erreur RPC ou de fonction, réécrit en « reconnecte-toi » si la session n'est plus valable. */
+  expliquer: (message: string) => string;
   /** L'adresse du projet Supabase (pour appeler les fonctions, ex. `${url}/functions/v1/tiktok`). */
   supabaseUrl: string;
   /** Le dossier où ranger ce qu'on fabrique (carrousels, montages) : ~/viraldar par défaut. */

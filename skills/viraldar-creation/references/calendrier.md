@@ -2,6 +2,9 @@
 
 Fichier : `~/viraldar/<projet>/calendrier.md`, sur 2 semaines, revu chaque semaine à l'étape 8.
 
+S'il a un plan sur viraldar (`mon_planning`), le planning du site tient lieu de calendrier : on n'en tient pas de
+copie ici, on le fait avancer (SKILL.md, « Travailler depuis le planning »). Ce gabarit sert à qui n'en a pas.
+
 ## Fixer la cadence
 
 | temps de l'utilisateur par semaine | cadence de départ par compte | formats |

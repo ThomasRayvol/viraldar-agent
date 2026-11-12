@@ -15,7 +15,7 @@
 //      le navigateur ne servent plus), l'écrit en 600 et ferme le serveur.
 // Ensuite supabase-js rafraîchit la session à la demande ; le fichier est relu à chaque fois, si bien que deux MCP
 // (Claude Desktop et Claude Code) qui partagent le fichier voient chacun le dernier jeton.
-import { createClient } from "@supabase/supabase-js";
+import { createClient, isAuthRetryableFetchError } from "@supabase/supabase-js";
 import { createServer } from "node:http";
 import { randomBytes, timingSafeEqual } from "node:crypto";
 import { spawn } from "node:child_process";
@@ -23,6 +23,7 @@ import { chmodSync, mkdirSync, readFileSync, renameSync, rmSync, statSync, write
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
 import { z } from "zod";
+import { sousRacine } from "./racine.js";
 // ---------- configuration : publique par nature, surchargeable ----------
 // Mêmes noms que la configuration du site (la clé « publishable » est la clé anon, protégée par la RLS).
 const SUPABASE_URL = process.env.VIRALDAR_SUPABASE_URL || "https://iarcyvzipvvopcebqpnr.supabase.co";
@@ -68,11 +69,72 @@ const client = createClient(SUPABASE_URL, SUPABASE_CLE, {
         autoRefreshToken: false, detectSessionInUrl: false,
     },
 });
+// ---------- la session perdue (révoquée depuis viraldar → Ton agent, ou expirée) ----------
+// Quand le refresh échoue pour de bon, supabase-js efface la session ; on garde le motif en mémoire pour que les
+// outils disent « reconnecte-toi » plutôt qu'un « pas connecté » muet. Une seule fois : aucun outil ne relance la
+// connexion de lui-même, c'est l'agent qui appelle `connexion` (et l'utilisateur qui autorise).
+let perdue = null;
+const MSG_PERDUE = "La session de ton agent chez viraldar a pris fin (révoquée dans viraldar → Ton agent, ou "
+    + "expirée). Appelle l'outil `connexion` une fois : l'utilisateur réautorise l'agent dans son navigateur. Ne "
+    + "réessaie pas l'outil en boucle avant.";
+const MSG_PAS_CONNECTE = "Pas connecté à viraldar : appelle l'outil `connexion`, puis recommence.";
 async function sessionCourante() {
     const { data, error } = await client.auth.getSession();
-    if (error)
+    if (error) {
         console.error("viraldar : session illisible :", error.message);
+        if (!isAuthRetryableFetchError(error)) {
+            // Refresh refusé (session supprimée côté viraldar, jeton déjà utilisé, compte supprimé) : rien à retenter.
+            perdue = error.message;
+            rmSync(FICHIER_SESSION, { force: true });
+        }
+    }
     return data.session;
+}
+/** Une erreur renvoyée par une RPC ou une fonction : dit-elle que la session n'est plus valable ? */
+function sessionRefusee(message) {
+    if (message.startsWith(MSG_PERDUE))
+        return false; // déjà expliquée
+    return /session r[ée]voqu[ée]e|session requise|session_id claim|session_not_found|auth session missing|JWT expired|invalid JWT|PGRST30[123]|refresh token/i.test(message);
+}
+// ---------- la déclaration de l'agent (viraldar → Ton agent) ----------
+// Une ligne par session d'agent dans agent_connexions, que l'utilisateur voit et révoque. Déclarée à la connexion,
+// et à chaque reprise (démarrage du MCP avec une session gardée) : declarer_agent met alors à jour vue_le.
+const VERSION_MCP = (() => {
+    try {
+        return JSON.parse(readFileSync(sousRacine("package.json"), "utf8")).version;
+    }
+    catch {
+        return "?";
+    }
+})();
+let nomClient = () => undefined;
+let declaree = null; // le session_id déjà déclaré par ce processus
+/** index.ts donne le nom du client MCP (Claude Code, Claude Desktop…) une fois l'initialisation faite. */
+export function nommerClient(f) { nomClient = f; }
+function idSession(s) {
+    try {
+        const charge = JSON.parse(Buffer.from(s.access_token.split(".")[1], "base64url").toString("utf8"));
+        return typeof charge.session_id === "string" ? charge.session_id : null;
+    }
+    catch {
+        return null;
+    }
+}
+/** Déclare la session à viraldar si ce processus ne l'a pas encore fait. Jamais bloquant pour l'outil appelant. */
+export async function declarerAgent(forcer = false) {
+    const s = await sessionCourante();
+    if (!s)
+        return;
+    const id = idSession(s);
+    if (!id || (!forcer && declaree === id))
+        return;
+    const client_ = ["viraldar-mcp " + VERSION_MCP, nomClient()].filter(Boolean).join(" / ").slice(0, 80);
+    const { error } = await client.rpc("declarer_agent", { p_client: client_ });
+    if (error) {
+        console.error("viraldar : declarer_agent :", error.message);
+        return;
+    }
+    declaree = id;
 }
 /** Le fichier de session donne accès au compte viraldar (et aux brouillons TikTok) : on resserre ses droits à
  *  chaque démarrage, au cas où il aurait été copié ou restauré avec des droits plus larges. */
@@ -90,7 +152,22 @@ function resserrerDroits() {
 export async function creerContexte() {
     resserrerDroits();
     return {
-        supabase: async () => (await sessionCourante()) ? client : null,
+        supabase: async () => {
+            if (!(await sessionCourante()))
+                return null;
+            await declarerAgent().catch((e) => console.error("viraldar : declarer_agent :", e.message));
+            return client;
+        },
+        pasConnecte: () => perdue ? MSG_PERDUE : MSG_PAS_CONNECTE,
+        expliquer: (message) => {
+            if (!sessionRefusee(message))
+                return message;
+            perdue = message;
+            // La session ne vaut plus rien côté viraldar : on l'oublie ici aussi (sans appel réseau), pour ne pas boucler.
+            rmSync(FICHIER_SESSION, { force: true });
+            declaree = null;
+            return MSG_PERDUE + ` (${message})`;
+        },
         supabaseUrl: SUPABASE_URL,
         dossierTravail: DOSSIER_TRAVAIL,
     };
@@ -163,7 +240,9 @@ async function demarrerAttente() {
             return cors(403, '{"erreur":"origine refusée"}');
         const formulaire = (req.headers["content-type"] || "").startsWith("application/x-www-form-urlencoded");
         const repondre = (code, ok, message) => formulaire
-            ? cors(code, page(ok ? "Agent connecté" : "Connexion refusée", message), "text/html; charset=utf-8")
+            ? cors(code, page(ok ? "Agent connecté" : "Connexion refusée", 
+            // La page /agent ajoute elle-même cette phrase ; le formulaire de repli n'affiche que ce texte-ci.
+            ok ? message + " Pour couper cette connexion plus tard : viraldar → Ton agent → Révoquer." : message), "text/html; charset=utf-8")
             : cors(code, JSON.stringify(ok ? { ok, message } : { erreur: message }));
         try {
             const brut = await lireCorps(req);
@@ -180,6 +259,8 @@ async function demarrerAttente() {
             if (neuve.error)
                 console.error("viraldar : rafraîchissement après connexion :", neuve.error.message);
             const email = pose.data.session.user.email || pose.data.session.user.id;
+            perdue = null;
+            await declarerAgent(true).catch((e) => console.error("viraldar : declarer_agent :", e.message));
             repondre(200, true, `Ton agent est connecté à viraldar (${email}). Tu peux fermer cet onglet.`);
             resoudre(email);
             fermer();
@@ -241,17 +322,19 @@ export const outilsAuth = (serveur) => {
     });
     serveur.registerTool("deconnexion", {
         title: "Se déconnecter de viraldar",
-        description: "Déconnecte ce MCP : révoque sa session chez viraldar (pas celle du navigateur) et efface "
-            + "~/.config/viraldar/session.json.",
+        description: "Déconnecte ce MCP : ferme sa session chez viraldar (pas celle du navigateur ; elle apparaît alors "
+            + "inactive dans viraldar → Ton agent) et efface ~/.config/viraldar/session.json.",
         inputSchema: {},
     }, async () => {
         const s = await sessionCourante();
+        // signOut « local » : Supabase supprime cette session-ci (et ses refresh tokens), les autres restent ouvertes.
         if (s) {
             const { error } = await client.auth.signOut({ scope: "local" });
             if (error)
                 console.error("viraldar : déconnexion :", error.message);
         }
         rmSync(FICHIER_SESSION, { force: true });
+        declaree = null;
         return texte(s ? `Déconnecté (${s.user.email || s.user.id}).` : "Aucune session : rien à faire.");
     });
     serveur.registerTool("qui_suis_je", {
@@ -262,7 +345,7 @@ export const outilsAuth = (serveur) => {
         const s = await sessionCourante();
         if (!s)
             return texte(attente ? `Pas encore connecté : la page d'autorisation attend toujours (${attente.url}).`
-                : "Pas connecté : appelle l'outil `connexion`.");
+                : perdue ? MSG_PERDUE : "Pas connecté : appelle l'outil `connexion`.");
         const u = s.user, m = u.user_metadata || {};
         return texte([`Connecté : ${u.email || "(sans e-mail)"}`, `id : ${u.id}`,
             m.tiktok_username ? `TikTok : @${m.tiktok_username}` : null,
