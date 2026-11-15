@@ -1,7 +1,7 @@
 // Textes animés (entrée en ressort, sortie en fondu) sur une vidéo, une image ou un fond uni.
 import React from "react";
 import { AbsoluteFill, Img, OffthreadVideo, Audio, Sequence, interpolate, spring, useCurrentFrame, useVideoConfig } from "remotion";
-import { POLICE, images, media, zonesSures } from "./commun";
+import { POLICE, Repere, images, media, useRepere, zonesSures } from "./commun";
 
 export type TexteAnime = {
   texte: string;
@@ -29,12 +29,15 @@ export type PropsTexteSurVideo = {
   /** Durée totale en s (sinon la fin du dernier texte). */
   duree?: number;
   couleur?: string;
+  /** Format : 9:16 (défaut), 3:4, 4:5, 1:1, 4:3, 16:9, 2.35:1 — la taille de la vidéo (calculateMetadata). */
+  format?: string;
   /** Zone sûre : « description » (défaut), « sans_description », « pub ». */
   zone?: string;
 };
 
 const Texte: React.FC<{ t: TexteAnime; couleur: string; dureeImages: number; zone?: string }> = ({ t, couleur, dureeImages, zone }) => {
-  const ZONES_SURES = zonesSures(zone);
+  const { h } = useRepere();
+  const ZONES_SURES = zonesSures(zone, h);
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const entree = spring({ frame, fps, config: { damping: 14, stiffness: 160 } });
@@ -86,14 +89,16 @@ export const TexteSurVideo: React.FC<PropsTexteSurVideo> = (p) => {
       {p.video ? <OffthreadVideo src={media(p.video)} muted={muet} style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : null}
       {!p.video && p.image ? <Img src={media(p.image)} style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : null}
       {p.musique ? <Audio src={media(p.musique)} volume={p.volumeMusique ?? 1} /> : null}
-      {p.textes.map((t, i) => {
-        const d = images(t.fin - t.debut, fps);
-        return (
-          <Sequence key={i} from={Math.round(t.debut * fps)} durationInFrames={d} layout="none">
-            <Texte t={t} couleur={p.couleur ?? "#fff"} dureeImages={d} zone={p.zone} />
-          </Sequence>
-        );
-      })}
+      <Repere>
+        {p.textes.map((t, i) => {
+          const d = images(t.fin - t.debut, fps);
+          return (
+            <Sequence key={i} from={Math.round(t.debut * fps)} durationInFrames={d} layout="none">
+              <Texte t={t} couleur={p.couleur ?? "#fff"} dureeImages={d} zone={p.zone} />
+            </Sequence>
+          );
+        })}
+      </Repere>
     </AbsoluteFill>
   );
 };

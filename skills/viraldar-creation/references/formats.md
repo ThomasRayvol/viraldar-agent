@@ -3,10 +3,13 @@
 Un **format** = une mécanique reproductible (type d'accroche + structure + support), indépendante du sujet. Ce
 catalogue sert à **nommer** ce que tu trouves dans la base et à savoir le **produire** ; il ne prouve rien. Avant de
 proposer un format, cherche-le dans la base (`chercher_posts` avec le type vidéo/diaporama, `petits_comptes_viraux`,
-`formats_similaires`) et dis s'il est fiable (≥ 3 posts qui passent les critères) dans **sa** niche.
+`formats_similaires`) et dis s'il est fiable (≥ 3 posts qui passent les critères) dans **sa** niche. Les codes
+ci-dessous nomment des familles ; ce qui se produit, c'est la mécanique **mesurée sur le modèle** (`decortiquer.md`) :
+son orientation, sa cadence, ses polices, sa voix, pas les valeurs par défaut de la famille.
 
-Ressources : **V** = visage de l'utilisateur, **C** = captures / enregistrements de l'app, **P** = photos (les siennes,
-ou générées avec label IA), **T** = texte seul. Temps = ordre de grandeur pour un post, une fois le brief validé.
+Ressources : **V** = visage de l'utilisateur, **O** = voix (la sienne ou une synthèse sous licence), **C** = captures /
+enregistrements de l'app, **P** = photos (les siennes, ou générées avec label IA), **T** = texte seul. Temps = ordre de
+grandeur pour un post, une fois le brief validé.
 
 ---
 
@@ -46,8 +49,17 @@ de leurs succès en vient (anecdotes, voir sources). TikTok accepte jusqu'à 35 
   d'ambiance ; ton intime à la 1re personne.
 - **Quand** : niches citations, poésie, santé mentale, rupture ; compte sans visage. T + P.
 - **Produire** : `carrousel_rendre`, modèle `citation`, ou `natif` (l'auteur prend l'étiquette rouge) ; texte original
-  ou citation exacte et sourcée (jamais une citation d'auteur vivant recopiée en masse sans attribution). Produit : dans
-  l'histoire (slide 2-3) plutôt qu'en logo de fin (`production.md` § 2).
+  ou citation exacte et sourcée, tirée de sa base vérifiée s'il en a une (jamais une citation d'auteur vivant recopiée
+  en masse sans attribution). Produit : dans l'histoire (slide 2-3) plutôt qu'en logo de fin (`production.md` § 2).
+- **Variante « la suite de la citation »** : la phrase connue, puis sa suite que personne ne cite ; la suite doit
+  **renverser le sens** de la phrase connue, sinon pas de chute (`production.md` § 2).
+
+### D6 · Voix off sur images (vidéo sans visage)
+- **Mécanique** : une voix qui raconte ou cite, sur une suite de plans d'ambiance ou d'images, souvent à coupes
+  rapides ; texte ou sous-titres à l'écran ; parfois en paysage.
+- **Quand** : sans visage, avec une voix (la sienne ou une synthèse sous licence). O + P (+ T).
+- **Produire** : la voix d'abord, horodatée (`production.md` § 3) ; les plans à la cadence du modèle (durée par plan,
+  coupe franche), au `format` du modèle ; sous-titres tirés de l'horodatage (`montage_texte`).
 
 ### D5 · Capture d'écran (« screenshot »)
 - **Mécanique** : fausse conversation, note du téléphone, liste dans l'app, écran de l'app avec une annotation.
@@ -101,14 +113,18 @@ de leurs succès en vient (anecdotes, voir sources). TikTok accepte jusqu'à 35 
 ## Choisir
 
 1. Ce qui est **fiable dans sa niche** (base) passe avant tout le reste.
-2. Puis ce que ses **ressources** permettent (pas de V → D1-D5, V1).
+2. Puis ce que ses **ressources** permettent **tel quel** (qui filme, voix) : pas de V → D1-D5, V1, mèmes et voix off
+   sans visage. Un modèle infaisable se remplace par un autre, il ne s'adapte pas (« on est là pour copier des formats
+   qui fonctionnent »).
 3. Puis ce qui montre le produit **en usage** le plus tôt possible sans ressembler à une pub.
 4. Un format principal + un format en test ; on ne change de format principal qu'après ≥ 3 posts mesurés.
 
 ## Spécifications de sortie
 
-- Vidéo : vertical 1080 × 1920 (9:16), ≥ 720p, MP4 H.264. Diaporama : 9:16, 3:4 (1080 × 1440) ou 4:5 (1080 × 1350),
-  d'après le modèle de la base et la légende prévue (`production.md` § 3).
+- **L'orientation du modèle** (option `format` des outils) : 9:16 (1080 × 1920), 3:4 (1080 × 1440), 4:5 (1080 × 1350),
+  1:1, 16:9, 4:3, 2,35:1 ; ≥ 720p, MP4 H.264. Quand le modèle laisse le choix : d'après la légende prévue
+  (`production.md` § 4).
+- La cadence du modèle (nombre de plans, durée d'un plan, coupe franche) et sa voix (`production.md` § 3 et § 5).
 - Zones sûres par cas (`description`, `sans_description`, `pub`) et lisibilité : liste de contrôle du SKILL.md.
 - Pas de musique dans le fichier : le son s'ajoute dans l'app (compte Entreprise : bibliothèque commerciale seulement).
 - Image générée ou fortement retouchée qui paraît réelle : label IA dans TikTok (« Image virtuelle » en France pour un

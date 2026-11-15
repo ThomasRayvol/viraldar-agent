@@ -7,16 +7,23 @@ comme des lois. Charge cette référence aux étapes 4 (écrire), 5 (produire) e
 
 ---
 
-## 1. Le texte d'abord, validé mot pour mot
+## 1. Le modèle d'abord, puis le texte validé mot pour mot
 
+- **Décortiquer chaque modèle avant d'écrire** (`decortiquer.md`) : le texte s'écrit **dans** la mécanique mesurée
+  (nombre de plans, durée d'un plan, mots par écran, forme du hook, voix), pas avant elle. Écrit à l'aveugle, il ne
+  rentre pas dans le format : douze textes ont dû être refaits quand les modèles se sont révélés en voix off, en
+  paysage, en mème ou à 0,5 s par plan.
 - **Le texte se relit en texte**, avant toute image : propose slide par slide (ou plan par plan) dans la conversation,
   l'utilisateur corrige, puis tu recopies **mot pour mot** dans le JSON (retours à la ligne compris). Ne réécris pas en
   rendant : une correction de texte repasse par lui.
 - **L'hypothèse s'écrit avant** de publier, dans le brief : ce qu'on attend, avec un seuil, et ce qu'on conclura dans
   chaque sens (« ≥ 2 × sa médiane : on garde ce type d'accroche ; < 1 × : on l'abandonne »). Classé après coup, un post
   devient une histoire qu'on se raconte.
-- **Rien d'éditorial ne se décide au rendu.** Le choix du format, de la zone sûre, des images et du nombre de slides est
-  dans le brief ; le JSON de `carrousel_rendre` n'en est que la traduction.
+- **Rien d'éditorial ne se décide au rendu.** Le choix du format, de l'orientation, de la zone sûre, des images, du
+  nombre de slides ou de plans et de la voix est dans le brief ; le JSON des outils n'en est que la traduction.
+- **Les phrases viennent de sa base de contenus vérifiés** quand il en a une (citations sourcées de son app, fiches,
+  FAQ) : c'est elle qui garantit qu'une citation est exacte. Une phrase hors base (même juste) est signalée comme
+  telle et validée par lui avant de produire.
 
 ## 2. Écrire un carrousel qui donne envie de glisser
 
@@ -57,10 +64,49 @@ sens quand… ») s'écrit en bas de casse, sans point final. Une citation reste
 la seule chose qu'on ne rend jamais « plus drôle » ; une phrase fausse ou déformée n'apparaît que comme l'objet qu'on
 corrige, à côté de la version juste.
 
+**« La suite de la citation »** (une phrase connue, puis « la suite que personne ne cite ») : la suite doit
+**renverser le sens** de la phrase connue, c'est elle qui fait la chute. Une suite qui ne fait que prolonger la phrase
+n'a pas de chute : « La raison du plus fort est toujours la meilleure » suivi de « Nous l'allons montrer tout à
+l'heure » a été refusé pour cette raison, et remplacé par une citation dont la suite retournait le sens. Vérifie la
+suite exacte dans sa base vérifiée ou une édition sourcée.
+
 **Avant de valider, trois questions.** Si je ne lis que la slide 1, ai-je envie de la suite ? Une slide pourrait-elle
 être retirée ? La dernière répond-elle à la première ?
 
-## 3. Choisir le format et la zone sûre
+## 3. Voix off
+
+Le modèle a une voix (6 sur 9 dans un lot analysé) : le nôtre aussi, du même type (voix off ou parlée, grave,
+chuchotée, synthèse « TikTok »), au même débit. Des sous-titres seuls ne la remplacent pas.
+
+| voix | quand | ce qu'il faut savoir |
+|---|---|---|
+| **la sienne** (enregistrée au téléphone, au calme) | toujours la meilleure option si elle colle au type du modèle | aucune licence à vérifier ; un plan à la fois, il peut refaire une phrase |
+| **synthèse dans l'app TikTok** (« Synthèse vocale » de l'éditeur) | le modèle a cette voix-là | gratuite, mais posée dans l'app au moment de publier : elle ne se cale pas dans le fichier ; prévois les silences et la durée des plans pour elle |
+| **ElevenLabs** (ou un service équivalent qu'il choisit) | voix réaliste calée au plan près | son compte, sa clé, jamais la tienne. Le **palier gratuit** n'accepte par l'API que les voix par défaut : une voix de la bibliothèque répond **402** ; il n'inclut **pas de licence commerciale** (pour une marque ou une app : un palier payant). Ne lui propose pas de contourner |
+| **modèle local** (Piper ou autre) | il en a un | vérifie la licence **de la voix** (certaines sont non commerciales) |
+
+- **Jamais la voix du modèle**, ni d'une personne réelle clonée sans son accord. Une voix de synthèse réaliste porte le
+  label IA dans TikTok.
+- **Horodatage** : il faut l'instant de chaque mot pour caler plans et sous-titres. ElevenLabs le rend
+  (`/v1/text-to-speech/<voice_id>/with-timestamps` : temps de début et de fin par caractère) ; sinon, une
+  transcription Whisper du fichier de voix, mot par mot (une à la fois).
+- **Balises** : les modèles récents d'ElevenLabs lisent des balises d'intonation entre crochets (`[whispers]`,
+  `[sighs]`…) ; les plus anciens, des pauses (`<break time="1.0s" />`). Vérifie celles du modèle de voix choisi dans
+  sa documentation : une balise qu'il ne connaît pas se lit à voix haute.
+- **Placer une réplique à un instant donné** : génère-la à part (une réplique par fichier) et place-la sur la piste,
+  plutôt qu'un seul fichier qu'on découpe ; ou une seule prise avec des pauses, recalée sur l'horodatage.
+- **Dans le fichier** : la voix est à nous, elle va dans le montage (`montage_assembler`) ; la musique, elle, s'ajoute
+  toujours dans l'app (volume bas sous la voix). Vérifie que le montage dure au moins la voix : des fondus peuvent le
+  raccourcir et couper la fin.
+- **Sous-titres** : tirés de l'horodatage (`montage_texte`, segments), jamais au même endroit qu'un texte posé.
+
+## 4. Choisir le format, l'orientation et la zone sûre
+
+**L'orientation fait partie du format** : le ratio du modèle d'abord (6 modèles sur 12 d'un lot n'étaient pas en
+9:16 : 16:9, 4:3, 2,35:1, presque carrés). Les outils le prennent en option `format` (9:16, 3:4, 4:5, 1:1, 16:9, 4:3,
+2,35:1). Une vidéo paysage s'affiche entre des bandes noires sur TikTok : c'est l'allure du modèle, on la garde, et le
+texte se pose là où le modèle le pose (dans l'image ou dans les bandes). Le tableau ci-dessous vaut quand le modèle
+laisse le choix (diaporama, ou vidéo verticale).
 
 TikTok met une image à la largeur de l'écran et la **centre** en hauteur. Avec une description (légende), il la centre
 entre la barre d'état et le haut du panneau de description : une image 9:16 perd alors le haut et le bas (visible de
@@ -82,8 +128,13 @@ leur source).
 - Les légendes relevées : 5 hashtags en médiane sur 3 comptes d'une niche (n = 160 posts) ; les comptes de carrousels
   de citations écrivent 140 à 260 caractères (n = 53). Aucun lien mesuré entre longueur de légende et vues.
 
-## 4. Rendre
+## 5. Rendre
 
+- **La cadence du modèle** : son nombre de plans et la durée d'un plan, en **coupe franche** quand il coupe franc
+  (`montage_assembler` / `montage_diaporama` : `duree` ou `images` par plan, `dureePlan` / `imagesParPlan`, coupe
+  franche par défaut ; jamais de fondu que le modèle n'a pas) ; un modèle qui coupe toutes les 0,48 à 0,54 s se monte à cette cadence. Pour un texte à l'écran, la règle de
+  lecture ci-dessous cède devant celle du modèle : s'il change de texte toutes les 0,5 s, c'est son format.
+- **Polices et couleurs par rôle**, comme le modèle : hook, corps, nom d'auteur ont souvent chacun la leur.
 - **`natif`** pour l'allure d'un post et pas d'une pub : photo plein cadre nette, texte de l'éditeur de TikTok (pavés
   blancs par ligne, ou blanc à liseré noir). Les réglages viennent de l'éditeur : TikTok Sans graisse 560, 54 à 60 px
   sur 1080, pavés aux coins arrondis, étiquette rouge pour un nom.
@@ -94,10 +145,21 @@ leur source).
   prévient sous 36 px (≈ 13 pt sur un téléphone).
 - **Vidéo** : un texte posé reste au moins **0,25 s par mot, et 2,5 s** (`montage_texte` prévient) ; pas de texte en bas
   en même temps que des sous-titres en bas.
-- **Pas de musique dans le fichier** : le son se pose dans l'app (un post envoyé par API a son audio figé).
+- **Pas de musique dans le fichier** : le son se pose dans l'app (un post envoyé par API a son audio figé). La voix
+  off, elle, est dans le fichier (§ 3).
+- **Un rendu lourd à la fois** (Remotion, encodage long, transcription) : plusieurs en parallèle saturent la machine.
 
-## 5. Contrôler avant de montrer
+## 6. Comparer au modèle
 
+`montage_comparaison` à **chaque** rendu, livré avec lui : `<slug>-comparaison.jpg` (planche modèle | nous, image par
+image) et, pour une vidéo, `<slug>-comparaison.mp4` côte à côte (son du modèle ou le nôtre). C'est ce qui a le plus
+servi à l'utilisateur pour juger : il voit d'un coup un hook différent, une cadence plus lente, une police qui n'est
+pas la bonne. Regarde-la toi-même d'abord, avec la liste « Fidélité au modèle » du SKILL.md, et corrige ce qui
+s'écarte avant de la lui montrer. Elle contient le modèle : elle reste sur sa machine, jamais envoyée ni publiée.
+
+## 7. Contrôler avant de montrer
+
+- [ ] La comparaison rendue et regardée (§ 6) : même format, autre contenu.
 - [ ] `carrousel_rendre` : aucun avertissement « zone sûre », « réduit » ni « coupé ». `zone_verifiee: true` veut dire
       que chaque ligne de texte rendue est dans la zone du cas choisi.
 - [ ] **Regarde la planche** : `carrousel_apercu` (carrousel) ou `<vidéo>-controle.jpg` rendue par `montage_texte`
@@ -111,7 +173,7 @@ leur source).
 - [ ] Métadonnées : les outils n'en écrivent aucune (images neuves, `-map_metadata -1`) ; une photo de l'utilisateur
       envoyée telle quelle, hors outils, garde les siennes (GPS compris).
 
-## 6. Varier et apprendre
+## 8. Varier et apprendre
 
 - **Une seule chose change à la fois** entre deux posts qu'on compare (l'accroche d'abord). Trois changements ensemble
   (durée, intro, rythme) et le résultat ne dit plus lequel a compté.

@@ -33,6 +33,11 @@ dependencies itself (from `package-lock.json`, no install scripts). Optional set
 `claude plugin configure viraldar@viraldar` (working folder, tool families, extra readable folders).
 It also installs from the git URL: `claude plugin marketplace add https://github.com/ThomasRayvol/viraldar-agent.git`.
 
+**Updating**: `claude plugin marketplace update viraldar`, then `claude plugin update viraldar@viraldar`, then **quit
+and restart Claude Code** (every window). `/mcp` is not enough: it restarts the server of the old, still cached
+version, and the new tools do not show up. Same after changing a setting (`claude plugin configure`). viraldar →
+Agentique lists every connected agent with its version.
+
 ### Claude Desktop (extension)
 
 Download `viraldar.mcpb` (the repository's Releases page), open it (double-click) and click "Install". Claude Desktop ships Node: nothing else to
@@ -62,7 +67,9 @@ or email and password) and authorize the agent. **Your password never goes throu
 own session, separate from your browser's, stored in `~/.config/viraldar/session.json` (readable by you only).
 `deconnexion` revokes it. Every connected agent is listed on viraldar.rayvol.net under
 the **Agentique** tab, where you can revoke it: the agent can no longer renew its session and asks you to
-reconnect it (within 30 minutes at most).
+reconnect it (within 30 minutes at most). Signing out of the website does not disconnect the agent. The session
+renews itself, even after a long break; if the network is down at that moment, the agent says to try again, without
+asking you to reconnect.
 
 ## Settings
 

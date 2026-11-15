@@ -78,7 +78,8 @@ const zCarrousel = {
   modele: z.enum(NOMS_MODELES),
   variante: z.string().optional().describe("notes : « app » (par défaut) ou « papier » ; natif : « bandeau » (par défaut), « contour » ou « bandeau_noir »"),
   format: z.enum(NOMS_FORMATS).default("9:16").describe(
-    "9:16 plein écran ; 3:4 presque entier sous une description ; 4:5 toujours entier"),
+    "9:16 plein écran ; 3:4 presque entier sous une description ; 4:5 toujours entier ; 1:1, 4:3, 16:9, 2.35:1 (paysage, " +
+    "1080 de large : à la largeur de l'écran avec des bandes) quand le modèle l'est — garder l'orientation du modèle"),
   zone: zCas.optional(),
   sortie: z.enum(["png", "jpeg"]).default("png").describe("jpeg pour l'API TikTok"),
   langue: z.string().default("fr"),
@@ -472,7 +473,7 @@ export const outilsCarrousel: Module = (serveur, ctx) => {
     description:
       "Liste les modèles de carrousel TikTok (citation, liste, notes, contraste, ecran, revelation, natif) : à quoi chacun sert, " +
       "les champs qu'il lit, son thème par défaut et un exemple de JSON complet à passer à carrousel_rendre ; " +
-      "et les formats (9:16, 3:4, 4:5) et les zones sûres par cas (avec ou sans description, pub), avec leur source. " +
+      "et les formats (9:16, 3:4, 4:5, 1:1, 4:3, 16:9, 2.35:1) et les zones sûres par cas (avec ou sans description, pub), avec leur source. " +
       "À appeler avant d'écrire un carrousel. Avec `modele`, ne donne que celui-là.",
     inputSchema: { modele: z.enum(NOMS_MODELES).optional() },
     annotations: { readOnlyHint: true },

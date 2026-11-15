@@ -28,8 +28,12 @@ Chaque accroche du brief porte son **type** (code ci-dessous) pour mesurer par t
 
 - **Une personne précise** plutôt que « tout le monde ». Les mots du client (fiche, commentaires 📲) plutôt que ceux de
   la marque. Pas le nom du produit dans l'accroche, sauf A12.
-- **Variantes** : pour une même idée, écris 5 accroches de **types différents** ; on en teste 2-3 (variantes nettement
-  différentes, pas des synonymes).
+- **D'un modèle, on reprend la forme exacte de son hook** (transcrit mot pour mot dans la fiche de mécanique) : même
+  syntaxe, même longueur, même ponctuation, même casse ; une formule générique se garde telle quelle (« Tu connais
+  Schopenhauer ? » → « Tu connais <auteur> ? », jamais « Ce philosophe que personne ne lit »). Relevé : un hook
+  réécrit « pour mieux faire » a été refusé, ce n'était plus le format.
+- **Variantes** : une fois la forme du modèle tenue, d'autres types d'accroche se testent **un à la fois**, sur des
+  posts à part (variantes nettement différentes, pas des synonymes).
 - **Après un succès** : garde le type et la longueur exacts, change le contenu (« Grand-père avait raison… » →
   « Ma mère avait raison… » est une variante, pas une copie, si tout le reste est à lui).
 - **Ne promets que ce que le post donne**, et rien de médical (« guérir », « remplace ta thérapie ») ni de résultat

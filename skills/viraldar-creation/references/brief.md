@@ -11,6 +11,14 @@ vide : « ? » ou « sans objet ».
 - Format : <code et nom, ex. D1 tension → révélation> — fiable ? <oui (n posts qui passent / n relevés, n comptes) | à tester>
 - Posts modèles : <id @compte : vues, outlier (médiane du compte, n), vues ÷ abonnés, 📲> (2-3)
 - Hypothèse testée : <ce qu'on apprend avec ce post, ex. « l'accroche A4 bat A3 sur ce format »>
+- Faisable tel quel avec ses ressources (qui filme : <…>) : <oui — sinon, autre modèle>
+
+## Mécanique du modèle (recopiée de modeles/<id>/mecanique.md, à reprendre exactement)
+- Orientation / ratio : <9:16 | 3:4 | 4:5 | 1:1 | 16:9 | 4:3 | 2,35:1> · bandes noires : <oui/non>
+- Hook du modèle, mot pour mot : « <…> » → forme reprise : « <…> »
+- Plans : <n> plans · <durée> s par plan · transitions : <coupe franche | fondu>
+- Fonds : <n, nature> · polices par rôle : <hook : …, corps : …> · couleurs : <…> · stickers : <…>
+- Voix : <aucune | voix off | parlée> · type : <…> · débit : <mots/s>
 
 ## Pour qui
 - Cible : <une personne précise, sa situation, son moment>
@@ -19,9 +27,9 @@ vide : « ? » ou « sans objet ».
 
 ## Accroche (0-3 s / slide 1)
 - Image : <ce qu'on voit à 0 s>
-- Texte à l'écran : « <3-10 mots> » — type <A1…A12>
+- Texte à l'écran : « <la forme du hook du modèle> » — type <A1…A12>
 - Voix : « <phrase> » | sans
-- Variantes à tester : <2-3 autres accroches, types différents>
+- Variantes : <2-3 accroches de même forme ; un autre type d'accroche se teste plus tard, seul changement du post>
 
 ## Structure
 | # | temps ou slide | rôle | à l'écran (image / plan) | texte à l'écran | voix |
@@ -40,10 +48,13 @@ vide : « ? » ou « sans objet ».
 - <un seul : enregistre / commente / suis / lien en bio / implicite (nom lisible sur la capture)>
 
 ## Production
-- Support : <diaporama n slides | vidéo n s> · 1080 × 1920
+- Support : <diaporama n slides | vidéo n s> · `format` : <celui du modèle> · zone : <description | sans_description | pub>
 - Outil : <carrousel_rendre modèle X | montage_* (ffmpeg | Remotion si l'utilisateur l'a)>
-- Ressources à fournir par l'utilisateur : <photos, captures, plans à filmer (liste), voix>
+- Ressources à fournir par l'utilisateur : <photos, captures, plans à filmer (liste), polices>
+- Voix off : <sans | la sienne | synthèse : service, voix, licence commerciale oui/non> · horodatage : <source>
+- Texte : <tiré de sa base vérifiée (référence) | hors base, validé le …>
 - Son (ajouté dans l'app) : <type de son ; compte Entreprise → bibliothèque commerciale>
+- Comparaison : `production/<id>/<slug>-comparaison.jpg` (+ `.mp4`)
 
 ## Légende et publication
 - Légende : <1-2 phrases + 3-5 hashtags de la niche (ceux des posts modèles qui décrivent le thème, pas #fyp)>
@@ -52,6 +63,11 @@ vide : « ? » ou « sans objet ».
 
 ## Ce qui ne vient PAS du modèle
 - <confirmer : texte, images, voix, histoire, musique sont à l'utilisateur ; ce qui reste commun = la mécanique : …>
+- <la vidéo du modèle, si elle a été récupérée (avec son accord), ne sert qu'à l'analyse et à la comparaison>
+
+## Rendu (rempli après production)
+- Comparaison regardée : <écarts de mécanique restants : aucun | lesquels, et pourquoi>
+- Validé par l'utilisateur le : <…>
 
 ## Résultat (rempli à 48 h et 7 j)
 - 48 h : vues · likes · commentaires · partages · enregistrements · abonnés · demandes de l'app · conversions

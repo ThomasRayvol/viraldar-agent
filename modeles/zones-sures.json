@@ -4,21 +4,38 @@
     "Repère : l'écran du téléphone ramené à 1080 × 1920 (9:16). Toutes les zones sont en fractions de cet écran (x de gauche à droite, y de haut en bas).",
     "Mécanisme mesuré (relevé du 15/10/2026, à 1 px près) : TikTok met une image à la largeur de l'écran et la CENTRE verticalement. Une image 3:4 ou 4:5 s'affiche donc avec une marge en haut et en bas ; une zone de l'écran se reporte sur l'image par cette mise à l'échelle et ce centrage (zones.ts, zonePour).",
     "Avec une description (légende), TikTok centre l'image entre la barre d'état et le haut du panneau de description : une image plus haute que cette fenêtre perd autant en haut qu'en bas, et ne s'affiche entière que si l'on ouvre la description. D'où une zone plus étroite en hauteur.",
+    "Formats (12/11/2026) : largeur × hauteur = l'image d'un carrousel (toujours 1080 de large, la largeur de l'écran) ; « video » = la taille d'une vidéo de ce format (montage, Remotion), 1080 px sur le petit côté pour un format paysage. Un format paysage (16:9, 4:3, 2.35:1) s'affiche à la largeur de l'écran, centré, avec des bandes en haut et en bas : il tient alors entier dans la hauteur de la zone sûre, seuls les bords gauche et droit comptent.",
     "Chaque cas porte sa source et sa date. On ne change une valeur qu'avec un nouveau relevé (capture d'un vrai téléphone), en gardant le pire des relevés."
   ],
   "repere": { "largeur": 1080, "hauteur": 1920 },
   "formats": {
     "9:16": {
-      "largeur": 1080, "hauteur": 1920,
+      "largeur": 1080, "hauteur": 1920, "video": { "largeur": 1080, "hauteur": 1920 },
       "usage": "Plein écran : vidéo, et carrousel quand l'image doit remplir l'écran. Avec une description, le haut et le bas de l'image sont rognés (relevé : visible de 13,7 % à 86,3 % de sa hauteur avec une description longue)."
     },
     "3:4": {
-      "largeur": 1080, "hauteur": 1440,
+      "largeur": 1080, "hauteur": 1440, "video": { "largeur": 1080, "hauteur": 1440 },
       "usage": "Carrousel qui reste presque entier même sous une description longue (relevé : visible de 1,6 % à 98,4 % de sa hauteur). Le ratio de la plupart des comptes de carrousels à texte relevés (rapport hauteur/largeur médian 1,25 à 1,41, n = 46 premières vues de 3 comptes)."
     },
     "4:5": {
-      "largeur": 1080, "hauteur": 1350,
+      "largeur": 1080, "hauteur": 1350, "video": { "largeur": 1080, "hauteur": 1350 },
       "usage": "Carrousel entièrement visible même sous une description longue ; bandes en haut et en bas dans le fil."
+    },
+    "1:1": {
+      "largeur": 1080, "hauteur": 1080, "video": { "largeur": 1080, "hauteur": 1080 },
+      "usage": "Carré : entier dans le fil, bandes en haut et en bas. Celui des modèles « presque carrés » (12/11/2026, retours de session)."
+    },
+    "4:3": {
+      "largeur": 1080, "hauteur": 810, "video": { "largeur": 1440, "hauteur": 1080 },
+      "usage": "Paysage 4:3 (vieille télé, archives, captures) : à la largeur de l'écran, centré, bandes en haut et en bas."
+    },
+    "16:9": {
+      "largeur": 1080, "hauteur": 608, "video": { "largeur": 1920, "hauteur": 1080 },
+      "usage": "Paysage 16:9 (extrait de film, conférence, plan large) : à la largeur de l'écran, centré, bandes en haut et en bas. À garder quand le modèle l'est : le remettre en 9:16 change le format."
+    },
+    "2.35:1": {
+      "largeur": 1080, "hauteur": 460, "video": { "largeur": 1920, "hauteur": 818 },
+      "usage": "Cinémascope (2,35:1, extraits de films) : une bande d'image au milieu de l'écran, larges bandes noires."
     }
   },
   "defaut": "description",

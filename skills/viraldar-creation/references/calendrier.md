@@ -37,7 +37,9 @@ contourner ses règles** ; des campagnes de faux UGC non déclarées ont vu leur
   la marque dans sa bio.
 - Chaque compte qui promeut le produit l'indique (« Contenu promotionnel » ; bio qui dit le lien avec la marque).
 - Pas de commentaires, likes ou partages croisés entre ses comptes pour gonfler l'engagement ; pas de faux clients.
-- Les formats ne se dupliquent pas tels quels d'un compte à l'autre le même jour : décliner (autre accroche, autres images).
+- **Pas de doublon le même jour sur deux comptes** : ni le même modèle, ni la même phrase ou citation, ni le même
+  auteur cité. Et pas le même auteur en boucle (4 fois en 2 jours a été relevé comme une répétition). Vérifié dès la
+  lecture du planning, avant de produire, pas au rendu : le contrôle à la création du plan ne suffit pas toujours.
 - Un compte neuf : quelques jours d'usage normal avant de publier sont souvent conseillés par les praticiens (non vérifié).
 - Les brouillons passent par la session TikTok **de chaque compte** ; la limite de 5 en attente vaut par compte.
 

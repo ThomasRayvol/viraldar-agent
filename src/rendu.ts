@@ -10,6 +10,8 @@ export const sig = (x: number) => Number(x).toLocaleString("fr-FR", { maximumSig
 export const nb = (n: number | null | undefined) => n == null ? "?" : n < 10_000 ? Number(n).toLocaleString("fr-FR")
   : n < 1e6 ? sig(n / 1e3) + " k" : sig(n / 1e6) + " M";
 export const pct = (x: number) => (x * 100).toFixed(1).replace(".", ",") + " %";
+/** En tête de la description des outils qui portent sur un produit (multi-produits, 15/11/2026). */
+export const PRODUIT_ACTIF = "Porte sur le produit actif (voir `mes_produits`). ";
 export const texte = (t: string) => ({ content: [{ type: "text" as const, text: t }] });
 export const erreur = (t: string) => ({ content: [{ type: "text" as const, text: t }], isError: true });
 

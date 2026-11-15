@@ -6,6 +6,8 @@ export const sig = (x) => Number(x).toLocaleString("fr-FR", { maximumSignificant
 export const nb = (n) => n == null ? "?" : n < 10_000 ? Number(n).toLocaleString("fr-FR")
     : n < 1e6 ? sig(n / 1e3) + " k" : sig(n / 1e6) + " M";
 export const pct = (x) => (x * 100).toFixed(1).replace(".", ",") + " %";
+/** En tête de la description des outils qui portent sur un produit (multi-produits, 15/11/2026). */
+export const PRODUIT_ACTIF = "Porte sur le produit actif (voir `mes_produits`). ";
 export const texte = (t) => ({ content: [{ type: "text", text: t }] });
 export const erreur = (t) => ({ content: [{ type: "text", text: t }], isError: true });
 // L'injection de prompt (revue du 11/11/2026) : les textes des posts, leurs sons et les commentaires sont écrits

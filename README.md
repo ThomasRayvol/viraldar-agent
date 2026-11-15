@@ -33,6 +33,12 @@ les dépendances (d'après `package-lock.json`, sans script). Réglages facultat
 `claude plugin configure viraldar@viraldar` (dossier de travail, familles d'outils, lecture de fichiers en plus).
 On peut aussi l'installer par l'URL git : `claude plugin marketplace add https://github.com/ThomasRayvol/viraldar-agent.git`.
 
+**Mettre à jour** : `claude plugin marketplace update viraldar` puis `claude plugin update viraldar@viraldar`, puis
+**quitte et relance Claude Code** (toutes ses fenêtres). `/mcp` ne suffit pas : il relance le serveur de l'ancienne
+version, encore en cache, et les nouveaux outils n'apparaissent pas. Même chose après un changement de réglage
+(`claude plugin configure`). `qui_suis_je` ne dit pas la version ; viraldar → Agentique, si : chaque agent connecté y
+apparaît avec la sienne.
+
 ### Claude Desktop (extension)
 
 Télécharge `viraldar.mcpb` (page Releases du dépôt), ouvre-le (double-clic) et clique sur « Installer ». Claude Desktop fournit Node : rien
@@ -62,7 +68,9 @@ ta machine (127.0.0.1). Tu te connectes (Google, ou e-mail et mot de passe) et a
 L'agent reçoit une session à lui, distincte de celle de ton navigateur, gardée dans `~/.config/viraldar/session.json`
 (lisible par toi seul). `deconnexion` la révoque. Chaque agent connecté apparaît sur viraldar.rayvol.net, dans
 l'onglet **Agentique**, d'où tu peux le révoquer : l'agent ne peut plus renouveler sa session et te demande de
-le reconnecter (au plus tard 30 minutes après).
+le reconnecter (au plus tard 30 minutes après). Te déconnecter du site ne coupe pas l'agent. La session se renouvelle
+seule, même après une longue pause ; si le réseau manque à ce moment-là, l'agent dit de réessayer, sans te
+redemander de connexion.
 
 ## Réglages
 
@@ -165,15 +173,17 @@ passent par libass (filtre `ass`), présent dans les versions courantes.
 | outil | ce qu'il fait |
 |---|---|
 | `montage_infos` | durée, taille, ratio, i/s, codecs, son ; écarts au format TikTok. Sans fichier : état de ffmpeg |
-| `montage_format_tiktok` | 1080×1920 9:16, H.264 High + AAC 48 kHz, 30 i/s, MP4 faststart ; `recadrer`, `flou` (fond flouté), `bandes`, `auto` ; découpe possible |
+| `montage_format_tiktok` | au `format` voulu (9:16 1080×1920 par défaut ; 3:4, 4:5, 1:1, 4:3 1440×1080, 16:9 1920×1080, 2.35:1 1920×818), H.264 High yuv420p (plage tv) + AAC 48 kHz, 30 i/s, MP4 faststart ; `recadrer`, `flou` (fond flouté), `bandes`, `auto` ; découpe possible |
 | `montage_decouper` | un passage, taille inchangée (ré-encodé, précis) |
-| `montage_assembler` | plans vidéo ou image bout à bout, mis au 9:16 ; fondus `xfade` (fade, slideleft…) ; musique mixée |
-| `montage_diaporama` | images (PNG d'un carrousel) → vidéo, durée par image, fondus, piste audio |
-| `montage_texte` | accroches (haut, centre, bas ou `y`) et sous-titres (SRT ou segments), contour ou boîte façon TikTok, dans la zone sûre du cas `zone` ; prévient si un texte reste moins de 0,25 s par mot (2,5 s au moins) ou s'il tombe sur les sous-titres ; rend `<sortie>-controle.jpg` (une image par texte, zones tracées) si un Chromium est là (`controle: false` pour s'en passer) |
-| `montage_couverture` | une image (jpg/png) à l'instant donné |
-| `remotion_detecter` | trouve le projet Remotion de l'utilisateur, sinon dit à l'agent de **lui demander** |
+| `montage_assembler` | plans vidéo ou image bout à bout, au même `format` ; durée exacte par plan (`duree` en s ou `images`), cadence commune (`dureePlan`, `imagesParPlan`), coupes à l'image près ; coupe franche par défaut, fondus `xfade` en option ; `mouvement` (Ken Burns : zoom_avant, zoom_arriere, gauche, droite, haut, bas) ; musique ou voix, `dureeSurMusique` allonge le dernier plan jusqu'à la fin de la piste (sinon avertissement) |
+| `montage_diaporama` | images (PNG d'un carrousel) → vidéo au `format` voulu, durée par image (s ou images), coupe franche ou fondus, `mouvement`, piste audio |
+| `montage_texte` | accroches (haut, centre, bas ou `y`) et sous-titres (SRT ou segments), contour ou boîte façon TikTok, dans la zone sûre du cas `zone` ; prévient si un texte reste moins de 0,25 s par mot (2,5 s au moins) ou s'il tombe sur les sous-titres ; rend `<sortie>-controle.jpg` (une image par texte, zones tracées) si un Chromium est là (`controle: false` pour s'en passer) ; tout format de vidéo (repère de 1080 de large) ; lignes vides gardées ; polices du plugin fournies d'office (TikTok Sans, Archivo, Lora, Caveat), `dossierPolices` lu comme un média |
+| `montage_couverture` | une image (jpg/png) à l'instant donné, en option mise à un format (`orientation`) |
+| `modele_decortiquer` | (`src/creation/analyse.ts`) une vidéo modèle (fichier lisible, ou URL TikTok si yt-dlp est installé, téléchargée pour l'analyse locale seulement) : durée, format, son, coupes (filtre `scene`), plans et durée d'un plan, planche de N images (renvoyée), transcription horodatée si un Whisper est déjà installé (whisper, whisper-ctranslate2 / faster-whisper, whisper.cpp ; `VIRALDAR_WHISPER`, `VIRALDAR_WHISPER_MODELE`), une à la fois |
+| `montage_comparaison` | modèle à côté de nous : planche N + N et vidéo côte à côte, son au choix (modele, nous, aucun), cadence des deux |
+| `remotion_detecter` | trouve le projet Remotion de l'utilisateur, sinon dit à l'agent de **lui demander** ; dit si le navigateur de Remotion (Chrome Headless Shell, ≈ 100 Mo) est déjà là |
 | `remotion_modeles` | décrit nos compositions types, les copie dans `<projet>/src/viraldar/` |
-| `remotion_rendre` | `remotion render` dans son projet, props JSON ; les fichiers locaux cités sont copiés dans `public/viraldar-medias/` |
+| `remotion_rendre` | `remotion render` dans son projet, props JSON, `format` passé en prop ; les fichiers locaux cités sont copiés dans `public/viraldar-medias/` ; rien n'est lancé tant que le navigateur manque, sauf `telechargerNavigateur: true` |
 
 **Zones sûres** : celles de `modeles/zones-sures.json` (voir plus bas), cas `description` par défaut ; centrage sur
 l'axe de la zone. Les compositions Remotion les lisent aussi : `remotion_modeles` écrit
@@ -182,11 +192,11 @@ l'axe de la zone. Les compositions Remotion les lisent aussi : `remotion_modeles
 **Remotion** : ni fourni ni installé ici (licence payante au-delà de 3 personnes : c'est à l'utilisateur).
 `VIRALDAR_REMOTION` peut donner le chemin de son projet. Les compositions types (`modeles/montage/remotion/`) :
 `ViraldarTexteSurVideo` (textes animés sur vidéo, image ou fond), `ViraldarListeDefile` (titre et liste qui
-défile), `ViraldarCitation` (citation mot à mot, puis l'auteur) ; 1080×1920, 30 i/s, durée tirée des props
+défile), `ViraldarCitation` (citation mot à mot, puis l'auteur) ; taille tirée de la prop `format` (9:16 1080×1920 par défaut), dessin dans un repère de 1080 de large, 30 i/s, durée tirée des props
 (`props-exemples.json`). Vérifiées avec Remotion 4.0.542. Le CLI est lancé par `node` (pas de `npx`, pas de shell).
 
-Limites : les emoji ne sont pas rendus par libass (ils le sont par Remotion) ; pas de transcription automatique
-(les sous-titres viennent d'un SRT ou de segments fournis par l'agent).
+Limites : les emoji ne sont pas rendus par libass (ils le sont par Remotion) ; libass ne rend que la graisse par défaut des polices variables fournies (TikTok Sans Light, Archivo SemiBold, Lora, Caveat) ; la transcription demande un Whisper
+déjà installé (sinon les sous-titres viennent d'un SRT ou de segments fournis par l'agent).
 
 ## Zones sûres et formats
 
@@ -251,8 +261,8 @@ Champs d'une diapositive : `etiquette`, `titre`, `texte`, `liste` (`[ ]` / `[x]`
 `noir_et_blanc`, `sepia`, `doux`) : un traitement commun à toutes les photos, pour qu'elles fassent série.
 Apostrophes courbes et espaces fines insécables du français posées d'office.
 
-- **Formats** : `9:16` (1080×1920, plein écran, par défaut), `3:4` (1080×1440, presque entier sous une légende) et
-  `4:5` (1080×1350, toujours entier). TikTok prend 1 à 35 images par post photo (limite de l'API Content Posting), d'où
+- **Formats** : `9:16` (1080×1920, plein écran, par défaut), `3:4` (1080×1440, presque entier sous une légende),
+  `4:5` (1080×1350, toujours entier), et pour garder l'orientation d'un modèle `1:1`, `4:3` (1080×810), `16:9` (1080×608), `2.35:1` (1080×460). TikTok prend 1 à 35 images par post photo (limite de l'API Content Posting), d'où
   35 diapositives au plus.
 - **Sortie** : PNG par défaut ; `"sortie": "jpeg"` pour un envoi en brouillon par l'API, qui n'accepte que JPEG et
   WebP (1080p, 20 Mo par image). Aucune métadonnée : PNG sans bloc texte ni EXIF, JPEG avec le seul profil sRGB.

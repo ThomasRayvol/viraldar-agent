@@ -61,8 +61,15 @@ function horsLecture(r, travail, quoi) {
     if (racines === null || sous(travail, r) || racines.some((x) => sous(x, r)))
         return null;
     return new CheminRefuse(`${quoi} refusé : ${r} est hors du dossier de travail (${travail})`
-        + (racines.length ? ` et des dossiers permis par VIRALDAR_LECTURE` : "") + `. Copie-le d'abord dans ${travail}, `
-        + `ou l'utilisateur élargit la lecture lui-même (réglage « lecture » / VIRALDAR_LECTURE).`);
+        + (racines.length ? ` et des dossiers permis par VIRALDAR_LECTURE` : "") + `. ${proposerLecture(travail)}`);
+}
+/** Ce que l'agent propose à l'utilisateur quand un fichier est hors de portée (aussi dit à la connexion). Le réglage
+ *  reste le sien : l'agent l'explique, il ne le change jamais. */
+export function proposerLecture(travail) {
+    return `Propose à l'utilisateur, au choix : copier le fichier (ou le dossier) dans ${travail} ; ou élargir LUI-MÊME `
+        + `la lecture au dossier où sont ses médias : réglage « lecture » (VIRALDAR_LECTURE : des dossiers séparés par « ${delimiter} », `
+        + `ou « partout »), dans Claude Code par \`claude plugin configure viraldar@viraldar\` puis un redémarrage complet de `
+        + `Claude Code, dans Claude Desktop dans les réglages de l'extension viraldar. Ne modifie jamais ce réglage à sa place.`;
 }
 const SIGNATURES = [
     ["image/jpeg", (b) => b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff],

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { DONNEES, erreur, externe, nb, pct, sig, texte, urlPost } from "./rendu.js";
+import { DONNEES, PRODUIT_ACTIF, erreur, externe, nb, pct, sig, texte, urlPost } from "./rendu.js";
 // ---------- utilitaires (les mêmes règles que site/js/commun.js) ----------
 // `plier` : comme dans la page et src/exporter.py, qui plie le texte des posts ; les deux doivent coïncider.
 const plier = (s) => (s || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[’'\-‐–—_]/g, " ");
@@ -17,6 +17,9 @@ export const outilsBase = (serveur, ctx) => {
     const parId = new Map();
     let infos = null;
     let favoris = null;
+    // Les posts triés dépendent du produit actif (multi-produits, 15/11/2026) : le cache et les listes repartent de zéro
+    // quand il change (choisir_produit ici, ou un autre MCP qui a gardé un autre choix dans session.json).
+    let favorisProduit = null;
     let quota = null;
     // Les listes de recommandés chargées : les posts triés depuis en sortent côté serveur, la page suivante commence
     // d'autant plus tôt (p_filtres.retires, comme Découvrir).
@@ -39,8 +42,11 @@ export const outilsBase = (serveur, ctx) => {
         return data;
     }
     async function lireFavoris(c) {
-        if (favoris)
+        if (favoris && favorisProduit === ctx.produitId())
             return favoris;
+        if (favoris)
+            listes.clear();
+        favorisProduit = ctx.produitId();
         const { data, error } = await c.from("favoris").select("post_id, statut, reprendre");
         if (error)
             throw new Error("favoris : " + error.message);
@@ -112,7 +118,7 @@ export const outilsBase = (serveur, ctx) => {
     // ---------- les filtres communs à la recherche et aux recommandés ----------
     const LANGUES = ["fr", "en", "es", "de", "pt", "autre", "inconnue"];
     const filtres = {
-        mots: z.string().max(200).optional().describe("Tous ces mots, dans le texte, le compte ou les mots-clés (accents ignorés)."),
+        mots: z.string().max(200).optional().describe("Tous ces mots, chacun comme un début de mot (« app » trouve appli, pas happy), dans le texte, le compte ou les mots-clés (accents ignorés)."),
         themes: z.array(z.string()).optional().describe("Clés de thèmes (infos_base), l'un OU l'autre."),
         mes_themes: z.boolean().optional().describe("Ajoute les thèmes de l'utilisateur."),
         langues: z.array(z.enum(LANGUES)).optional(),
@@ -148,6 +154,44 @@ export const outilsBase = (serveur, ctx) => {
                 app: !!f.demande_app, likes: !!f.likes_ok },
         };
     }
+    // ---------- les produits (multi-produits, 15/11/2026) ----------
+    // Un compte a un ou plusieurs produits ; la fiche, la stratégie, les thèmes, les posts gardés, les idées, le planning et
+    // les comptes TikTok de brouillon sont ceux du produit actif. La base (les posts viraux) est la même pour tous.
+    serveur.registerTool("mes_produits", {
+        title: "Mes produits",
+        description: "Les produits du compte viraldar (une app, un SaaS… : chacun a sa fiche, sa stratégie, ses thèmes, ses "
+            + "posts gardés, ses idées, son planning et ses comptes TikTok) et celui sur lequel l'agent travaille (le produit "
+            + "actif). À vérifier avant de produire quoi que ce soit pour un produit ; `choisir_produit` pour changer. Hors quota.",
+        inputSchema: {},
+    }, outil(async () => {
+        const P = await ctx.produits();
+        if (!P)
+            throw new Error(ctx.pasConnecte());
+        return texte([`${P.liste.length} produit${P.liste.length > 1 ? "s" : ""} :`,
+            ...P.liste.map(p => `• ${p.nom}${p.id === P.actif.id ? "  ← actif" : ""}  (id ${p.id}, créé le ${String(p.cree_le).slice(0, 10)})`),
+            P.liste.length > 1 ? "Changer : `choisir_produit`." : "Un seul produit : rien à choisir (on en ajoute sur viraldar.rayvol.net)."].join("\n"));
+    }));
+    serveur.registerTool("choisir_produit", {
+        title: "Choisir le produit actif",
+        description: "Fait d'un produit (par son nom ou son id, voir `mes_produits`) le produit actif : les outils qui suivent "
+            + "lisent et écrivent sa fiche, sa stratégie, ses thèmes, ses posts gardés, ses idées et son planning. Le choix est "
+            + "gardé pour les prochaines sessions de l'agent. Ne change de produit que si l'utilisateur le demande ou si sa "
+            + "demande porte clairement sur un autre produit (dis-le-lui).",
+        inputSchema: { produit: z.string().min(1).describe("Nom (sans tenir compte des majuscules) ou id du produit.") },
+    }, outil(async ({ produit }) => {
+        const P = await ctx.produits();
+        if (!P)
+            throw new Error(ctx.pasConnecte());
+        const v = produit.trim().toLowerCase();
+        const t = P.liste.find(p => p.id === produit.trim()) ?? P.liste.find(p => p.nom.trim().toLowerCase() === v)
+            ?? (() => { const m = P.liste.filter(p => p.nom.toLowerCase().includes(v)); return m.length === 1 ? m[0] : undefined; })();
+        if (!t)
+            throw new Error(`Produit inconnu : ${produit}. Produits du compte : ${P.liste.map(p => p.nom).join(", ")}.`);
+        ctx.choisirProduit(t.id);
+        favoris = null;
+        listes.clear();
+        return texte(`Produit actif : ${t.nom}.` + (t.id === P.actif.id ? " (C'était déjà lui.)" : ""));
+    }));
     // ---------- infos_base ----------
     serveur.registerTool("infos_base", {
         title: "Ce que contient la base viraldar",
@@ -300,7 +344,7 @@ export const outilsBase = (serveur, ctx) => {
     const nomme = (I, ks) => ks.map(k => `${k} (${I.etiquettes[k]?.nom || "?"}, ${I.etiquettes[k]?.n ?? "?"} posts)`).join(", ") || "—";
     serveur.registerTool("mes_themes", {
         title: "Mes thèmes",
-        description: "Les thèmes que l'utilisateur a choisis sur viraldar (« Mes thèmes »), ceux que le site lui suggère "
+        description: PRODUIT_ACTIF + "Les thèmes que l'utilisateur a choisis sur viraldar (« Mes thèmes »), ceux que le site lui suggère "
             + "d'après les hashtags de ses vidéos, et ces hashtags. Sert de filtre `mes_themes` aux recherches. Hors quota.",
         inputSchema: {},
     }, outil(async (_a, c) => {
@@ -311,7 +355,7 @@ export const outilsBase = (serveur, ctx) => {
     }));
     serveur.registerTool("modifier_mes_themes", {
         title: "Modifier Mes thèmes",
-        description: "Ajoute ou retire des thèmes (clés de `infos_base`) dans « Mes thèmes » de l'utilisateur, ou les "
+        description: PRODUIT_ACTIF + "Ajoute ou retire des thèmes (clés de `infos_base`) dans « Mes thèmes » de l'utilisateur, ou les "
             + "remplace tous. C'est la même liste que sur le site : ne la change que si l'utilisateur le demande.",
         inputSchema: {
             ajouter: z.array(z.string()).optional(), retirer: z.array(z.string()).optional(),
@@ -328,8 +372,9 @@ export const outilsBase = (serveur, ctx) => {
         const { data: u, error: eu } = await c.auth.getUser();
         if (!u.user)
             throw new Error(eu?.message || ctx.pasConnecte());
-        // Comme enregistrerSelection (site/js/commun.js) : user_id, etiquettes, ecartees.
-        const { error } = await c.from("ma_selection").upsert({ user_id: u.user.id, etiquettes: et, ecartees: s.ecartees || [] }, { onConflict: "user_id" });
+        // Comme enregistrerSelection (site/js/commun.js) : user_id, etiquettes, ecartees ; une ligne par produit (produit_id,
+        // posé par la base d'après l'en-tête du produit actif).
+        const { error } = await c.from("ma_selection").upsert({ user_id: u.user.id, etiquettes: et, ecartees: s.ecartees || [] }, { onConflict: "produit_id" });
         if (error)
             throw new Error("Pas enregistré : " + error.message);
         return texte(`Mes thèmes : ${nomme(I, et)}`);
@@ -337,7 +382,7 @@ export const outilsBase = (serveur, ctx) => {
     // ---------- garder / passer / noter ----------
     serveur.registerTool("trier_post", {
         title: "Garder ou passer un post",
-        description: "Comme les boutons du site : « garder » met le post dans À reproduire (avec une note facultative : ce "
+        description: PRODUIT_ACTIF + "Comme les boutons du site : « garder » met le post dans À reproduire (avec une note facultative : ce "
             + "qu'on en reprend — hook, structure, visuel, son), « passer » le sort des recommandés, « retirer » efface le tri. "
             + "Seul un post déjà montré à l'utilisateur ces 2 derniers jours (rendu par un outil de recherche) peut être trié.",
         inputSchema: {
@@ -357,7 +402,9 @@ export const outilsBase = (serveur, ctx) => {
         else {
             const statut = action === "garder" ? "a_reproduire" : "ecarte";
             const reprendre = note?.trim() || avant?.reprendre || null;
-            const { error } = await c.from("favoris").upsert({ post_id: id, statut, reprendre }, { onConflict: "user_id,post_id" });
+            // origine « agent » (13/11/2026) : la Bibliothèque dit d'où vient un post gardé ; la base ne la pose qu'au moment
+            // où il devient gardé (un post déjà gardé sur le site le reste « sur le site »).
+            const { error } = await c.from("favoris").upsert({ post_id: id, statut, reprendre, ...(action === "garder" ? { origine: "agent" } : {}) }, { onConflict: "produit_id,post_id" });
             if (error)
                 throw new Error("Pas enregistré : " + error.message);
             F.set(id, { statut, reprendre });
@@ -373,7 +420,7 @@ export const outilsBase = (serveur, ctx) => {
     }));
     serveur.registerTool("noter_post", {
         title: "Noter un post gardé",
-        description: "Écrit (ou efface, avec une note vide) « ce que tu en reprends » sur un post déjà gardé dans À reproduire.",
+        description: PRODUIT_ACTIF + "Écrit (ou efface, avec une note vide) « ce que tu en reprends » sur un post déjà gardé dans À reproduire.",
         inputSchema: { post: z.string(), note: z.string().max(2000) },
     }, outil(async ({ post, note }, c) => {
         const F = await lireFavoris(c), { id } = lireRef(post);
@@ -389,31 +436,47 @@ export const outilsBase = (serveur, ctx) => {
         return texte(v ? "Note enregistrée." : "Note effacée.");
     }));
     // ---------- À reproduire ----------
+    // L'origine d'un post gardé (favoris.origine, 13/11/2026) : qui l'a choisi.
+    const ORIGINES = { site: "sur le site", agent: "par un agent", accueil: "pendant l'accueil",
+        import: "importé", inconnue: "avant le suivi de l'origine" };
     serveur.registerTool("a_reproduire", {
         title: "À reproduire (posts gardés)",
-        description: "Tous les posts que l'utilisateur a gardés, du plus récent au plus ancien, avec sa note « ce qu'il en "
-            + "reprend » : le point de départ pour créer ses contenus. Hors quota (5 lectures par minute au plus).",
-        inputSchema: { detail: z.boolean().optional() },
-    }, outil(async ({ detail }, c) => {
+        description: PRODUIT_ACTIF + "Tous les posts que l'utilisateur a gardés, du plus récent au plus ancien, avec sa note « ce qu'il en "
+            + "reprend » et leur origine (gardé sur le site, par un agent, pendant l'accueil, importé ; avec la date) : le point "
+            + "de départ pour créer ses contenus. `origine` n'en garde qu'une (« site » : ceux qu'il a choisis lui-même). "
+            + "Hors quota (5 lectures par minute au plus).",
+        inputSchema: {
+            detail: z.boolean().optional(),
+            origine: z.enum(["site", "agent", "accueil", "import", "inconnue"]).optional()
+                .describe("Seulement les posts gardés de cette origine (inconnue : gardés avant le 13/11/2026, avant le suivi)."),
+        },
+    }, outil(async ({ detail, origine }, c) => {
         const I = await lireInfos(c), F = await lireFavoris(c);
         const { data, error } = await c.rpc("mes_gardes");
         if (error)
             throw new Error("mes_gardes : " + error.message);
         if (data.refus)
             return erreur(data.message);
-        const posts = data.posts;
-        posts.forEach(p => { parId.set(p.id, p); F.set(p.id, { statut: "a_reproduire", reprendre: p.reprendre ?? null }); });
-        if (!posts.length)
+        const tous = data.posts;
+        tous.forEach(p => { parId.set(p.id, p); F.set(p.id, { statut: "a_reproduire", reprendre: p.reprendre ?? null }); });
+        if (!tous.length)
             return texte("À reproduire est vide : garde des posts avec `trier_post` (ou sur le site).");
-        return texte([`À reproduire — ${posts.length} posts gardés (base du ${data.exporte_le})\n${DONNEES}`,
-            ...posts.map(p => lignePost(p, I, detail) + `\n  gardé le ${String(p.garde_le).slice(0, 10)}`
+        const de = (p) => p.origine || "inconnue";
+        const posts = origine ? tous.filter(p => de(p) === origine) : tous;
+        const par = new Map();
+        tous.forEach(p => par.set(de(p), (par.get(de(p)) || 0) + 1));
+        const resume = [...par].map(([o, n]) => `${n} ${ORIGINES[o]}`).join(", ");
+        if (!posts.length)
+            return texte(`Aucun post gardé ${ORIGINES[origine]} (sur ${tous.length} : ${resume}).`);
+        return texte([`À reproduire — ${posts.length} posts gardés${origine ? ` ${ORIGINES[origine]} (sur ${tous.length})` : ""} (base du ${data.exporte_le}) · ${resume}\n${DONNEES}`,
+            ...posts.map(p => lignePost(p, I, detail) + `\n  gardé le ${String(p.garde_le).slice(0, 10)} ${ORIGINES[de(p)]}`
                 + (!detail ? (p.reprendre ? `\n  note : ${p.reprendre}` : "\n  note : —") : ""))].join("\n\n"));
     }));
     // ---------- la fiche produit ----------
     const liste = (xs) => Array.isArray(xs) && xs.length ? xs.map(x => `  - ${typeof x === "string" ? x : JSON.stringify(x)}`).join("\n") : "  —";
     serveur.registerTool("ma_fiche", {
         title: "Ma fiche produit",
-        description: "Ce que l'utilisateur a dit de lui à l'accueil (objectifs, @TikTok, ce qu'il vend, son lien, qui filme, "
+        description: PRODUIT_ACTIF + "Ce que l'utilisateur a dit de lui à l'accueil (objectifs, @TikTok, ce qu'il vend, son lien, qui filme, "
             + "vues visées, ce qui le bloque) et sa fiche produit si elle est rédigée (produit, clients, problèmes, "
             + "positionnement, angles de vidéos). À lire avant de proposer des contenus ; la stratégie de contenu est dans "
             + "`ma_strategie`. Hors quota.",

@@ -42,7 +42,7 @@ sur des comptes publics de cette niche, en production quotidienne. Une niche, de
 - **Réglages de l'éditeur de texte TikTok** (police, graisse, corps, interligne, pavés, étiquette rouge) relevés sur des
   carrousels de la niche et reproduits dans le modèle `natif`.
 - **Règle de lecture** des textes posés en vidéo : 0,25 s par mot, 2,5 s au moins (règle de production).
-- **Apprentissages chiffrés** (`production.md` § 2 et § 6) : visites du store quasi nulles quand le produit n'est qu'un
+- **Apprentissages chiffrés** (`production.md` § 2 et § 8) : visites du store quasi nulles quand le produit n'est qu'un
   logo de fin (n = 26 jours) ; dérivés de gagnants autour de × 1,3 (n = 13) ; progression après 8 h (n = 12) ; carrousel
   contre vidéo selon le compte et la niche (n = 10 par branche ; n = 160 posts de 3 comptes) ; légendes et hashtags
   (n = 53 et n = 160) ; ouvertures sur écran noir et letterboxage (n = 15 par compte).

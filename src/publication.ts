@@ -1,6 +1,8 @@
 // Les brouillons TikTok, par la fonction Supabase `tiktok` (supabase/functions/tiktok), qui garde les jetons TikTok :
 // le MCP n'en voit jamais un. Contrat de la fonction (POST JSON, session de l'utilisateur) :
-//   {action:"comptes"}                                          → {comptes: [{open_id, username, display_name, scopes}]}
+//   {action:"comptes"}                                          → {comptes: [{open_id, username, display_name, scopes, produit_id}]}
+//   (produit_id : multi-produits, 15/11/2026 ; un compte TikTok est rangé dans un seul produit. Sans précision, un
+//   brouillon part vers un compte du produit actif ; un compte nommé explicitement peut être d'un autre produit.)
 //   {action:"brouillon_video_init", open_id, taille_octets}     → {publish_id, upload_url, morceau_octets, nb_morceaux}
 //   {action:"brouillon_photos", open_id, urls, titre?, description?} → {publish_id}
 //   {action:"brouillon_statut", open_id, publish_id}            → {statut, raison?}
@@ -24,7 +26,7 @@ const STATUTS: Record<string, string> = {
   PUBLISH_COMPLETE: "publié (ou finalisé dans l'app)",
   FAILED: "échec",
 };
-type Compte = { open_id: string; username: string; display_name?: string; scopes?: string };
+type Compte = { open_id: string; username: string; display_name?: string; scopes?: string; produit_id?: string };
 
 export const outilsPublication: Module = (serveur, ctx: Contexte) => {
   async function tiktok(corps: Record<string, unknown>): Promise<any> {
@@ -38,12 +40,23 @@ export const outilsPublication: Module = (serveur, ctx: Contexte) => {
     throw new Error((r.erreur || error.message) + (r.reconnecter
       ? " — le compte TikTok doit être relié à nouveau sur viraldar.rayvol.net (Mon produit → Mon TikTok)." : ""));
   }
-  async function compte(choix?: string): Promise<Compte> {
+  /** Les comptes reliés, et ceux du produit actif (tous si la fonction ne dit pas encore le produit de chacun). */
+  async function lesComptes(): Promise<{ tous: Compte[]; duProduit: Compte[]; produit: { id: string; nom: string } | null }> {
     const { comptes } = await tiktok({ action: "comptes" }) as { comptes: Compte[] };
+    const tous = comptes || [];
+    let produit: { id: string; nom: string } | null = null;
+    try { produit = (await ctx.produits())?.actif ?? null; } catch { /* base pas encore multi-produits */ }
+    const range = tous.some(x => x.produit_id);
+    return { tous, produit, duProduit: produit && range ? tous.filter(x => x.produit_id === produit!.id) : tous };
+  }
+  async function compte(choix?: string): Promise<Compte> {
+    const { tous: comptes, duProduit, produit } = await lesComptes();
     if (!comptes?.length) throw new Error("Aucun compte TikTok relié : l'utilisateur doit relier le sien sur viraldar.rayvol.net (Continuer avec TikTok).");
     if (!choix) {
-      if (comptes.length === 1) return comptes[0];
-      throw new Error(`Plusieurs comptes TikTok reliés : précise \`compte\` (${comptes.map(x => "@" + x.username).join(", ")}).`);
+      if (duProduit.length === 1) return duProduit[0];
+      if (!duProduit.length) throw new Error(`Aucun compte TikTok relié au produit ${produit?.nom ?? "actif"} : précise \`compte\` `
+        + `(reliés : ${comptes.map(x => "@" + x.username).join(", ")}), ou range un compte dans ce produit sur viraldar.rayvol.net (Mon produit).`);
+      throw new Error(`Plusieurs comptes TikTok pour ce produit : précise \`compte\` (${duProduit.map(x => "@" + x.username).join(", ")}).`);
     }
     const c = choix.replace(/^@/, "");
     const t = comptes.find(x => x.open_id === c || x.username.toLowerCase() === c.toLowerCase());
@@ -53,17 +66,24 @@ export const outilsPublication: Module = (serveur, ctx: Contexte) => {
   const outil = <A,>(fn: (a: A) => Promise<ReturnType<typeof texte>>) => async (a: A) => {
     try { return await fn(a); } catch (e) { return erreur(ctx.expliquer((e as Error).message)); }
   };
-  const champCompte = z.string().optional().describe("@username ou open_id du compte TikTok (facultatif s'il n'y en a qu'un ; voir `comptes_tiktok`).");
+  const champCompte = z.string().optional().describe("@username ou open_id du compte TikTok (facultatif si le produit actif n'en a qu'un ; voir `comptes_tiktok`).");
 
   serveur.registerTool("comptes_tiktok", {
     title: "Comptes TikTok reliés",
-    description: "Les comptes TikTok que l'utilisateur a reliés à viraldar (@username, open_id, droits accordés). "
-      + "Un brouillon part vers l'un d'eux ; il faut le droit `video.upload`.",
-    inputSchema: {},
-  }, outil<Record<string, never>>(async () => {
-    const { comptes } = await tiktok({ action: "comptes" }) as { comptes: Compte[] };
-    if (!comptes?.length) return texte("Aucun compte TikTok relié : à faire sur viraldar.rayvol.net (Continuer avec TikTok).");
-    return texte(comptes.map(x => `@${x.username}${x.display_name ? ` (${x.display_name})` : ""} · open_id ${x.open_id} · droits : ${x.scopes || "?"}`).join("\n"));
+    description: "Les comptes TikTok que l'utilisateur a reliés à viraldar (@username, open_id, droits accordés), ceux "
+      + "du produit actif d'abord (chaque compte est rangé dans un produit). Un brouillon part vers l'un d'eux ; il faut "
+      + "le droit `video.upload`. `tous: true` montre aussi ceux des autres produits.",
+    inputSchema: { tous: z.boolean().optional().describe("Aussi les comptes rangés dans les autres produits.") },
+  }, outil<{ tous?: boolean }>(async ({ tous: voirTous }) => {
+    const { tous, duProduit, produit } = await lesComptes();
+    if (!tous.length) return texte("Aucun compte TikTok relié : à faire sur viraldar.rayvol.net (Continuer avec TikTok).");
+    const ligne = (x: Compte) => `@${x.username}${x.display_name ? ` (${x.display_name})` : ""} · open_id ${x.open_id} · droits : ${x.scopes || "?"}`;
+    const autres = tous.filter(x => !duProduit.includes(x));
+    const l = [produit ? `Produit actif : ${produit.nom}` : null,
+      ...(duProduit.length ? duProduit.map(ligne) : ["(aucun compte TikTok rangé dans ce produit)"])];
+    if (autres.length) l.push(voirTous ? "Autres produits :" : `+ ${autres.length} compte(s) d'autres produits (\`tous: true\`).`,
+      ...(voirTous ? autres.map(ligne) : []));
+    return texte(l.filter(Boolean).join("\n"));
   }));
 
   serveur.registerTool("envoyer_brouillon_video", {

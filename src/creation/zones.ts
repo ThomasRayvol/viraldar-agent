@@ -15,7 +15,7 @@ interface CasDonnees {
 }
 interface Donnees {
   repere: { largeur: number; hauteur: number };
-  formats: Record<string, { largeur: number; hauteur: number; usage: string }>;
+  formats: Record<string, { largeur: number; hauteur: number; video: { largeur: number; hauteur: number }; usage: string }>;
   defaut: string;
   cas: Record<string, CasDonnees>;
 }
@@ -25,6 +25,26 @@ export const ZONES: Donnees = JSON.parse(readFileSync(FICHIER_ZONES, "utf8"));
 
 export const NOMS_CAS = Object.keys(ZONES.cas) as [string, ...string[]];
 export const NOMS_FORMATS = Object.keys(ZONES.formats) as [string, ...string[]];
+/** Le format d'une vidéo (montage, Remotion) : sa taille en px. 9:16 par défaut. */
+export const FORMAT_DEFAUT = "9:16";
+export function tailleVideo(format: string = FORMAT_DEFAUT): { l: number; h: number } {
+  const f = ZONES.formats[format];
+  if (!f) throw new Error(`Format inconnu : « ${format} » (possibles : ${NOMS_FORMATS.join(", ")})`);
+  return { l: f.video.largeur, h: f.video.hauteur };
+}
+/** Le format connu le plus proche d'un rapport largeur/hauteur (à 3 % près), sinon undefined. */
+export function formatProche(l: number, h: number): string | undefined {
+  const r = l / h;
+  let mieux: [string, number] | undefined;
+  for (const [nom, f] of Object.entries(ZONES.formats)) {
+    const e = Math.abs(f.largeur / f.hauteur - r) / r;
+    if (e < 0.03 && (!mieux || e < mieux[1])) mieux = [nom, e];
+  }
+  return mieux?.[0];
+}
+export const zFormat = z.enum(NOMS_FORMATS).describe(
+  "Format (orientation) : " + NOMS_FORMATS.map((n) => `${n} (${ZONES.formats[n]!.video.largeur}×${ZONES.formats[n]!.video.hauteur})`).join(", ") +
+  ". 9:16 par défaut ; garder celui du modèle (un modèle en paysage reste en paysage).");
 if (!NOMS_CAS.length || !(ZONES.defaut in ZONES.cas)) throw new Error("modeles/zones-sures.json : aucun cas, ou défaut inconnu");
 
 export const zCas = z.enum(NOMS_CAS).describe(
