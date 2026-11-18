@@ -43,11 +43,14 @@ Références, à charger quand l'étape le demande (pas toutes d'un coup) :
 | session | `qui_suis_je` / `connexion` / `deconnexion` | état de la session ; sans session, rien ne marche : `connexion` rend tout de suite un lien (et essaie de l'ouvrir) ; montre-le à l'utilisateur, qui l'ouvre dans le navigateur où il est connecté et autorise ; puis `connexion` avec `attendre: true` (1 min au plus, rappelle-le tant qu'il n'a pas fini). « Injoignable (réseau) » n'est pas une déconnexion : réessaie plus tard, sans `connexion` |
 | base | `mes_produits` / `choisir_produit` | un compte viraldar peut avoir plusieurs produits (chacun sa fiche, sa stratégie, ses thèmes, ses posts gardés, ses idées, son planning et ses comptes TikTok) ; les outils portent sur le produit actif (`qui_suis_je` le dit) |
 | base | `infos_base` | thèmes (avec leur nombre de posts), langues, règles ; hors quota : commence par là |
-| base | `chercher_posts` | recherche dans la base (mots, thèmes, `mes_themes`, langue, format, publié depuis, vues, outlier, likes ≥ 2 %, 📲), 24 par page |
+| base | `chercher_posts` | recherche dans la base (mots-clés `mots_cles` / `mes_mots_cles`, mots libres, thèmes, langue, format, publié depuis, vues, outlier, likes ≥ 2 %, 📲), 24 par page |
 | base | `petits_comptes_viraux` | les « petits comptes viraux » (règles plus bas), pour ses thèmes, des thèmes ou une langue |
 | base | `post` | un post : chiffres, compte, médiane du compte et son n, texte, hashtags, format, durée, 📲 (`detail: true` pour tout) |
 | base | `formats_similaires` | posts proches d'un post donné (hashtags, durée) |
-| base | `mes_themes` / `modifier_mes_themes` | lire ou modifier ses thèmes (étiquettes suivies) |
+| base | `suggerer_mots_cles` | le vocabulaire de la base (nos mots-clés de recherche et les hashtags répandus) avec le nombre de posts de chaque terme ; hors quota |
+| base | `explorer_mots_cles` | trouver dans tout le vocabulaire les mots-clés cohérents avec son produit : `contient` (les termes qui contiennent un texte) et `voisins_de` / `voisins_de_mes_mots` (ceux qui reviennent sur les mêmes posts, avec leur lift) ; hors quota |
+| base | `mes_mots_cles` / `modifier_mes_mots_cles` | lire ou modifier les mots-clés de son produit : le filtre précis de sa niche (à la place des thèmes) |
+| base | `mes_themes` / `modifier_mes_themes` | ses thèmes (étiquettes larges), en attendant leur retrait |
 | base | `trier_post` / `noter_post` | garder un post (→ À reproduire), le passer ou le retirer ; noter le format et la raison |
 | base | `a_reproduire` | sa liste À reproduire, avec ses notes |
 | base | `ma_fiche` | sa fiche produit (produit, clients, problèmes, positionnement, angles) et son profil, dont **qui filme** |
@@ -116,7 +119,7 @@ les étapes 2 et 7. Sinon, pose **en un seul message**, au plus 7 questions :
 ressources ne permettent pas de reproduire tel quel n'est pas un modèle pour lui. Sa base de contenus vérifiés, quand
 elle existe, est **la** source du texte (citations, chiffres, affirmations).
 
-Puis `mes_themes` : vérifie que ses thèmes collent à sa niche ; propose d'en ajouter ou d'en retirer (avec son accord).
+Puis `mes_mots_cles` : vérifie que ses mots-clés collent à sa niche. Pour en trouver : `explorer_mots_cles` avec `contient` sur les mots de sa fiche (produit, problème, concurrents, formats qu'il veut produire), puis `voisins_de` des meilleurs (un `lift` élevé = propre à sa niche ; écarte les homonymes et les termes d'une autre langue que son public). Propose une liste courte, chaque terme avec son nombre de posts et sa raison ; `modifier_mes_mots_cles` seulement avec son accord.
 
 **Livrable** : `fiche.md` — produit, cible, 3 à 5 douleurs dans les mots du client, ressources de production (visage,
 voix, temps, captures de l'app, médias, polices), base de contenus vérifiés (chemin), objectif et mesure, thèmes retenus.

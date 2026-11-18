@@ -115,7 +115,10 @@ export const outilsBase: Module = (serveur, ctx: Contexte) => {
   const LANGUES = ["fr", "en", "es", "de", "pt", "autre", "inconnue"] as const;
   const filtres = {
     mots: z.string().max(200).optional().describe("Tous ces mots, chacun comme un début de mot (« app » trouve appli, pas happy), dans le texte, le compte ou les mots-clés (accents ignorés)."),
-    themes: z.array(z.string()).optional().describe("Clés de thèmes (infos_base), l'un OU l'autre."),
+    mots_cles: z.array(z.string()).max(60).optional().describe("Des mots-clés du vocabulaire viraldar (nos mots-clés de "
+      + "recherche et les hashtags répandus : `suggerer_mots_cles`), l'un OU l'autre. Plus précis que les thèmes, et rapide."),
+    mes_mots_cles: z.boolean().optional().describe("Ajoute les mots-clés du produit actif (`mes_mots_cles`)."),
+    themes: z.array(z.string()).optional().describe("Clés de thèmes (infos_base), l'un OU l'autre. Larges : préfère `mots_cles`."),
     mes_themes: z.boolean().optional().describe("Ajoute les thèmes de l'utilisateur."),
     langues: z.array(z.enum(LANGUES)).optional(),
     vues_min: z.number().int().optional(),
@@ -128,7 +131,7 @@ export const outilsBase: Module = (serveur, ctx: Contexte) => {
     page: z.number().int().min(0).optional().describe("0 = première (24 posts) ; chaque post neuf compte dans le quota."),
     detail: z.boolean().optional().describe("Toutes les stats, texte entier."),
   };
-  type Filtres = { mots?: string; themes?: string[]; mes_themes?: boolean; langues?: string[]; vues_min?: number;
+  type Filtres = { mots?: string; mots_cles?: string[]; mes_mots_cles?: boolean; themes?: string[]; mes_themes?: boolean; langues?: string[]; vues_min?: number;
     outlier_min?: number; publie_depuis_jours?: number; abonnes_max?: number; format?: "video" | "carrousel";
     demande_app?: boolean; likes_ok?: boolean; page?: number; detail?: boolean };
 
@@ -145,6 +148,7 @@ export const outilsBase: Module = (serveur, ctx: Contexte) => {
     et = [...new Set(et)].sort();
     return {
       p_mode: mode, p_etiquettes: et, p_langues: f.langues || [],
+      p_termes: [...new Set((f.mots_cles || []).map(m => m.trim()).filter(Boolean))], p_mes_mots: !!f.mes_mots_cles,
       p_mots: plier(f.mots || "").split(/\s+/).filter(m => m.length > 1),
       p_filtres: { vues: f.vues_min || 0, outlier: f.outlier_min || null, age: f.publie_depuis_jours || null,
         abonnes: f.abonnes_max || null, type: f.format === "carrousel" ? "carrousel" : f.format === "video" ? "vidéo" : null,
@@ -221,7 +225,7 @@ export const outilsBase: Module = (serveur, ctx: Contexte) => {
     title: "Chercher dans la base viraldar",
     description: "Cherche parmi les posts TikTok viraux (≥ 100 k vues) déjà relevés par viraldar — jamais sur TikTok "
       + "lui-même : si rien ne sort, la base n'a pas encore ce sujet (la recherche vide est notée pour le prochain relevé). "
-      + "Filtres : mots, thèmes, langue, vues, outlier, date, taille du compte, format, 📲. Tri au choix. 24 posts par page, "
+      + "Filtres : mots-clés (`mots_cles`, `mes_mots_cles` : précis et rapides), mots, thèmes, langue, vues, outlier, date, taille du compte, format, 📲. Tri au choix. 24 posts par page, "
       + "chacun avec son URL TikTok, ses vues, son outlier (avec la médiane du compte et son n), vues ÷ abonnés, 📲, "
       + "thèmes, langue, date. Compte dans le quota du jour (600 posts distincts). Pour des idées à reproduire sur de "
       + "petits comptes, préfère `petits_comptes_viraux`.",
@@ -246,7 +250,7 @@ export const outilsBase: Module = (serveur, ctx: Contexte) => {
     title: "Petits comptes viraux (recommandés)",
     description: "Les recommandés de viraldar : des posts de comptes ≤ 50 k abonnés qui ont fait ≥ 300 k vues et ≥ 20 × "
       + "leurs abonnés, classés par vues ÷ abonnés, 2 au plus par compte, les 100 premiers — les formats qui marchent "
-      + "sans audience, donc les plus reproductibles. Mêmes filtres que `chercher_posts` (thèmes, `mes_themes`, langue, "
+      + "sans audience, donc les plus reproductibles. Mêmes filtres que `chercher_posts` (mots-clés, `mes_mots_cles`, thèmes, langue, "
       + "mots…). Les posts déjà gardés ou passés par l'utilisateur n'y sont plus. Compte dans le quota du jour.",
     inputSchema: filtres,
   }, outil<Filtres>(async (f, c) => {
@@ -320,6 +324,93 @@ export const outilsBase: Module = (serveur, ctx: Contexte) => {
     if (!r.posts.length && !r.refus)
       await c.from("recherches").insert({ q: tp.join(" ").slice(0, 200), n_resultats: 0 }).then(() => {}, () => {});
     return texte(rendreListe(r, I, `Formats similaires à #${tp.join(" #")}${duree ? ` (≈ ${Math.round(duree)} s)` : ""}`, detail));
+  }));
+
+  // ---------- Mes mots-clés (18/11/2026 : à la place des thèmes) ----------
+  type Terme = { terme: string; n: number; n_recents: number; origine?: string; genre?: string };
+  const ligneTerme = (m: Terme) => `${m.terme} — ${m.n} posts dont ${m.n_recents} publiés ≤ 90 jours`
+    + (m.origine && m.origine !== "utilisateur" ? ` (proposé : ${m.origine})` : "");
+  serveur.registerTool("suggerer_mots_cles", {
+    title: "Suggérer des mots-clés",
+    description: "Le vocabulaire de la base (nos mots-clés de recherche TikTok et les hashtags répandus) : les termes qui "
+      + "commencent par `debut` (accents, espaces et tirets ignorés : « study with me » = #studywithme), les plus fournis "
+      + "d'abord, avec leur nombre de posts ; sans `debut`, les plus fournis. Hors quota. Un terme absent n'a pas encore de "
+      + "posts : il peut quand même aller dans `modifier_mes_mots_cles` (c'est ce qui dit quoi relever).",
+    inputSchema: { debut: z.string().max(80).optional(), n: z.number().int().min(1).max(50).optional() },
+  }, outil<{ debut?: string; n?: number }>(async ({ debut, n }, c) => {
+    const { data, error } = await c.rpc("mots_suggerer", { p_debut: debut || "", p_n: n || 20 });
+    if (error) throw new Error("mots_suggerer : " + error.message);
+    const ms = (data || []) as Terme[];
+    return texte(ms.length ? ms.map(ligneTerme).join("\n") : `Aucun terme ne commence par « ${debut} » dans la base.`);
+  }));
+  type Voisin = Terme & { ensemble: number; sur: number; lift: number };
+  serveur.registerTool("explorer_mots_cles", {
+    title: "Explorer les mots-clés de la base",
+    description: "Pour proposer à l'utilisateur les mots-clés les plus cohérents avec son produit et ce qu'il veut produire, "
+      + "parmi tout le vocabulaire de la base (nos mots-clés de recherche TikTok et les hashtags répandus, ~7 000 termes). "
+      + "Deux recherches, combinables : `contient` (chaque texte donné : les termes qui le contiennent, « focus » → "
+      + "focusflight, focusonyourself… ; tire-les de sa fiche, de son produit, de ses concurrents, des formats visés) et "
+      + "`voisins_de` / `voisins_de_mes_mots` (les termes qui reviennent le plus sur les mêmes posts — le vocabulaire réel "
+      + "de sa niche ; `lift` > 3 : propre à la niche, ≈ 1 : répandu partout ; méfie-toi des homonymes, « pomodoro » "
+      + "attire aussi la cuisine italienne). Chaque terme avec ses posts (n) et ceux publiés ≤ 90 jours. Hors quota. "
+      + "Méthode : `ma_fiche` → `contient` sur ses mots → `voisins_de` des meilleurs → trie par cohérence avec son produit "
+      + "et son public (langue comprise), écarte le hors-sujet, propose une liste courte avec la raison de chacun, puis "
+      + "`modifier_mes_mots_cles` seulement avec son accord.",
+    inputSchema: {
+      contient: z.array(z.string().min(2).max(60)).max(12).optional().describe("Des textes : les termes qui les contiennent."),
+      voisins_de: z.array(z.string().max(80)).max(60).optional().describe("Des termes : ceux qui reviennent avec eux sur les mêmes posts."),
+      voisins_de_mes_mots: z.boolean().optional().describe("Ajoute à `voisins_de` les mots-clés du produit actif."),
+      n: z.number().int().min(5).max(100).optional().describe("Termes par recherche (30 par défaut)."),
+    },
+  }, outil<{ contient?: string[]; voisins_de?: string[]; voisins_de_mes_mots?: boolean; n?: number }>(
+    async ({ contient, voisins_de, voisins_de_mes_mots, n }, c) => {
+      const parties: string[] = [];
+      for (const x of contient || []) {
+        const { data, error } = await c.rpc("mots_chercher", { p_texte: x, p_n: n || 30 });
+        if (error) throw new Error("mots_chercher : " + error.message);
+        const ms = (data || []) as Terme[];
+        parties.push(`Contient « ${x} » :\n` + (ms.map(ligneTerme).join("\n") || "— aucun terme"));
+      }
+      if ((voisins_de || []).length || voisins_de_mes_mots) {
+        const { data, error } = await c.rpc("mots_voisins",
+          { p_termes: voisins_de || [], p_mes_mots: !!voisins_de_mes_mots, p_n: n || 30 });
+        if (error) throw new Error("mots_voisins : " + error.message);
+        const vs = (data || []) as Voisin[];
+        const de = [...(voisins_de || []), ...(voisins_de_mes_mots ? ["ses mots-clés"] : [])].join(", ");
+        parties.push(vs.length
+          ? `Voisins de ${de} (sur les ${vs[0].sur} posts les plus vus de ces termes) :\n`
+            + vs.map(v => `${ligneTerme(v)} · avec eux sur ${v.ensemble} posts · lift ${v.lift}`).join("\n")
+          : `Voisins de ${de} : aucun (ces termes n'ont pas encore de posts dans la base).`);
+      }
+      if (!parties.length) throw new Error("Donne `contient`, `voisins_de` ou `voisins_de_mes_mots`.");
+      return texte(parties.join("\n\n"));
+    }));
+  serveur.registerTool("mes_mots_cles", {
+    title: "Mes mots-clés",
+    description: PRODUIT_ACTIF + "Les mots-clés du produit (« Mes mots-clés » sur le site), chacun avec ses posts dans la base "
+      + "(0 = rien encore). Sert de filtre `mes_mots_cles` aux recherches. Hors quota.",
+    inputSchema: {},
+  }, outil<Record<string, never>>(async (_a, c) => {
+    const { data, error } = await c.rpc("mes_mots_cles");
+    if (error) throw new Error("mes_mots_cles : " + error.message);
+    const ms = (data || []) as Terme[];
+    return texte(ms.length ? `Mes mots-clés (${ms.length}) :\n` + ms.map(ligneTerme).join("\n")
+      : "Aucun mot-clé pour ce produit : `suggerer_mots_cles` puis `modifier_mes_mots_cles`.");
+  }));
+  serveur.registerTool("modifier_mes_mots_cles", {
+    title: "Modifier Mes mots-clés",
+    description: PRODUIT_ACTIF + "Ajoute ou retire des mots-clés du produit, ou les remplace tous (200 au plus). C'est la même "
+      + "liste que sur le site : ne la change que si l'utilisateur le demande.",
+    inputSchema: {
+      ajouter: z.array(z.string().max(80)).max(200).optional(), retirer: z.array(z.string().max(80)).max(200).optional(),
+      remplacer: z.array(z.string().max(80)).max(200).optional().describe("La liste complète, à la place de l'actuelle."),
+    },
+  }, outil<{ ajouter?: string[]; retirer?: string[]; remplacer?: string[] }>(async ({ ajouter, retirer, remplacer }, c) => {
+    const { data, error } = await c.rpc("mes_mots_cles_modifier",
+      { p_ajouter: ajouter || [], p_retirer: retirer || [], p_remplacer: remplacer ?? null });
+    if (error) throw new Error("Pas enregistré : " + error.message);
+    const ms = (data || []) as Terme[];
+    return texte(`Mes mots-clés (${ms.length}) :\n` + (ms.map(ligneTerme).join("\n") || "—"));
   }));
 
   // ---------- Mes thèmes ----------
