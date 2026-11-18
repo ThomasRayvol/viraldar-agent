@@ -86,7 +86,7 @@ export const outilsBase = (serveur, ctx) => {
             p.type === "carrousel" ? `carrousel${p.slides ? ` ${p.slides} images` : ""}` : `vidéo${p.duree ? ` ${Math.round(p.duree)} s` : ""}`,
             p.publie ? `publié ${p.publie}${p.age_j != null ? ` (${p.age_j} j au relevé)` : ""}` : null,
             p.langue,
-            p.etiquettes?.length ? `thèmes : ${p.etiquettes.join(", ")}` : null,
+            p.mots?.length ? `trouvé par : ${p.mots.slice(0, 4).join(", ")}` : null,
         ].filter(Boolean).join(" · ");
         const desc = externe(p.description);
         const lignes = [tete, "  " + chiffres, desc ? `  texte : ⟦${detail || desc.length <= 160 ? desc : desc.slice(0, 157) + "…"}⟧` : ""];
@@ -120,10 +120,8 @@ export const outilsBase = (serveur, ctx) => {
     const filtres = {
         mots: z.string().max(200).optional().describe("Tous ces mots, chacun comme un début de mot (« app » trouve appli, pas happy), dans le texte, le compte ou les mots-clés (accents ignorés)."),
         mots_cles: z.array(z.string()).max(60).optional().describe("Des mots-clés du vocabulaire viraldar (nos mots-clés de "
-            + "recherche et les hashtags répandus : `suggerer_mots_cles`), l'un OU l'autre. Plus précis que les thèmes, et rapide."),
+            + "recherche et les hashtags répandus : `suggerer_mots_cles`, `explorer_mots_cles`), l'un OU l'autre. Précis et rapide."),
         mes_mots_cles: z.boolean().optional().describe("Ajoute les mots-clés du produit actif (`mes_mots_cles`)."),
-        themes: z.array(z.string()).optional().describe("Clés de thèmes (infos_base), l'un OU l'autre. Larges : préfère `mots_cles`."),
-        mes_themes: z.boolean().optional().describe("Ajoute les thèmes de l'utilisateur."),
         langues: z.array(z.enum(LANGUES)).optional(),
         vues_min: z.number().int().optional(),
         outlier_min: z.number().optional().describe("vues ÷ médiane du compte, minimum (ex. 5)."),
@@ -135,22 +133,10 @@ export const outilsBase = (serveur, ctx) => {
         page: z.number().int().min(0).optional().describe("0 = première (24 posts) ; chaque post neuf compte dans le quota."),
         detail: z.boolean().optional().describe("Toutes les stats, texte entier."),
     };
-    async function args(c, I, f, mode) {
-        let et = [...(f.themes || [])];
-        if (f.mes_themes) {
-            const { data, error } = await c.from("ma_selection").select("etiquettes").maybeSingle();
-            if (error)
-                throw new Error("ma_selection : " + error.message);
-            if (!data?.etiquettes?.length)
-                throw new Error("Mes thèmes est vide : choisis des thèmes avec `modifier_mes_themes`, ou passe `themes`.");
-            et.push(...data.etiquettes);
-        }
-        const inconnues = et.filter(k => !I.etiquettes[k]);
-        if (inconnues.length)
-            throw new Error(`Thèmes inconnus : ${inconnues.join(", ")}. Les clés valables sont dans \`infos_base\`.`);
-        et = [...new Set(et)].sort();
+    // Les thèmes (étiquettes) ont quitté le MCP en 0.5.0 (18/11/2026, étape 4 des mots-clés) : seuls les mots-clés filtrent.
+    async function args(_c, _I, f, mode) {
         return {
-            p_mode: mode, p_etiquettes: et, p_langues: f.langues || [],
+            p_mode: mode, p_etiquettes: [], p_langues: f.langues || [],
             p_termes: [...new Set((f.mots_cles || []).map(m => m.trim()).filter(Boolean))], p_mes_mots: !!f.mes_mots_cles,
             p_mots: plier(f.mots || "").split(/\s+/).filter(m => m.length > 1),
             p_filtres: { vues: f.vues_min || 0, outlier: f.outlier_min || null, age: f.publie_depuis_jours || null,
@@ -159,11 +145,11 @@ export const outilsBase = (serveur, ctx) => {
         };
     }
     // ---------- les produits (multi-produits, 15/11/2026) ----------
-    // Un compte a un ou plusieurs produits ; la fiche, la stratégie, les thèmes, les posts gardés, les idées, le planning et
+    // Un compte a un ou plusieurs produits ; la fiche, la stratégie, les mots-clés, les posts gardés, les idées, le planning et
     // les comptes TikTok de brouillon sont ceux du produit actif. La base (les posts viraux) est la même pour tous.
     serveur.registerTool("mes_produits", {
         title: "Mes produits",
-        description: "Les produits du compte viraldar (une app, un SaaS… : chacun a sa fiche, sa stratégie, ses thèmes, ses "
+        description: "Les produits du compte viraldar (une app, un SaaS… : chacun a sa fiche, sa stratégie, ses mots-clés, ses "
             + "posts gardés, ses idées, son planning et ses comptes TikTok) et celui sur lequel l'agent travaille (le produit "
             + "actif). À vérifier avant de produire quoi que ce soit pour un produit ; `choisir_produit` pour changer. Hors quota.",
         inputSchema: {},
@@ -178,7 +164,7 @@ export const outilsBase = (serveur, ctx) => {
     serveur.registerTool("choisir_produit", {
         title: "Choisir le produit actif",
         description: "Fait d'un produit (par son nom ou son id, voir `mes_produits`) le produit actif : les outils qui suivent "
-            + "lisent et écrivent sa fiche, sa stratégie, ses thèmes, ses posts gardés, ses idées et son planning. Le choix est "
+            + "lisent et écrivent sa fiche, sa stratégie, ses mots-clés, ses posts gardés, ses idées et son planning. Le choix est "
             + "gardé pour les prochaines sessions de l'agent. Ne change de produit que si l'utilisateur le demande ou si sa "
             + "demande porte clairement sur un autre produit (dis-le-lui).",
         inputSchema: { produit: z.string().min(1).describe("Nom (sans tenir compte des majuscules) ou id du produit.") },
@@ -199,30 +185,20 @@ export const outilsBase = (serveur, ctx) => {
     // ---------- infos_base ----------
     serveur.registerTool("infos_base", {
         title: "Ce que contient la base viraldar",
-        description: "Les thèmes (clés d'étiquettes à passer aux autres outils, avec leur nom et leur nombre de posts), les "
-            + "langues, les règles chiffrées (recommandés, critères) et la date du dernier export. Ne coûte rien sur le quota. "
-            + "À appeler avant de filtrer par thème. Avec `theme`, donne aussi les mots les plus fréquents de ce thème (idées de mots à chercher).",
-        inputSchema: { theme: z.string().optional().describe("Clé d'un thème ('' = toute la base) pour ses mots fréquents.") },
-    }, outil(async ({ theme }, c) => {
+        description: "Les langues, les règles chiffrées (recommandés, critères) et la date du dernier export. Ne coûte rien "
+            + "sur le quota. Les sujets de la base se trouvent par mots-clés : `suggerer_mots_cles`, `explorer_mots_cles`.",
+        inputSchema: {},
+    }, outil(async (_a, c) => {
         const I = await lireInfos(c);
-        const ets = Object.entries(I.etiquettes).sort((a, b) => (b[1].n || 0) - (a[1].n || 0));
         const r = I.regles || {};
         const lignes = [
-            `Base exportée le ${I.exporte_le} · ${Object.values(I.langues || {}).reduce((s, n) => s + n, 0)} posts (≥ ${nb(r.vues)} vues, au moins un thème).`,
+            `Base exportée le ${I.exporte_le} · ${Object.values(I.langues || {}).reduce((s, n) => s + n, 0)} posts (≥ ${nb(r.vues)} vues).`,
             `Règles : recommandés = ${JSON.stringify(r.recommandes)} ; critères : ≥ ${nb(r.vues)} vues, publié ≤ ${r.age_j} j, likes ≥ ${r.likes != null ? pct(r.likes) : "?"} des vues.`,
             "Outlier = vues ÷ médiane des posts de plus de 48 h du même compte ; vues ÷ abonnés : abonnés relevés le jour de la recherche (comptés 1 000 au moins).",
             "Quota : 600 posts distincts par jour et 30 appels par minute (posts_page) ; un post revu le même jour ne recompte pas.",
             "",
             `Langues : ${Object.entries(I.langues || {}).map(([k, n]) => `${k} ${n}`).join(", ")}`,
-            "",
-            `Thèmes (${ets.length}) — clé : nom (posts) :`,
-            ...ets.map(([k, e]) => `${k} : ${e.nom} (${e.n ?? "?"})`),
         ];
-        if (theme != null) {
-            if (theme && !I.etiquettes[theme])
-                throw new Error(`Thème inconnu : ${theme}.`);
-            lignes.push("", `Mots fréquents ${theme ? `de « ${I.etiquettes[theme].nom} »` : "de toute la base"} : ${(I.suggestions?.[theme] || []).join(", ") || "—"}`);
-        }
         return texte(lignes.join("\n"));
     }));
     // ---------- chercher_posts ----------
@@ -230,9 +206,9 @@ export const outilsBase = (serveur, ctx) => {
         title: "Chercher dans la base viraldar",
         description: "Cherche parmi les posts TikTok viraux (≥ 100 k vues) déjà relevés par viraldar — jamais sur TikTok "
             + "lui-même : si rien ne sort, la base n'a pas encore ce sujet (la recherche vide est notée pour le prochain relevé). "
-            + "Filtres : mots-clés (`mots_cles`, `mes_mots_cles` : précis et rapides), mots, thèmes, langue, vues, outlier, date, taille du compte, format, 📲. Tri au choix. 24 posts par page, "
+            + "Filtres : mots-clés (`mots_cles`, `mes_mots_cles` : précis et rapides), mots, langue, vues, outlier, date, taille du compte, format, 📲. Tri au choix. 24 posts par page, "
             + "chacun avec son URL TikTok, ses vues, son outlier (avec la médiane du compte et son n), vues ÷ abonnés, 📲, "
-            + "thèmes, langue, date. Compte dans le quota du jour (600 posts distincts). Pour des idées à reproduire sur de "
+            + "les mots-clés qui l’ont trouvé, langue, date. Compte dans le quota du jour (600 posts distincts). Pour des idées à reproduire sur de "
             + "petits comptes, préfère `petits_comptes_viraux`.",
         inputSchema: {
             ...filtres,
@@ -248,14 +224,14 @@ export const outilsBase = (serveur, ctx) => {
         if (f.mots?.trim() && !f.page && r.total != null)
             await c.from("recherches").insert({ q: f.mots.trim().slice(0, 200), n_resultats: r.total }).then(() => { }, () => { });
         return texte(rendreListe(r, I, "Recherche", f.detail) + (r.total === 0
-            ? "\n\nRien dans la base pour cette recherche (notée pour le prochain relevé). Essaie d'autres mots, un thème voisin, ou moins de filtres." : ""));
+            ? "\n\nRien dans la base pour cette recherche (notée pour le prochain relevé). Essaie d’autres mots, des mots-clés voisins (`explorer_mots_cles`), ou moins de filtres." : ""));
     }));
     // ---------- petits_comptes_viraux ----------
     serveur.registerTool("petits_comptes_viraux", {
         title: "Petits comptes viraux (recommandés)",
         description: "Les recommandés de viraldar : des posts de comptes ≤ 50 k abonnés qui ont fait ≥ 300 k vues et ≥ 20 × "
             + "leurs abonnés, classés par vues ÷ abonnés, 2 au plus par compte, les 100 premiers — les formats qui marchent "
-            + "sans audience, donc les plus reproductibles. Mêmes filtres que `chercher_posts` (mots-clés, `mes_mots_cles`, thèmes, langue, "
+            + "sans audience, donc les plus reproductibles. Mêmes filtres que `chercher_posts` (mots-clés, `mes_mots_cles`, langue, "
             + "mots…). Les posts déjà gardés ou passés par l'utilisateur n'y sont plus. Compte dans le quota du jour.",
         inputSchema: filtres,
     }, outil(async (f, c) => {
@@ -423,51 +399,6 @@ export const outilsBase = (serveur, ctx) => {
             throw new Error("Pas enregistré : " + error.message);
         const ms = (data || []);
         return texte(`Mes mots-clés (${ms.length}) :\n` + (ms.map(ligneTerme).join("\n") || "—"));
-    }));
-    // ---------- Mes thèmes ----------
-    async function lireSelection(c) {
-        const { data, error } = await c.from("ma_selection").select("etiquettes, hashtags, suggerees, ecartees").maybeSingle();
-        if (error)
-            throw new Error("ma_selection : " + error.message);
-        return data || { etiquettes: [], hashtags: [], suggerees: [], ecartees: [] };
-    }
-    const nomme = (I, ks) => ks.map(k => `${k} (${I.etiquettes[k]?.nom || "?"}, ${I.etiquettes[k]?.n ?? "?"} posts)`).join(", ") || "—";
-    serveur.registerTool("mes_themes", {
-        title: "Mes thèmes",
-        description: PRODUIT_ACTIF + "Les thèmes que l'utilisateur a choisis sur viraldar (« Mes thèmes »), ceux que le site lui suggère "
-            + "d'après les hashtags de ses vidéos, et ces hashtags. Sert de filtre `mes_themes` aux recherches. Hors quota.",
-        inputSchema: {},
-    }, outil(async (_a, c) => {
-        const I = await lireInfos(c), s = await lireSelection(c);
-        const sugg = (s.suggerees || []).filter((k) => !s.etiquettes.includes(k) && !(s.ecartees || []).includes(k));
-        return texte([`Mes thèmes : ${nomme(I, s.etiquettes || [])}`, `Suggérés : ${nomme(I, sugg)}`,
-            `Écartés : ${(s.ecartees || []).join(", ") || "—"}`, `Hashtags de ses vidéos : ${(s.hashtags || []).join(" ") || "—"}`].join("\n"));
-    }));
-    serveur.registerTool("modifier_mes_themes", {
-        title: "Modifier Mes thèmes",
-        description: PRODUIT_ACTIF + "Ajoute ou retire des thèmes (clés de `infos_base`) dans « Mes thèmes » de l'utilisateur, ou les "
-            + "remplace tous. C'est la même liste que sur le site : ne la change que si l'utilisateur le demande.",
-        inputSchema: {
-            ajouter: z.array(z.string()).optional(), retirer: z.array(z.string()).optional(),
-            remplacer: z.array(z.string()).optional().describe("La liste complète, à la place de l'actuelle."),
-        },
-    }, outil(async ({ ajouter, retirer, remplacer }, c) => {
-        const I = await lireInfos(c), s = await lireSelection(c);
-        const inconnues = [...(ajouter || []), ...(remplacer || [])].filter(k => !I.etiquettes[k]);
-        if (inconnues.length)
-            throw new Error(`Thèmes inconnus : ${inconnues.join(", ")} (voir \`infos_base\`).`);
-        let et = remplacer ? [...remplacer] : [...(s.etiquettes || [])];
-        et = [...new Set([...et, ...(ajouter || [])])].filter(k => !(retirer || []).includes(k));
-        // getUser interroge viraldar : une session révoquée y répond « session_id … does not exist » (voir ctx.expliquer).
-        const { data: u, error: eu } = await c.auth.getUser();
-        if (!u.user)
-            throw new Error(eu?.message || ctx.pasConnecte());
-        // Comme enregistrerSelection (site/js/commun.js) : user_id, etiquettes, ecartees ; une ligne par produit (produit_id,
-        // posé par la base d'après l'en-tête du produit actif).
-        const { error } = await c.from("ma_selection").upsert({ user_id: u.user.id, etiquettes: et, ecartees: s.ecartees || [] }, { onConflict: "produit_id" });
-        if (error)
-            throw new Error("Pas enregistré : " + error.message);
-        return texte(`Mes thèmes : ${nomme(I, et)}`);
     }));
     // ---------- garder / passer / noter ----------
     serveur.registerTool("trier_post", {

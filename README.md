@@ -125,12 +125,13 @@ s'appliquent (600 posts distincts par jour, 30 appels par minute) ; un post revu
 
 | outil | ce qu'il fait |
 |---|---|
-| `infos_base` | thèmes (clés et nombre de posts), langues, règles, date d'export ; mots fréquents d'un thème |
-| `chercher_posts` | recherche par mots, thèmes, langue, vues, outlier, date, taille du compte, format, 📲, avec tri |
+| `infos_base` | langues, règles chiffrées, date d'export |
+| `suggerer_mots_cles` / `explorer_mots_cles` | les mots-clés de la base (nos mots-clés de recherche et les hashtags répandus) : ceux qui commencent par, contiennent ou accompagnent d'autres termes, avec leur nombre de posts |
+| `mes_mots_cles` / `modifier_mes_mots_cles` | lire ou changer les mots-clés de ton produit, le filtre de ta niche |
+| `chercher_posts` | recherche par mots-clés, mots, langue, vues, outlier, date, taille du compte, format, 📲, avec tri |
 | `petits_comptes_viraux` | les recommandés : comptes ≤ 50 k abonnés, ≥ 300 k vues et ≥ 20 × les abonnés |
 | `post` | toutes les stats d'un post (id ou URL) |
 | `formats_similaires` | posts aux hashtags communs et à la durée proche d'un post |
-| `mes_themes` / `modifier_mes_themes` | lire ou changer Mes thèmes |
 | `trier_post` / `noter_post` | garder, passer, retirer un post ; noter ce qu'on en reprend |
 | `a_reproduire` | tous les posts gardés, avec leur note |
 | `ma_fiche` | l'accueil et la fiche produit |
@@ -143,7 +144,7 @@ Aucun outil ne publie ni n'envoie en brouillon depuis le planning : c'est toi qu
 
 | outil | ce qu'il fait |
 |---|---|
-| `ma_strategie` | ta stratégie rédigée (cap, piliers, formats retenus, cadence, premiers posts, jalons) ; sinon les repères calculés de tes thèmes (critères, petits comptes viraux, diaporama contre vidéo, chaque médiane avec son n) et le format que suggèrent les chiffres |
+| `ma_strategie` | ta stratégie rédigée (cap, piliers, formats retenus, cadence, premiers posts, jalons) ; sinon les repères calculés de tes mots-clés (critères, petits comptes viraux, diaporama contre vidéo, chaque médiane avec son n) et le format que suggèrent les chiffres |
 | `mon_planning` | tes plans, leurs comptes et les créneaux d'une période (par défaut aujourd'hui et les 7 jours suivants, à l'heure du plan) : heure, compte, statut, et ce qu'il faut reproduire (le post gardé qui sert de modèle, l'idée et son brief) ; `a_produire` : ce qui reste à produire |
 | `maj_creneaux` | fait avancer un ou plusieurs créneaux : statut (à créer → en production → prêt), titre, légende, format, modèle, idée liée |
 | `mes_idees` / `ecrire_idee` | lire, créer et modifier les idées à produire de la Bibliothèque (brief, statut, format, compte, post modèle) |

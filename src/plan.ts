@@ -202,7 +202,7 @@ export const outilsPlan: Module = (serveur, ctx: Contexte) => {
     title: "Ma stratégie de contenu",
     description: PRODUIT_ACTIF + "La stratégie de contenu de l'utilisateur (page Stratégie de viraldar) : cap, piliers, formats retenus, "
       + "cadence, premiers posts à produire, jalons, pièges. Si elle n'est pas encore rédigée, les repères calculés sur "
-      + "la base pour ses thèmes (critères, petits comptes viraux, « d'habitude », Demande l'app, diaporama contre vidéo, "
+      + "la base pour ses mots-clés (critères, petits comptes viraux, « d'habitude », Demande l'app, diaporama contre vidéo, "
       + "chaque médiane avec son n) et le format que suggèrent les chiffres. À lire avant de produire ou de remplir le "
       + "planning. Hors quota.",
     inputSchema: {},
@@ -210,14 +210,16 @@ export const outilsPlan: Module = (serveur, ctx: Contexte) => {
     const [acc, st, sel, R] = await Promise.all([
       c.from("accueil").select("objectifs, qui_filme, vues_visees, problemes, lu_le, fiche_le").maybeSingle(),
       c.from("strategies").select("strategie, redigee_le").maybeSingle(),
-      c.from("ma_selection").select("etiquettes").maybeSingle(),
+      c.rpc("mes_mots_cles"),
       lireRegles(c),
     ]);
-    for (const [nom, r] of [["accueil", acc], ["strategies", st], ["ma_selection", sel]] as const)
+    for (const [nom, r] of [["accueil", acc], ["strategies", st], ["mes_mots_cles", sel]] as const)
       if (r.error) throw new Error(`${nom} : ${r.error.message}`);
-    const themes: string[] = sel.data?.etiquettes || [];
+    // ses mots-clés (0.5.0, 18/11/2026 : à la place des thèmes)
+    const mots: string[] = ((sel.data || []) as Ligne[]).map(m => m.terme);
+    const siens = new Set(mots.map(m => m.toLowerCase()));
     // Les repères ne doivent jamais empêcher de lire la stratégie rédigée : leur erreur (délai de la base…) est dite, pas levée.
-    const { data: rep, error: er } = await c.rpc("strategie_reperes", { p_etiquettes: themes });
+    const { data: rep, error: er } = await c.rpc("strategie_reperes", { p_mes_mots: true });
     const a = acc.data, s = st.data?.strategie;
     const l: string[] = [];
     const profil = a ? `Profil (accueil) : vues visées ${a.vues_visees || "—"} · qui produit ${a.qui_filme || "—"} · objectifs ${(a.objectifs || []).join(", ") || "—"} · ce qui bloque ${(a.problemes || []).join(", ") || "—"}` : "Profil : accueil pas rempli.";
@@ -240,8 +242,8 @@ export const outilsPlan: Module = (serveur, ctx: Contexte) => {
         `  ${i + 1}. « ${p.titre} »${p.accroche ? ` — accroche : « ${p.accroche} »` : ""} · ${FORMAT_STRAT(p.format)}${p.pilier ? ` · pilier ${p.pilier}` : ""}`));
       if (s.jalons?.length) l.push("Jalons :", ...s.jalons.map((j: Ligne) => `  - ${j.quand} : ${j.quoi}${j.critere ? ` (critère : ${j.critere})` : ""}`));
       if (s.a_eviter?.length) l.push("À éviter :", ...s.a_eviter.map((x: string) => `  - ${x}`));
-      if (s.themes?.ajouter?.length) l.push(`Thèmes à suivre en plus : ${s.themes.ajouter.filter((k: string) => !themes.includes(k)).join(", ") || "(déjà suivis)"}`
-        + `${s.themes.pourquoi ? ` — ${s.themes.pourquoi}` : ""} (avec l'accord de l'utilisateur : \`modifier_mes_themes\`).`);
+      if (s.mots_cles?.ajouter?.length) l.push(`Mots-clés à suivre en plus : ${s.mots_cles.ajouter.filter((k: string) => !siens.has(k.toLowerCase())).join(", ") || "(déjà suivis)"}`
+        + `${s.mots_cles.pourquoi ? ` — ${s.mots_cles.pourquoi}` : ""} (avec l'accord de l'utilisateur : \`modifier_mes_mots_cles\`).`);
       l.push("", "Repères recalculés maintenant (les chiffres de la stratégie datent de sa rédaction) :");
     } else {
       l.push("Pas encore de stratégie rédigée. "
@@ -258,8 +260,8 @@ export const outilsPlan: Module = (serveur, ctx: Contexte) => {
           : "Rappeler `ma_strategie` dans une minute ; en attendant, `petits_comptes_viraux` donne les posts qui ont marché."));
       return texte(l.join("\n"));
     }
-    const rc = R.recommandes || {}, noms = (k: string) => R.etiquettes?.[k]?.nom || k;
-    l.push(`Repères de ${themes.length ? `ses thèmes (${themes.join(", ")})` : "toute la base (aucun thème choisi : `mes_themes`)"} : `
+    const rc = R.recommandes || {};
+    l.push(`Repères de ${mots.length ? `ses ${mots.length} mots-clés (${mots.slice(0, 12).join(", ")}${mots.length > 12 ? "…" : ""})` : "toute la base (aucun mot-clé choisi : `mes_mots_cles`)"} : `
       + `${entier(rep.total)} posts de ${entier(rep.comptes)} comptes.`);
     l.push(`  Critères (≥ ${nb(R.vues)} vues, publié ≤ ${R.age_j} j, likes ≥ ${R.likes != null ? pct(R.likes) : "?"}) : ${entier(rep.valides)} posts les passent, de ${entier(rep.valides_comptes)} comptes.`);
     l.push(`  Petits comptes viraux (≤ ${nb(rc.abonnes_max)} abonnés, ≥ ${nb(rc.vues_min)} vues, ≥ ${rc.ratio_min} × leurs abonnés) : `
@@ -272,7 +274,7 @@ export const outilsPlan: Module = (serveur, ctx: Contexte) => {
       ...fs.map((f: Ligne) => `    ${f.format === "video" ? "vidéo" : "diaporama"} : ${entier(f.valides)} passent les critères sur ${entier(f.n)} (${f.fiable ? "fiable" : "à tester"}), `
         + `${entier(f.comptes_valides)} comptes ; vues médianes ${nb(f.vues_med)} (n = ${entier(f.valides)}), ${fois(f.ratio_med)} les abonnés (n = ${entier(f.ratio_n)}), `
         + `${fois(f.outlier_med)} la médiane du compte (n = ${entier(f.outlier_n)}) ; ${entier(f.recommandables)} de petits comptes viraux ; 📲 ${entier(f.demande_app)}`));
-    if (rep.par_theme?.length) l.push(`  Par thème : ${rep.par_theme.map((e: Ligne) => `${noms(e.cle)} ${entier(e.n)} posts (${entier(e.valides)} passent, ${entier(e.recommandables)} petits comptes viraux)`).join(" ; ")}.`);
+    if (rep.par_terme?.length) l.push(`  Par mot-clé (les 20 plus fournis) : ${rep.par_terme.slice(0, 20).map((e: Ligne) => `${e.terme} ${entier(e.n)} posts (${entier(e.valides)} passent, ${entier(e.recommandables)} petits comptes viraux)`).join(" ; ")}.`);
     if (!s) {
       // Comme la page : le format fiable, faisable avec ce qu'il a, qui porte le plus loin un petit compte (× abonnés).
       const ok = fs.filter((f: Ligne) => f.fiable && f.ratio_n >= 3);

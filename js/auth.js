@@ -74,7 +74,7 @@ const stockage = {
     removeItem: (k) => { const c = lireFichier(); delete c[k]; ecrireFichier(c); },
 };
 // ---------- le produit actif (multi-produits, 15/11/2026) ----------
-// Un compte viraldar a plusieurs produits (une app, un SaaS…) : la fiche, la stratégie, les thèmes, les posts gardés,
+// Un compte viraldar a plusieurs produits (une app, un SaaS…) : la fiche, la stratégie, les mots-clés, les posts gardés,
 // les idées et les plans dépendent du produit. Le produit actif part dans l'en-tête `x-viraldar-produit` de chaque
 // requête à la base (la fonction `produit_courant()` le lit, s'il appartient bien au compte ; sans lui, le premier
 // produit du compte). D'où vient-il, du plus fort au plus faible :

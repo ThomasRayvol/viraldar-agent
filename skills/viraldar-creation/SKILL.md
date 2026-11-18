@@ -41,20 +41,19 @@ Références, à charger quand l'étape le demande (pas toutes d'un coup) :
 | famille | outil | ce qu'il fait |
 |---|---|---|
 | session | `qui_suis_je` / `connexion` / `deconnexion` | état de la session ; sans session, rien ne marche : `connexion` rend tout de suite un lien (et essaie de l'ouvrir) ; montre-le à l'utilisateur, qui l'ouvre dans le navigateur où il est connecté et autorise ; puis `connexion` avec `attendre: true` (1 min au plus, rappelle-le tant qu'il n'a pas fini). « Injoignable (réseau) » n'est pas une déconnexion : réessaie plus tard, sans `connexion` |
-| base | `mes_produits` / `choisir_produit` | un compte viraldar peut avoir plusieurs produits (chacun sa fiche, sa stratégie, ses thèmes, ses posts gardés, ses idées, son planning et ses comptes TikTok) ; les outils portent sur le produit actif (`qui_suis_je` le dit) |
-| base | `infos_base` | thèmes (avec leur nombre de posts), langues, règles ; hors quota : commence par là |
-| base | `chercher_posts` | recherche dans la base (mots-clés `mots_cles` / `mes_mots_cles`, mots libres, thèmes, langue, format, publié depuis, vues, outlier, likes ≥ 2 %, 📲), 24 par page |
-| base | `petits_comptes_viraux` | les « petits comptes viraux » (règles plus bas), pour ses thèmes, des thèmes ou une langue |
+| base | `mes_produits` / `choisir_produit` | un compte viraldar peut avoir plusieurs produits (chacun sa fiche, sa stratégie, ses mots-clés, ses posts gardés, ses idées, son planning et ses comptes TikTok) ; les outils portent sur le produit actif (`qui_suis_je` le dit) |
+| base | `infos_base` | langues, règles chiffrées, date d'export ; hors quota |
+| base | `chercher_posts` | recherche dans la base (mots-clés `mots_cles` / `mes_mots_cles`, mots libres, langue, format, publié depuis, vues, outlier, likes ≥ 2 %, 📲), 24 par page |
+| base | `petits_comptes_viraux` | les « petits comptes viraux » (règles plus bas), pour ses mots-clés, des mots-clés ou une langue |
 | base | `post` | un post : chiffres, compte, médiane du compte et son n, texte, hashtags, format, durée, 📲 (`detail: true` pour tout) |
 | base | `formats_similaires` | posts proches d'un post donné (hashtags, durée) |
 | base | `suggerer_mots_cles` | le vocabulaire de la base (nos mots-clés de recherche et les hashtags répandus) avec le nombre de posts de chaque terme ; hors quota |
 | base | `explorer_mots_cles` | trouver dans tout le vocabulaire les mots-clés cohérents avec son produit : `contient` (les termes qui contiennent un texte) et `voisins_de` / `voisins_de_mes_mots` (ceux qui reviennent sur les mêmes posts, avec leur lift) ; hors quota |
-| base | `mes_mots_cles` / `modifier_mes_mots_cles` | lire ou modifier les mots-clés de son produit : le filtre précis de sa niche (à la place des thèmes) |
-| base | `mes_themes` / `modifier_mes_themes` | ses thèmes (étiquettes larges), en attendant leur retrait |
+| base | `mes_mots_cles` / `modifier_mes_mots_cles` | lire ou modifier les mots-clés de son produit : le filtre de sa niche (les thèmes ont disparu en 0.5.0) |
 | base | `trier_post` / `noter_post` | garder un post (→ À reproduire), le passer ou le retirer ; noter le format et la raison |
 | base | `a_reproduire` | sa liste À reproduire, avec ses notes |
 | base | `ma_fiche` | sa fiche produit (produit, clients, problèmes, positionnement, angles) et son profil, dont **qui filme** |
-| base | `ma_strategie` | sa stratégie rédigée (cap, piliers, formats retenus, cadence, premiers posts, jalons) ; sinon les repères calculés de ses thèmes et le format que suggèrent les chiffres |
+| base | `ma_strategie` | sa stratégie rédigée (cap, piliers, formats retenus, cadence, premiers posts, jalons) ; sinon les repères calculés de ses mots-clés et le format que suggèrent les chiffres |
 | base | `mon_planning` | ses plans, comptes et créneaux (aujourd'hui + 7 jours par défaut ; `a_produire` : ce qui reste à produire), chacun avec son modèle (post gardé) et/ou son idée (brief) |
 | base | `maj_creneaux` | fait avancer des créneaux : statut, titre, légende, format, modèle, idée liée |
 | base | `mes_idees` / `ecrire_idee` | ses idées à produire (Bibliothèque → Créer) : lire, créer, modifier le brief et le statut |
@@ -82,7 +81,7 @@ sur tiktok.com à la place. Récupérer la vidéo d'**un** modèle déjà choisi
 recherche (étape 3).
 
 **Quota** : la base sert ~600 posts distincts par compte et par jour, 30 appels par minute. Sois sobre : filtre côté
-outil (thèmes, langue, type, récence) plutôt que de feuilleter des pages ; 2 à 4 pages suffisent pour une étape.
+outil (mots-clés, langue, type, récence) plutôt que de feuilleter des pages ; 2 à 4 pages suffisent pour une étape.
 
 **Calcul** : un traitement lourd à la fois (transcription Whisper, rendu Remotion, encodage long), même avec plusieurs
 modèles ou plusieurs agents : neuf Whisper lancés ensemble ont fait tomber une machine (mémoire saturée). Mets les
@@ -122,11 +121,11 @@ elle existe, est **la** source du texte (citations, chiffres, affirmations).
 Puis `mes_mots_cles` : vérifie que ses mots-clés collent à sa niche. Pour en trouver : `explorer_mots_cles` avec `contient` sur les mots de sa fiche (produit, problème, concurrents, formats qu'il veut produire), puis `voisins_de` des meilleurs (un `lift` élevé = propre à sa niche ; écarte les homonymes et les termes d'une autre langue que son public). Propose une liste courte, chaque terme avec son nombre de posts et sa raison ; `modifier_mes_mots_cles` seulement avec son accord.
 
 **Livrable** : `fiche.md` — produit, cible, 3 à 5 douleurs dans les mots du client, ressources de production (visage,
-voix, temps, captures de l'app, médias, polices), base de contenus vérifiés (chemin), objectif et mesure, thèmes retenus.
+voix, temps, captures de l'app, médias, polices), base de contenus vérifiés (chemin), objectif et mesure, mots-clés retenus.
 
 ### 2. Trouver les formats prouvés de sa niche
 
-Commence par `petits_comptes_viraux` sur ses thèmes et sa langue : ce sont les posts qui prouvent qu'**un petit compte** peut y
+Commence par `petits_comptes_viraux` sur ses mots-clés (`mes_mots_cles: true`) et sa langue : ce sont les posts qui prouvent qu'**un petit compte** peut y
 percer (≤ 50 k abonnés, ≥ 300 k vues, ≥ 20 × ses abonnés). Puis `chercher_posts` avec ses mots (douleurs, usages, nom des
 concurrents) et les filtres : publié ≤ 90 jours, likes ≥ 2 %, outlier élevé ; un passage avec 📲 seul.
 
@@ -371,7 +370,7 @@ références ; les fichiers restent dans le dossier de travail.
 - **Récupérer la vidéo d'un modèle sans son accord**, la monter, l'envoyer ou la republier : elle sert à l'analyse et
   à la comparaison, sur sa machine.
 - **Publier ou envoyer sans accord.** Aucun brouillon envoyé sans un « oui » explicite pour ce post-là ; aucune
-  modification de ses thèmes ou de sa liste À reproduire sans le lui dire ; aucun créneau marqué « en brouillon » ou
+  modification de ses mots-clés ou de sa liste À reproduire sans le lui dire ; aucun créneau marqué « en brouillon » ou
   « publié » qu'il n'a pas publié lui-même.
 - **Lancer une recherche TikTok** ou aspirer la base (pas de pagination systématique).
 - **Lancer des traitements lourds en parallèle** (Whisper, rendus) : un à la fois.
