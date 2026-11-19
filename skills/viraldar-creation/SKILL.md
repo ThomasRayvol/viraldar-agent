@@ -215,7 +215,7 @@ séparer le format de ce qui tient à ce post) :
    qu'il y a **dans** la vidéo : une note « citation + origine » peut décrire la légende, un « il a décrit ma vie » un mème.
 2. **Voir la vidéo.** Demande à l'utilisateur s'il accepte que tu la récupères par son URL pour l'analyser sur sa
    machine ; avec son accord, `modele_decortiquer` (planche, coupes, cadence, orientation, transcription si Whisper est
-   installé). La vidéo reste dans `modeles/<id>/`, ne sert qu'à l'analyse et à la comparaison : elle n'entre jamais
+   installé ; pour un diaporama, toutes ses images et leur texte : lis-les toutes, pas seulement la couverture). La vidéo reste dans `modeles/<id>/`, ne sert qu'à l'analyse et à la comparaison : elle n'entre jamais
    dans un montage, n'est jamais envoyée ni republiée. Sans son accord (ou sans l'outil) : il ouvre le post et te
    donne des captures (début, chaque changement de plan, fin) et la transcription de la voix, ou te les décrit.
 3. Remplis la **fiche de mécanique** : hook transcrit mot pour mot, nombre de plans, durée d'un plan, fonds, polices et

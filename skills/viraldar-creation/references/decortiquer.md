@@ -11,7 +11,7 @@ Quand le format compte d'autres posts, décortique-en 2 de plus : ce qui est com
 |---|---|
 | `post` (`detail: true`) | vues, likes, commentaires, partages, enregistrements, outlier (avec médiane et n du compte), vues ÷ abonnés, type (vidéo / diaporama), nombre de slides ou durée, son, légende, hashtags, extraits de commentaires « demande l'app » |
 | `formats_similaires` | 2-5 posts voisins pour vérifier que la mécanique se répète |
-| `modele_decortiquer` | **avec l'accord de l'utilisateur**, la vidéo récupérée par son URL et analysée sur sa machine : planche d'images, coupes détectées, nombre de plans et durée moyenne d'un plan, orientation et ratio, transcription horodatée si Whisper est installé |
+| `modele_decortiquer` | **avec l'accord de l'utilisateur**, le post récupéré par son URL et analysé sur sa machine. Vidéo : planche d'images, coupes détectées, nombre de plans et durée moyenne d'un plan, orientation et ratio, transcription horodatée si Whisper est installé. **Diaporama : toutes ses images**, numérotées, une planche, le son et le texte de chaque image par OCR local si tesseract est installé — lis-les toutes, dans l'ordre, pas seulement la couverture |
 | l'utilisateur | sans l'outil ou sans accord : captures (début, chaque changement de plan, fin), la voix transcrite ou décrite, ce qu'il voit et entend |
 
 **La vidéo du modèle** : on la récupère seulement si l'utilisateur l'accepte, pour une analyse locale. Elle reste dans
@@ -94,6 +94,9 @@ Un élément qui n'apparaît que dans 1 des 3 posts du format est du contenu, pa
 - **Le letterboxage** : une vidéo 16:9 dans un cadre 9:16 a des bandes noires qui mangent jusqu'aux deux tiers de
   l'image ; à l'œil, elle « ouvre sur du noir ». Dans un relevé, 7 « ouvertures noires » sur 15 n'étaient que du
   letterboxage.
+- **Lire un diaporama par sa couverture** : la couverture pose l'accroche, le reste du diaporama porte la série (la
+  structure image par image), le déclencheur (souvent dans la chute) et l'appel à l'action. `modele_decortiquer` rend
+  toutes les images : lis-les toutes, dans l'ordre, et note le rôle de chacune dans la fiche.
 - **Croire qu'un mème se raconte** : un mème (« me psychoanalysing… ») tient à son image et à son décalage ; il se
   reprend avec une image du même registre, pas en texte sur fond.
 - **La taille servie n'est pas la taille montée** : TikTok rogne une image sous la légende (`production.md` § 4) ; une

@@ -25,12 +25,16 @@ minuscules, espaces normalisés (« Révélation » et « révélation » font u
 ## L'ordre : du plus objectif au plus interprété
 
 1. **Le support** et **les chiffres** : vues, indice (vues ÷ médiane du compte), engagement (ci-dessous).
-2. **La couverture et la légende.** Sur sa machine : `modele_decortiquer` avec l'URL du post (une planche, la
-   transcription si un Whisper est installé). Un diaporama n'a pas de vidéo : la planche est vide ; demande une capture
-   de la couverture à l'utilisateur, ou ouvre le post dans son navigateur s'il te l'a permis. Lis le texte à l'écran
-   toi-même (ou un OCR local s'il a tesseract) : **il n'est enregistré nulle part**, seule ta lecture courte l'est. Avec
-   le seul connecteur (claude.ai, téléphone), tu n'as que la légende (`mes_posts`) : dis-le, propose moins, et
-   demande-lui ce qu'il y a sur la couverture.
+2. **Le post entier, et la légende.** Sur sa machine : `modele_decortiquer` avec l'URL du post. Une vidéo : une
+   planche, la cadence, la transcription si un Whisper est installé. Un **diaporama : toutes ses images**, téléchargées
+   dans le dossier de travail, montrées une par une et numérotées, avec le texte de chacune par un OCR local si
+   tesseract est installé (`ma_machine` ; le pack français lit les accents). **Lis toutes les images, dans l'ordre** —
+   l'accroche (image 1), le développement, la chute, l'appel à l'action — jamais la seule couverture : la série et le
+   déclencheur se lisent sur l'ensemble (sur un diaporama d'Apolline, l'image 1 pose « Mes parents ont mis papi en
+   EHPAD… Pourtant… », la 2 le conte des Grimm, la 3 la morale et l'appel « Envoie-le à quelqu'un… »). L'OCR est une
+   aide : vérifie sur l'image. Ce texte **n'est enregistré nulle part**, seule ta lecture courte l'est. Avec le seul
+   connecteur (claude.ai, téléphone), tu n'as que la légende (`mes_posts`) : dis-le, propose moins, et demande-lui ce
+   qu'il y a sur les images.
 3. **La série** : regroupe les posts qui ont la même structure. Une légende dont la 1re ligne revient est un indice,
    pas une preuve (la légende dit rarement la scène).
 4. **Le déclencheur** : l'accroche, puis ce que disent les commentaires (« c'est moi », « je savais pas »…), puis les

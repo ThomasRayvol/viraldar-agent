@@ -9,6 +9,7 @@ import type { Contexte, Module } from "../contexte.ts";
 import { candidatsNavigateur } from "./apercu.ts";
 import { installationFfmpeg, projetRemotion, trouverFfmpeg } from "./montage.ts";
 import { trouverWhisper, trouverYtDlp } from "./analyse.ts";
+import { languesTesseract, trouverTesseract } from "./diaporama.ts";
 
 type Os = "darwin" | "win32" | "linux";
 const OS: Os = process.platform === "darwin" || process.platform === "win32" ? process.platform : "linux";
@@ -75,6 +76,22 @@ const PROGRAMMES: Programme[] = [
     },
   },
   {
+    nom: "tesseract (OCR)",
+    sert: "lire le texte de chaque image d'un diaporama (modele_decortiquer avec l'URL d'un post photo), sur cette machine ; avec le pack français pour les accents",
+    sans: "pas de texte relevé : l'agent lit les images du diaporama lui-même (elles sont téléchargées et montrées quand même)",
+    installer: {
+      darwin: "`brew install tesseract tesseract-lang` (tesseract-lang apporte le français)",
+      win32: "`winget install UB-Mannheim.TesseractOCR` (cocher la langue française à l'installation)",
+      linux: "`sudo apt install tesseract-ocr tesseract-ocr-fra` (ou le paquet tesseract et son pack fra de sa distribution)",
+    },
+    trouver: async () => {
+      const exe = trouverTesseract();
+      if (!exe) return null;
+      const l = await languesTesseract(exe);
+      return `${exe} (langues : ${l.join(", ") || "aucune"}${l.includes("fra") ? "" : " ; le pack français manque : `tesseract-ocr-fra`, `tesseract-lang` ou `tesseract-data-fra` selon le système"})`;
+    },
+  },
+  {
     nom: "Remotion",
     sert: "des animations plus riches que ffmpeg (textes animés, listes qui défilent), dans un projet Remotion à l'utilisateur",
     sans: "le montage passe par ffmpeg, qui couvre les formats courants",
@@ -92,7 +109,8 @@ export const outilsMachine: Module = (serveur, ctx: Contexte) => {
   serveur.registerTool("ma_machine", {
     title: "Ce qu'il y a sur cet ordinateur pour fabriquer",
     description: "Regarde (sans rien installer) les programmes dont dépend la fabrication : Chrome (carrousels), ffmpeg "
-      + "(montage, analyse d'une vidéo), yt-dlp (vidéo d'un modèle par son URL), Whisper (transcription), Remotion "
+      + "(montage, analyse d'une vidéo), yt-dlp (vidéo d'un modèle par son URL), Whisper (transcription), tesseract (texte des "
+      + "images d'un diaporama, OCR local), Remotion "
       + "(animations). Pour chacun : présent ou non, à quoi il sert, ce qu'on perd sans, et la commande à taper soi-même "
       + "pour ce système. À appeler AVANT une tâche qui en dépend (décortiquer un modèle, monter, faire un carrousel) : "
       + "explique à l'utilisateur ce qui manque et ce que ça permet, demande-lui ce qu'il veut installer, et ne commence "
