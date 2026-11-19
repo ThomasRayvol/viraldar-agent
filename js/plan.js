@@ -271,7 +271,9 @@ export const outilsPlan = (serveur, ctx) => {
             angles.forEach((x, i) => {
                 const k = liens.get(x.id) || { idees: 0, creneaux: 0, publies: 0 };
                 const champs = [["pour qui", x.pour_qui], ["douleur", x.douleur], ["promesse", x.promesse], ["hypothèse", x.hypothese]]
-                    .map(([n, v]) => `\n     ${n} : ${v ? saisi(v, 300) : "à préciser (avec l'utilisateur)"}`).join("");
+                    .map(([n, v]) => `\n     ${n} : ${v ? saisi(v, 300) : "à préciser (avec l'utilisateur)"}`).join("")
+                    // le déclencheur attendu (19/11/2026, texte libre) : le même mot que la lecture de ses posts, pour comparer visé / obtenu
+                    + `\n     déclencheur attendu : ${x.declencheur ? saisi(x.declencheur, 60) : "à préciser (`ecrire_angle` avec `declencheur`)"}`;
                 const fmts = (x.formats || []);
                 const pr = [...(x.preuves || []), ...fmts.map(f => f?.preuve).filter(Boolean)].map((v) => saisi(v, 200)).filter(Boolean);
                 const ac = (x.accroches || []).map((v) => saisi(v, 160)).filter(Boolean);
@@ -537,7 +539,9 @@ export const outilsPlan = (serveur, ctx) => {
                 const an = x.angle_id ? tAngles.get(x.angle_id) : null;
                 b.push(`  ${heureDe(d, p.fuseau)} @${k?.pseudo || "?"} — ${LIB_CRENEAU[x.statut] || x.statut} · créneau ${court(x.id)}${tt ? ` · « ${saisi(tt, 140)} »` : ""}${an ? ` · angle « ${saisi(an.nom, 80)} » (${court(an.id)})` : ""}${mq.length ? ` · ⚠ ${mq.join(", ")}` : ""}`
                     + `\n        ${quoi ? `à reproduire : ${quoi}` : "rien à reproduire désigné : lie un post gardé ou une idée (`maj_creneaux`)"}`
-                    + `${x.format ? ` · format : ${saisi(x.format, 40)}` : ""} · sa légende à publier : ${x.note ? `« ${saisi(x.note, 120)} »` : "—"}`);
+                    + `${x.format ? ` · format : ${saisi(x.format, 40)}` : ""}`
+                    + `${x.format_vise || x.declencheur_vise ? ` · visé : ${[x.format_vise ? `série « ${saisi(x.format_vise, 80)} »` : "", x.declencheur_vise ? `déclencheur « ${saisi(x.declencheur_vise, 60)} »` : ""].filter(Boolean).join(", ")}` : ""}`
+                    + ` · sa légende à publier : ${x.note ? `« ${saisi(x.note, 120)} »` : "—"}`);
             }
             if (!vus.length) {
                 b.push("", a.a_produire ? "Rien à produire sur cette période." : "Aucun créneau sur cette période.");
@@ -598,7 +602,9 @@ export const outilsPlan = (serveur, ctx) => {
             + "texte sur plusieurs comptes le même jour n'est PAS enregistré sans `confirmer: true`, à ne passer qu'après accord "
             + "explicite de l'utilisateur ; les répétitions et les écarts à la stratégie sont seulement signalés. Stratégie v2 : "
             + "`angle` rattache le créneau à un angle (pour le bilan par angle) ; une fois publié, `lien` (URL TikTok) et la note "
-            + "d'exécution (`execution_note` 1 à 5 + `execution_commentaire`, fixée par l'utilisateur).",
+            + "d'exécution (`execution_note` 1 à 5 + `execution_commentaire`, fixée par l'utilisateur). Le prévu avec les mots de "
+            + "la lecture (19/11/2026) : `format_vise` (la série visée, « dialogue sur un tableau ») et `declencheur_vise` (texte libre "
+            + "court : identification, révélation, défi, humour noir…) ; `bilan` les compare à la lecture du post publié (visé / obtenu).",
         inputSchema: {
             confirmer: z.boolean().optional().describe("L'utilisateur a vu les points « à confirmer » et les accepte."),
             creneaux: z.array(z.object({
@@ -616,6 +622,8 @@ export const outilsPlan = (serveur, ctx) => {
                 lien: nul(300).describe("L'URL TikTok du post, une fois publié par l'utilisateur (sert aux relevés de vues)."),
                 execution_note: z.number().int().min(1).max(5).nullable().optional().describe("La note d'exécution du post publié, de 1 à 5, FIXÉE PAR L'UTILISATEUR (propose-la d'après la comparaison modèle | nous, il décide)."),
                 execution_commentaire: nul(500).describe("Ce qui pèche ou réussit dans l'exécution (« voix trop lente, accroche illisible »)."),
+                format_vise: nul(80).describe("La série (format) visée : sa structure reconnaissable, en quelques mots (« ma psy m'a dit », « dialogue sur un tableau »). Les mêmes mots que la lecture de ses posts (`lire_mes_posts`)."),
+                declencheur_vise: nul(60).describe("Le déclencheur visé, en texte libre court (identification, révélation, défi, humour noir… ; aucune liste imposée). Les mêmes mots que la lecture de ses posts."),
             })).min(1).max(200),
         },
     }, outil(async ({ confirmer, creneaux }, c) => {
@@ -677,6 +685,18 @@ export const outilsPlan = (serveur, ctx) => {
                 e.execution_note = x.execution_note;
             if (x.execution_commentaire !== undefined)
                 e.execution_commentaire = x.execution_commentaire?.trim() || null;
+            if (x.format_vise !== undefined)
+                e.format_vise = x.format_vise?.trim() || null;
+            if (x.declencheur_vise !== undefined)
+                e.declencheur_vise = x.declencheur_vise?.trim() || null;
+            // une idée liée donne son visé au créneau, sauf s'il est donné ici
+            if (e.brief_id && (x.format_vise === undefined || x.declencheur_vise === undefined)) {
+                const { data: id } = await c.from("bibliotheque_idees").select("format_vise, declencheur_vise").eq("id", e.brief_id).maybeSingle();
+                if (x.format_vise === undefined && id?.format_vise)
+                    e.format_vise = id.format_vise;
+                if (x.declencheur_vise === undefined && id?.declencheur_vise)
+                    e.declencheur_vise = id.declencheur_vise;
+            }
             if (Object.keys(e).length === 1)
                 throw new Error(`Rien à changer pour le créneau ${x.creneau}.`);
             lot.push(e);
@@ -838,6 +858,7 @@ export const outilsPlan = (serveur, ctx) => {
             const brief = (i.brief || "").trim();
             l.push(`• idée ${court(i.id)} « ${saisi(i.titre, 160)} » — ${LIB_IDEE[i.statut] || i.statut}${i.format ? ` · ${i.format === "video" ? "vidéo" : "diaporama"}` : ""}`
                 + `${i.compte_cible ? ` · pour ${i.compte_cible}` : ""}${i.post_id ? ` · modèle post ${i.post_id}` : ""} · origine ${i.origine}`
+                + (i.format_vise || i.declencheur_vise ? ` · visé : ${[i.format_vise ? `série « ${saisi(i.format_vise, 80)} »` : "", i.declencheur_vise ? `déclencheur « ${saisi(i.declencheur_vise, 60)} »` : ""].filter(Boolean).join(", ")}` : "")
                 + (cs.length ? ` · ${cs.length} créneau${cs.length > 1 ? "x" : ""}${prochain ? `, prochain : ${(() => {
                     const d = new Date(prochain.prevu_a), f = tz.get(prochain.plan_id) || "Europe/Paris";
                     return `${jourCourt(jourDe(d, f))} ${heureDe(d, f)} @${ps.get(prochain.compte_id) || "?"} (créneau ${court(prochain.id)})`;
@@ -852,7 +873,8 @@ export const outilsPlan = (serveur, ctx) => {
         description: PRODUIT_ACTIF + "Sans `idee` : crée une idée à produire dans la Bibliothèque de l'utilisateur (origine « agent ») ; avec "
             + "`idee` : modifie celle-ci (seules les clés données changent ; null efface). Le brief garde le hook, la structure, "
             + "le visuel, le son, le CTA (gabarit : `methode`, references/brief.md). Du texte seulement : les fichiers restent "
-            + "dans le dossier de travail. Pas de suppression ici (sur le site).",
+            + "dans le dossier de travail. Pas de suppression ici (sur le site). Le prévu avec les mots de la lecture (19/11/2026) : "
+            + "`format_vise` (la série) et `declencheur_vise` (texte libre court) ; un créneau qui reçoit cette idée les reprend.",
         inputSchema: {
             idee: z.string().max(36).optional().describe("Référence (`mes_idees`) ou id complet ; absent = nouvelle idée."),
             titre: z.string().min(1).max(160).optional().describe("Obligatoire pour une nouvelle idée."),
@@ -863,6 +885,8 @@ export const outilsPlan = (serveur, ctx) => {
             post: nul(80).describe("Le post modèle : id ou URL TikTok (de préférence un post gardé)."),
             lien: nul(500).describe("L'adresse du post une fois publié."),
             angle: nul(36).describe("L'angle de la stratégie que sert cette idée : référence (`ma_strategie`) ou id complet."),
+            format_vise: nul(80).describe("La série (format) visée, en quelques mots (« ma psy m'a dit ») : les mêmes mots que la lecture de ses posts."),
+            declencheur_vise: nul(60).describe("Le déclencheur visé, texte libre court (identification, révélation, défi… ; aucune liste imposée)."),
         },
     }, outil(async (a, c) => {
         const v = {};
@@ -882,6 +906,10 @@ export const outilsPlan = (serveur, ctx) => {
             v.lien = a.lien?.trim() || null;
         if (a.angle !== undefined)
             v.angle_id = a.angle ? await resoudre(c, "angles", a.angle) : null;
+        if (a.format_vise !== undefined)
+            v.format_vise = a.format_vise?.trim().replace(/\s+/g, " ") || null;
+        if (a.declencheur_vise !== undefined)
+            v.declencheur_vise = a.declencheur_vise?.trim().replace(/\s+/g, " ") || null;
         let i;
         if (!a.idee) {
             if (!v.titre)

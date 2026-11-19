@@ -27,7 +27,10 @@ Un format porte un angle quand son déclencheur ne dépend pas de son sujet ; s'
 attendrissante), le **sujet est soudé** et le format ne sort pas de sa niche. Grille complète, exemples et test des
 commentaires : `references/formats.md`, « Angle ou format ». C'est une grille de lecture : la lecture est la tienne,
 le chiffre (n, médianes) tranche. Dans viraldar, les champs « format » (stratégie, idées, planning) désignent le
-**support** : dis « support » quand c'est de lui qu'il s'agit.
+**support** : dis « support » quand c'est de lui qu'il s'agit ; la série visée et le déclencheur visé ont leurs champs
+(`format_vise`, `declencheur_vise` ; `declencheur` d'un angle). La lecture de ses posts (support, série, déclencheur,
+sujet soudé, variables, angle) se fait **chez lui, par toi**, et s'enregistre validée par lui (`lire_mes_posts`) :
+`references/lire-un-post.md`. Le déclencheur est un texte libre court, jamais une liste fermée.
 
 Parle la langue de l'utilisateur. Travaille dans son dossier (`~/viraldar/<projet>/` par défaut) : tout ce que tu
 décides s'écrit dans des fichiers qu'il peut relire (`fiche.md`, `modeles/`, `briefs/`, `calendrier.md`, `journal.md`).
@@ -38,6 +41,7 @@ Références, à charger quand l'étape le demande (pas toutes d'un coup) :
 |---|---|
 | `references/decortiquer.md` | étape 3 et avant chaque créneau : la fiche de mécanique d'un modèle |
 | `references/lire-les-stats.md` | dès que tu cites un chiffre viraldar (étapes 2, 3, 8) |
+| `references/lire-un-post.md` | étape 8 et l'historique : lire ses posts (support, série, déclencheur, sujet soudé, variables, angle), le bilan croisé et l'engagement |
 | `references/accroches.md` | étapes 3-4, le catalogue d'accroches |
 | `references/formats.md` | étapes 2-5 : angle ou format (la grille), les formats, quand les choisir, comment les produire avec nos outils |
 | `references/brief.md` | étape 4, le gabarit de brief à remplir avant de produire |
@@ -332,12 +336,17 @@ créent et se suppriment sur le site (Planning → Nouveau plan), pas par toi.
 Charge `references/lire-les-stats.md` (section « ses propres posts »). La boucle vit dans viraldar (stratégie v2), plus
 dans un `journal.md` :
 0. **son historique, dès le premier jour** : `relever_mes_posts` avec `posts: 200` relève tout ce qu'il a déjà publié sur
-   ses comptes ; `mes_posts` montre ces posts sans angle (légende, indice) : propose un angle de sa stratégie pour chacun
-   (ou un angle nouveau pour un groupe qui n'entre dans aucun ; un post sans légende, demande-lui), **montre-lui la
-   proposition en tableau**, puis `classer_mes_posts` avec `valide: true` pour ce qu'il approuve. `bilan` lit alors ce
-   que chaque angle a déjà donné, séparé de ce qu'il produit avec viraldar ; sans note d'exécution, un angle de
+   ses comptes (et le support des plus vus) ; **lis ses posts** (`references/lire-un-post.md`) : `mes_posts` avec le
+   filtre `a_lire` donne l'ordre (gagnants, au-dessus, puis sous la médiane dans les mêmes séries) ; regarde chaque post
+   ici (couverture, planche, légende, chiffres), propose support, série, déclencheur, sujet soudé, variables et angle
+   (un angle de sa stratégie, ou un angle nouveau pour un groupe qui n'entre dans aucun), **montre-lui la proposition
+   en tableau**, puis `lire_mes_posts` avec `valide: true` pour ce qu'il approuve (`classer_mes_posts` reste pour
+   l'angle seul). `bilan` lit alors ce que chaque angle a déjà donné, séparé de ce qu'il produit avec viraldar, et la
+   lecture croisée (série, déclencheur, angle × déclencheur, avec l'engagement) ; sans note d'exécution, un angle de
    l'historique sous sa médiane est « à retester », jamais « il n'attire pas » ;
-1. un post publié passe à « publié » dans son planning avec son lien TikTok (`maj_creneaux`, `lien`) et son angle ;
+1. un post publié passe à « publié » dans son planning avec son lien TikTok (`maj_creneaux`, `lien`) et son angle ; ce
+   qu'il visait (série, déclencheur : `format_vise`, `declencheur_vise`) se pose dès l'idée ou le créneau, et sa lecture
+   une fois publié (`lire_mes_posts`) : le bilan compare visé / obtenu ;
 2. **relevés à 8 h, 48 h et 7 jours** : `relever_mes_posts` sur sa machine (ses comptes seulement), sinon ses chiffres et
    `noter_resultats` ; un post se juge à 48 h (un bon post croît encore après), à 8 h il peut seulement être déclaré gagnant ;
 3. **la note d'exécution** de chaque post publié (`noter_execution`, 1 à 5 et un commentaire) : propose-la d'après la
@@ -346,7 +355,8 @@ dans un `journal.md` :
 4. **ses conversions**, avec son critère (`noter_conversions`) : c'est ce qui compte pour lui ; par compte s'il a un lien
    par compte (jeton de campagne App Store, UTM Google Play, code promo) ;
 5. **`bilan`** : verdict par post, lecture par angle (il porte / il n'attire pas / non concluant car mal exécuté / trop
-   tôt), conversions ; décide avec lui (garder, refaire l'exécution, abandonner l'angle : `ecrire_angle`), puis remets
+   tôt), lecture croisée (par série, déclencheur, support, angle × déclencheur ; vues ET engagement, chaque chiffre avec
+   son n : l'engagement dit si la cible a été touchée, sans le biais des vues achetées), conversions ; décide avec lui (garder, refaire l'exécution, abandonner l'angle : `ecrire_angle`), puis remets
    au planning. Les seuils du bilan sont arbitrés (19/11/2026).
 
 Diagnostic, par format (après ≥ 3 posts du format, sinon « trop tôt ») :

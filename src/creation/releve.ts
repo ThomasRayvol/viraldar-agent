@@ -10,7 +10,7 @@
 // (RPC mes_posts_relever, qui revérifie que chaque compte est déclaré pour le produit), avec leur relevé dans
 // `resultats`. Ceux sans créneau forment son historique : ils donnent la médiane du compte dès le premier relevé, et leur
 // angle se propose avec `mes_posts` / `classer_mes_posts`. La légende de SES posts est gardée (500 caractères, pour
-// proposer l'angle) ; ce relevé ne rend que des identifiants et des compteurs.
+// proposer l'angle) ; ce relevé ne rend que des identifiants et des compteurs, et le support (19/11/2026).
 import { z } from "zod";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Contexte, Module } from "../contexte.ts";
@@ -24,6 +24,18 @@ const PSEUDO = /^[a-z0-9._]{2,24}$/;
 const idVideo = (url: string | null) => url?.match(/\/(?:video|photo)\/(\d{8,25})/)?.[1] ?? null;
 const FENETRE_H = 36;   // sans URL, un post rapproché d'un créneau publié à ± 36 h de sa date de publication
 const LOT = 300;        // posts par appel de mes_posts_relever (la RPC en refuse davantage)
+// Le support (19/11/2026, arbitré : il se relève chez l'utilisateur, jamais chez viraldar) : le catalogue ne distingue
+// pas un diaporama d'une vidéo ; `yt-dlp -j` post par post, oui (un diaporama n'a que de l'audio, vcodec « none » ; une
+// vidéo a un flux h264/h265). ~1,1 s par post, une seule fois par post (ceux qui ont déjà leur support sont sautés).
+const SUPPORTS_DEFAUT = 40;
+
+/** diaporama | video d'après `yt-dlp -j`, ou null si la lecture échoue. */
+export function supportDe(j: Ligne): "diaporama" | "video" | null {
+  const fs: Ligne[] = Array.isArray(j?.formats) ? j.formats : [];
+  if (!fs.length && !j?.vcodec) return null;
+  const video = fs.some(f => f.vcodec && f.vcodec !== "none") || (!!j.vcodec && j.vcodec !== "none");
+  return video ? "video" : "diaporama";
+}
 
 export const outilsReleve: Module = (serveur, ctx: Contexte) => {
   async function sb(): Promise<SupabaseClient> {
@@ -65,8 +77,9 @@ export const outilsReleve: Module = (serveur, ctx: Contexte) => {
       posts: z.number().int().min(5).max(200).optional().describe("Les N posts les plus récents de chaque compte (60 par défaut ; 200 pour tout l'historique)."),
       produit: z.string().max(80).optional().describe("Le produit (nom ou id) dont relever les comptes ; absent = le produit actif de ce "
         + "module. Le connecteur viraldar garde son propre produit actif : donne-le ici s'il diffère."),
+      supports: z.number().int().min(0).max(200).optional().describe(`Relever aussi le support (diaporama ou vidéo) de N posts qui ne l'ont pas encore, les plus vus d'abord (~1 s par post, une seule fois par post ; ${SUPPORTS_DEFAUT} par défaut, 0 pour s'en passer).`),
     },
-  }, async (a: { compte?: string; posts?: number; produit?: string }) => {
+  }, async (a: { compte?: string; posts?: number; produit?: string; supports?: number }) => {
     try {
       const c = await sb();
       // Le module création (0.6.0) n'a plus mes_produits / choisir_produit par défaut : le produit se donne ici.
@@ -142,6 +155,22 @@ export const outilsReleve: Module = (serveur, ctx: Contexte) => {
         const { error } = await c.rpc("plan_maj_creneaux", { p: liens });
         if (error) lignes.push(`Liens non posés : ${error.message}`);
       }
+      // Le support des posts qui ne l'ont pas encore (les plus vus d'abord : ce sont eux qu'on lit en premier).
+      const nSup = a.supports ?? SUPPORTS_DEFAUT;
+      let supLus = 0, supRestants = 0;
+      if (nSup > 0 && lus.length) {
+        const { data: deja } = await c.from("mes_posts").select("video_id, support").not("support", "is", null).limit(5000);
+        const connus = new Set((deja || []).map((x: Ligne) => String(x.video_id)));
+        const manquants = lus.filter(x => !connus.has(x.video_id)).sort((x, y) => (y.vues ?? 0) - (x.vues ?? 0));
+        supRestants = Math.max(0, manquants.length - nSup);
+        for (const x of manquants.slice(0, nSup)) {
+          try {
+            const { stdout } = await executer(yt, ["-j", "--no-warnings", "--skip-download", x.url], { nom: "yt-dlp", delaiMs: 60_000 });
+            const sp = supportDe(JSON.parse(stdout));
+            if (sp) { x.support = sp; supLus++; }
+          } catch { /* privé, supprimé, limité : le support reste inconnu, il sera retenté au prochain relevé */ }
+        }
+      }
       // Tous les posts lus, par lots : créneaux et historique (la RPC ne garde que les comptes déclarés du produit).
       const total = { nouveaux: 0, releves: 0 };
       for (let i = 0; i < lus.length; i += LOT) {
@@ -152,11 +181,13 @@ export const outilsReleve: Module = (serveur, ctx: Contexte) => {
       }
       if (lus.length) lignes.push("", `${lus.length} post(s) lu(s) : ${total.releves} relevé(s) enregistré(s) (${surCreneau} sur un créneau publié`
         + `${liens.length ? `, ${liens.length} lien(s) TikTok posé(s) d'après la date` : ""}) ; ${total.nouveaux} post(s) nouveau(x) dans son historique. `
-        + "Relire un post met à jour ses chiffres, sans le dédoubler.");
+        + "Relire un post met à jour ses chiffres, sans le dédoubler."
+        + (supLus || supRestants ? ` Support (diaporama / vidéo) relevé pour ${supLus} post(s)${supRestants ? `, ${supRestants} encore sans support (relance avec \`supports\`)` : ""}.` : ""));
       if (aMarquer.length) lignes.push(`${aMarquer.length} post(s) publié(s) près de l'heure d'un créneau encore « prêt » : si ce sont ces créneaux, `
         + `demande-le à l'utilisateur puis passe-les à « publié » avec leur lien (\`maj_creneaux\`) : ${aMarquer.slice(0, 6).join(", ")}${aMarquer.length > 6 ? "…" : ""}.`);
-      if (lus.length) lignes.push("Ensuite : `bilan` (verdicts, historique, médiane de chaque compte), puis `mes_posts` pour proposer l'angle "
-        + "des posts qui n'en ont pas, et `classer_mes_posts` une fois que l'utilisateur a validé.");
+      if (lus.length) lignes.push("Ensuite : `bilan` (verdicts, historique, médiane de chaque compte, engagement), puis `mes_posts` "
+        + "(filtre a_lire) pour LIRE ses posts ici, sur sa machine — couverture ou planche (`modele_decortiquer`), légende, chiffres — "
+        + "et proposer série, déclencheur, sujet soudé, variables et angle (`lire_mes_posts`, validés par l'utilisateur).");
       return texte((actif ? `Produit : ${actif.nom}.\n` : "") + lignes.join("\n"));
     } catch (e) { return erreur(ctx.expliquer((e as Error).message)); }
   });

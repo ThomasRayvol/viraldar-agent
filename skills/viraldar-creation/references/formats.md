@@ -28,7 +28,10 @@ C'est une grille de lecture, pas une science : elle sert à trier et à formuler
 chiffre (posts qui passent les critères, médianes avec leur n, puis les résultats de ses propres posts). La lecture
 (quel déclencheur, quel angle) est la tienne ; elle se **note dans le texte qui existe déjà** : la fiche de mécanique
 (`decortiquer.md`), la note d'un post gardé (`noter_post` : « format · déclencheur · soudé ou non »), le brief de
-l'idée, l'hypothèse de l'angle.
+l'idée, l'hypothèse de l'angle — et, depuis le 19/11/2026, dans des champs courts : le déclencheur attendu d'un angle
+(`ecrire_angle`, `declencheur`), la série et le déclencheur visés d'une idée ou d'un créneau (`format_vise`,
+`declencheur_vise`), la lecture de ses posts publiés (`lire_mes_posts`, validée par l'utilisateur ; `lire-un-post.md`).
+Le déclencheur y reste un texte libre court : les mots de la liste ci-dessus sont des suggestions.
 
 ## Le catalogue
 
