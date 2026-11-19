@@ -10,7 +10,7 @@ vulnerability). Answer within 7 days.
 
 | | |
 |---|---|
-| Réseau / Network | l'API Supabase de viraldar (avec ta session) ; les images que tu donnes par URL (https/http publiques seulement : aucune adresse locale ni privée) ; l'adresse d'envoi de TikTok (`*.tiktokapis.com`) pour un brouillon vidéo |
+| Réseau / Network | l'API Supabase de viraldar (avec ta session) ; les images que tu donnes par URL (https/http publiques seulement : aucune adresse locale ni privée) ; l'adresse d'envoi de TikTok (`*.tiktokapis.com`) pour un brouillon vidéo ; le stockage R2 de viraldar (`*.r2.cloudflarestorage.com`, adresse signée, effacée après envoi) pour un brouillon diaporama |
 | Fichiers lus / Files read | les médias que tu désignes (images vérifiées par leur contenu, vidéos, sons, `.srt`, polices), **dans le dossier de travail seulement par défaut** ; `VIRALDAR_LECTURE` l'élargit (dossiers en plus, ou `partout`) par ton choix explicite ; jamais dans un dossier caché / only in the working folder by default; `VIRALDAR_LECTURE` widens it, by your explicit choice; never in a hidden folder |
 | Fichiers écrits / Files written | le dossier de travail (`~/viraldar`) ; la session (`~/.config/viraldar/session.json`, 600) ; `src/viraldar/` et `public/viraldar-medias/` d'un projet Remotion que tu désignes |
 | Programmes lancés / Processes | ffmpeg/ffprobe, un Chrome/Chromium headless (sans réseau, sans script, CSP `default-src 'none'`), le CLI Remotion de ton projet ; toujours sans shell |

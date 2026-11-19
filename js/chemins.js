@@ -131,12 +131,12 @@ export async function dossierLu(p, travail) {
     return r;
 }
 /** Un fichier qui va QUITTER la machine (brouillon TikTok) : il doit être dans le dossier de travail. */
-export async function cheminDuTravail(p, travail, extensions) {
+export async function cheminDuTravail(p, travail, extensions, conseil) {
     const r = await reel(developper(p, travail));
     const t = await realpath(travail).catch(() => resolve(travail));
     if (!sous(t, r))
         throw new CheminRefuse(`Envoi refusé : seuls les fichiers du dossier de travail (${t}) partent vers TikTok. `
-            + `Passe la vidéo par montage_format_tiktok (sortie dans ${join(t, "montages")}), ou demande à l'utilisateur de l'y copier.`);
+            + (conseil ?? `Passe la vidéo par montage_format_tiktok (sortie dans ${join(t, "montages")}), ou demande à l'utilisateur de l'y copier.`));
     const ext = extname(r).toLowerCase();
     if (!extensions.includes(ext))
         throw new CheminRefuse(`Format non pris en charge : ${extensions.join(", ")} seulement.`);

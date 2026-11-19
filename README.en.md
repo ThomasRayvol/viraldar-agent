@@ -92,7 +92,7 @@ agents.
 
 | variable | default | |
 |---|---|---|
-| `VIRALDAR_DOSSIER` | `~/viraldar` | where carousels and edits go; only videos in this folder can be sent as TikTok drafts |
+| `VIRALDAR_DOSSIER` | `~/viraldar` | where carousels and edits go; only videos and images in this folder can be sent as TikTok drafts |
 | `VIRALDAR_OUTILS` | `carrousel,montage` | tool families to load (`publication`, `remotion`, `base` — the database locally, without the connector —, or `tout` for all): every tool costs agent context |
 | `VIRALDAR_LECTURE` | — (strict) | empty: tools read **only the working folder** (copy your media there). To widen it, **your choice**: extra folders (`:`-separated, `;` on Windows), or `partout` (the whole disk except hidden folders) |
 | `VIRALDAR_CHROMIUM` | — | browser path |

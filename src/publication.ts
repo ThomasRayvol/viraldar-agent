@@ -5,13 +5,19 @@
 //   brouillon part vers un compte du produit actif ; un compte nommé explicitement peut être d'un autre produit.)
 //   {action:"brouillon_video_init", open_id, taille_octets}     → {publish_id, upload_url, morceau_octets, nb_morceaux}
 //   {action:"brouillon_photos", open_id, urls, titre?, description?} → {publish_id}
+//   {action:"transit_photos", open_id, photos:[{type,taille}]}  → {lot, envois:[{envoi, entetes, url}], expire_s}
+//   {action:"transit_vider", lot}                                → {supprimes}
 //   {action:"brouillon_statut", open_id, publish_id}            → {statut, raison?}
 // La vidéo, elle, part directement d'ici vers upload_url (Content Posting API, « Media transfer guide ») : morceaux
 // envoyés dans l'ordre par PUT, Content-Range `bytes a-b/total`, le dernier morceau absorbe le reste ; 206 tant qu'il
 // en manque, 201 à la fin. Rien n'est gardé en local.
+// Les photos (19/11/2026) : TikTok ne les prend qu'en les tirant d'un préfixe vérifié (PULL_FROM_URL). La fonction
+// signe des adresses d'envoi R2 sous transit/ (PUT, 15 min, type et taille signés) ; on y envoie les images d'ici, on
+// passe leurs adresses publiques à brouillon_photos, puis on vide le lot dès que TikTok les a téléchargées (filet :
+// le bucket efface transit/ après 24 h). Les octets ne passent jamais par viraldar.
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { open, stat } from "node:fs/promises";
-import { extname } from "node:path";
+import { open, readFile, stat } from "node:fs/promises";
+import { extname, join } from "node:path";
 import { cheminDuTravail } from "./chemins.ts";
 import { z } from "zod";
 import type { Contexte, Module } from "./contexte.ts";
@@ -26,6 +32,31 @@ const STATUTS: Record<string, string> = {
   PUBLISH_COMPLETE: "publié (ou finalisé dans l'app)",
   FAILED: "échec",
 };
+// Les raisons d'échec les plus courantes (fail_reason de TikTok), dites clairement ; les autres telles quelles.
+const RAISONS: Record<string, string> = {
+  picture_size_check_failed: "image refusée : dimensions hors des limites de TikTok (1080 × 1920 conseillé)",
+  file_format_check_failed: "format refusé (JPEG ou WebP pour les images, MP4/MOV/WebM pour une vidéo)",
+  photo_pull_failed: "TikTok n'a pas pu télécharger les images",
+  video_pull_failed: "TikTok n'a pas pu télécharger la vidéo",
+  auth_removed: "l'utilisateur a retiré l'accès de viraldar à ce compte TikTok",
+  spam_risk_too_many_posts: "trop d'envois sur 24 h pour ce compte",
+  publish_cancelled: "envoi annulé",
+};
+const etatLisible = (statut: string, raison?: string) => `${statut}${STATUTS[statut] ? ` — ${STATUTS[statut]}` : ""}`
+  + (raison ? ` (raison : ${RAISONS[raison] ? `${RAISONS[raison]} — ${raison}` : raison})` : "");
+const TYPES_PHOTO: Record<string, string> = { ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".webp": "image/webp" };
+const PHOTOS_MAX = 35, PHOTO_MAX_OCTETS = 20 * 1024 * 1024;
+const SUIVI_PAUSE_MS = 4000, SUIVI_MAX_MS = 90_000; // statut : 30 appels par minute et par jeton chez TikTok
+/** Les premiers octets disent le vrai type (une extension se renomme). */
+async function signatureImage(chemin: string, type: string): Promise<boolean> {
+  const f = await open(chemin, "r");
+  try {
+    const b = Buffer.alloc(12);
+    await f.read(b, 0, 12, 0);
+    return type === "image/jpeg" ? b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff
+      : b.toString("latin1", 0, 4) === "RIFF" && b.toString("latin1", 8, 12) === "WEBP";
+  } finally { await f.close(); }
+}
 type Compte = { open_id: string; username: string; display_name?: string; scopes?: string; produit_id?: string };
 
 export const outilsPublication: Module = (serveur, ctx: Contexte) => {
@@ -141,22 +172,82 @@ export const outilsPublication: Module = (serveur, ctx: Contexte) => {
 
   serveur.registerTool("envoyer_brouillon_photos", {
     title: "Envoyer un carrousel en brouillon TikTok",
-    description: "Envoie un carrousel de photos dans les brouillons TikTok de l'utilisateur (il le finit dans l'app). "
-      + "Les images doivent DÉJÀ être en ligne à des URL publiques que TikTok va télécharger (JPEG ou WebP, 35 au plus, "
-      + "dans l'ordre ; TikTok n'accepte que des domaines vérifiés par l'app viraldar). Cet outil n'héberge pas les "
-      + "fichiers locaux : un carrousel fabriqué en local doit d'abord être mis en ligne par un autre moyen.",
+    description: "Envoie un carrousel de photos dans les brouillons TikTok de l'utilisateur (il le finit dans l'app : "
+      + "son, visibilité, publication). Donne `fichiers` : les images locales du dossier de travail, dans l'ordre "
+      + "(JPEG ou WebP, 35 au plus, 20 Mo chacune ; TikTok refuse le PNG : rends le carrousel avec `sortie: \"jpeg\"`). "
+      + "Elles passent quelques secondes en transit sur le stockage de viraldar, le temps que TikTok les télécharge, "
+      + "puis sont effacées. Rend un publish_id à suivre avec `statut_brouillon`. (`urls` : seulement des images déjà en "
+      + "ligne sur un domaine vérifié par l'app viraldar chez TikTok.)",
     inputSchema: {
-      urls: z.array(z.string().url()).min(1).max(35).describe("URL publiques des images, dans l'ordre du carrousel."),
-      titre: z.string().max(90).optional(),
+      fichiers: z.array(z.string()).min(1).max(PHOTOS_MAX).optional()
+        .describe("Chemins des images, dans l'ordre du carrousel (ex. carrousels/<nom>/01.jpg…)."),
+      urls: z.array(z.string().url()).min(1).max(PHOTOS_MAX).optional().describe("À la place de `fichiers`, rarement utile."),
+      titre: z.string().max(90).optional().describe("Titre du post (90 caractères au plus)."),
       description: z.string().max(4000).optional().describe("Texte du post (hashtags compris)."),
       compte: champCompte,
     },
-  }, outil<{ urls: string[]; titre?: string; description?: string; compte?: string }>(async ({ urls, titre, description, compte: choix }) => {
-    const t = await compte(choix);
-    const { publish_id } = await tiktok({ action: "brouillon_photos", open_id: t.open_id, urls, titre, description }) as { publish_id: string };
-    return texte(`Carrousel de ${urls.length} images envoyé vers @${t.username}. publish_id : ${publish_id}. `
-      + "Vérifie avec `statut_brouillon` (TikTok télécharge les images).");
-  }));
+  }, outil<{ fichiers?: string[]; urls?: string[]; titre?: string; description?: string; compte?: string }>(
+    async ({ fichiers, urls, titre, description, compte: choix }) => {
+      if (!!fichiers === !!urls) throw new Error("Donne `fichiers` (les images locales) ou `urls`, pas les deux.");
+      if (!fichiers) {
+        const t = await compte(choix);
+        const { publish_id } = await tiktok({ action: "brouillon_photos", open_id: t.open_id, urls, titre, description }) as { publish_id: string };
+        return texte(`Carrousel de ${urls!.length} images envoyé vers @${t.username}. publish_id : ${publish_id}. `
+          + "Vérifie avec `statut_brouillon` (TikTok télécharge les images).");
+      }
+      // Ces fichiers quittent la machine : seulement du dossier de travail, et seulement des images (signature lue).
+      const images: { chemin: string; type: string; taille: number }[] = [];
+      for (const f of fichiers) {
+        const ext = extname(f).toLowerCase();
+        if (ext === ".png") throw new Error(`${f} : TikTok refuse le PNG. Rends le carrousel avec \`sortie: "jpeg"\` (carrousel_rendre).`);
+        const chemin = await cheminDuTravail(f, ctx.dossierTravail, Object.keys(TYPES_PHOTO),
+          `Rends le carrousel avec carrousel_rendre (sortie dans ${join(ctx.dossierTravail, "carrousels")}), ou demande à l'utilisateur d'y copier ses images.`);
+        const type = TYPES_PHOTO[extname(chemin).toLowerCase()]!;
+        if (!(await signatureImage(chemin, type))) throw new Error(`${f} : ce n'est pas une image ${type === "image/webp" ? "WebP" : "JPEG"}.`);
+        const taille = (await stat(chemin)).size;
+        if (taille > PHOTO_MAX_OCTETS) throw new Error(`${f} : plus de 20 Mo, TikTok la refusera.`);
+        images.push({ chemin, type, taille });
+      }
+      const t = await compte(choix);
+      const tr = await tiktok({ action: "transit_photos", open_id: t.open_id,
+        photos: images.map(({ type, taille }) => ({ type, taille })) }) as
+        { lot: string; envois: { envoi: string; entetes: Record<string, string>; url: string }[] };
+      if (!tr?.lot || tr.envois?.length !== images.length) throw new Error("Réponse inattendue de la fonction tiktok (transit).");
+      let garder = false; // vrai seulement si TikTok n'a pas fini de télécharger : on laisse alors le filet de 24 h
+      try {
+        await Promise.all(images.map(async (im, k) => {
+          const { envoi, entetes } = tr.envois[k]!;
+          const dest = new URL(envoi); // les images ne partent que vers le stockage R2 de viraldar, en https
+          if (dest.protocol !== "https:" || !dest.hostname.endsWith(".r2.cloudflarestorage.com"))
+            throw new Error("Adresse d'envoi inattendue : rien n'a été envoyé.");
+          const corps = await readFile(im.chemin);
+          let rep: Response | null = null;
+          for (let essai = 0; essai < 3; essai++) {
+            rep = await fetch(envoi, { method: "PUT", body: corps, headers: entetes }).catch(() => null);
+            if (rep && rep.status < 500) break;
+            await new Promise(r => setTimeout(r, 2000 * (essai + 1)));
+          }
+          if (!rep?.ok) throw new Error(`Image ${k + 1} : envoi refusé (HTTP ${rep?.status ?? "injoignable"}).`);
+        }));
+        const { publish_id } = await tiktok({ action: "brouillon_photos", open_id: t.open_id,
+          urls: tr.envois.map(e => e.url), titre, description }) as { publish_id: string };
+        // TikTok tire les images en quelques secondes d'ordinaire ; on attend qu'il ait fini avant de vider le lot.
+        let statut = "PROCESSING_DOWNLOAD", raison: string | undefined;
+        const debut = Date.now();
+        while (statut === "PROCESSING_DOWNLOAD" && Date.now() - debut < SUIVI_MAX_MS) {
+          await new Promise(r => setTimeout(r, SUIVI_PAUSE_MS));
+          ({ statut, raison } = await tiktok({ action: "brouillon_statut", open_id: t.open_id, publish_id }) as { statut: string; raison?: string });
+        }
+        garder = statut === "PROCESSING_DOWNLOAD";
+        const etat = etatLisible(statut, raison);
+        return texte(`Carrousel de ${images.length} images envoyé vers @${t.username}. publish_id : ${publish_id}. État : ${etat}. `
+          + (garder ? "TikTok télécharge encore : les images restent en transit 24 h au plus, puis sont effacées ; vérifie plus tard avec `statut_brouillon`."
+            : statut === "FAILED" ? "Images effacées du transit."
+              : "Images effacées du transit. Si ce n'est pas encore dans la boîte de réception TikTok, `statut_brouillon` le dira (parfois plusieurs minutes)."));
+      } finally {
+        if (!garder) await tiktok({ action: "transit_vider", lot: tr.lot }).catch(() => { /* le filet de 24 h */ });
+      }
+    }));
 
   serveur.registerTool("statut_brouillon", {
     title: "Où en est un brouillon TikTok",
@@ -166,6 +257,6 @@ export const outilsPublication: Module = (serveur, ctx: Contexte) => {
   }, outil<{ publish_id: string; compte?: string }>(async ({ publish_id, compte: choix }) => {
     const t = await compte(choix);
     const { statut, raison } = await tiktok({ action: "brouillon_statut", open_id: t.open_id, publish_id }) as { statut: string; raison?: string };
-    return texte(`${statut}${STATUTS[statut] ? ` — ${STATUTS[statut]}` : ""}${raison ? ` (raison : ${raison})` : ""}`);
+    return texte(etatLisible(statut, raison));
   }));
 };

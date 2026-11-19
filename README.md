@@ -96,7 +96,7 @@ agents.
 
 | variable | défaut | |
 |---|---|---|
-| `VIRALDAR_DOSSIER` | `~/viraldar` | où ranger carrousels et montages ; seules les vidéos de ce dossier peuvent partir en brouillon TikTok |
+| `VIRALDAR_DOSSIER` | `~/viraldar` | où ranger carrousels et montages ; seuls les vidéos et images de ce dossier peuvent partir en brouillon TikTok |
 | `VIRALDAR_OUTILS` | `carrousel,montage` | familles d'outils chargées (`publication`, `remotion`, `base` — la base en local, sans le connecteur —, ou `tout`) : chaque outil pèse sur le contexte de l'agent |
 | `VIRALDAR_LECTURE` | — (lecture stricte) | vide : les outils ne lisent **que le dossier de travail** (copie-y tes médias). Pour élargir, **ton choix** : des dossiers en plus (séparés par `:`, `;` sous Windows), ou `partout` (tout le disque, sauf les dossiers cachés) |
 | `VIRALDAR_CHROMIUM` | — | chemin du navigateur |
@@ -180,7 +180,7 @@ finit dans l'app TikTok.
 |---|---|
 | `comptes_tiktok` | les comptes TikTok reliés |
 | `envoyer_brouillon_video` | envoie une vidéo du dossier de travail (mp4, mov, webm) |
-| `envoyer_brouillon_photos` | envoie un carrousel d'images déjà en ligne (URL publiques) |
+| `envoyer_brouillon_photos` | envoie un carrousel d'images du dossier de travail (JPEG ou WebP ; quelques secondes en transit chez viraldar, puis effacées) |
 | `statut_brouillon` | où en est un envoi |
 
 ## Montage

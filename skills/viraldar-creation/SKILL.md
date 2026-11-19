@@ -288,10 +288,10 @@ Seulement quand l'utilisateur a dit « oui, envoie ». Rappelle-lui avant :
 - TikTok refuse plus de **5 envois en attente sur 24 h** : il faut publier (ou supprimer) les brouillons pour en
   envoyer d'autres ; les diaporamas demandent une app TikTok récente.
 
-`envoyer_brouillon_video`, puis `statut_brouillon`. Pour un diaporama : `envoyer_brouillon_photos` ne prend que des
-images **déjà en ligne** (JPEG ou WebP, sur un domaine vérifié par l'app) ; avec des fichiers locaux, fais-en une vidéo
-(`montage_diaporama` sur les images de `carrousel_rendre`, puis `envoyer_brouillon_video`), ou laisse l'utilisateur les
-poster depuis son téléphone. Rends le carrousel en `"sortie": "jpeg"` : TikTok refuse le PNG. Une vidéo arrive en
+`envoyer_brouillon_video`, puis `statut_brouillon`. Pour un diaporama : `envoyer_brouillon_photos` avec `fichiers`, les
+images de `carrousel_rendre` dans l'ordre (JPEG ou WebP, 35 au plus ; elles passent quelques secondes en transit chez
+viraldar, le temps que TikTok les télécharge, puis sont effacées). Rends le carrousel en `"sortie": "jpeg"` : TikTok
+refuse le PNG. Un diaporama garde son titre et sa description ; une vidéo arrive en
 brouillon sans légende : donne-lui la légende du brief à coller. Jamais la comparaison : elle contient le modèle.
 Si l'outil renvoie une erreur (quota, jeton, compte restreint), dis-la telle quelle et n'essaie pas de la contourner.
 
