@@ -304,8 +304,16 @@ export const outilsBase = (serveur, ctx) => {
             throw new Error(`Pseudo illisible : ${a.compte}`);
         const I = await lireInfos(c);
         await lireFavoris(c);
+        // Ses propres comptes : la base partagée ne les relève pas (elle ne garde que les posts de la niche) ; leur catalogue
+        // entier est dans `mes_posts`, privé, relevé sur sa machine (19/11/2026).
+        const { count: siens } = await c.from("mes_posts").select("id", { count: "exact", head: true }).eq("compte", pseudo)
+            .then((x) => x, () => ({ count: null }));
+        const sien = siens ? `\n\n@${pseudo} est un de ses comptes : ses ${siens} posts relevés sur sa machine (\`relever_mes_posts\`), avec la médiane `
+            + "du compte, sont dans `bilan` et `mes_posts` — c'est là qu'il faut lire ses propres chiffres." : "";
         const r = await page(c, { p_mode: "recherche", p_filtres: { compte: pseudo }, p_tri: a.tri || "outlier", p_page: a.page || 0 });
         if (r.total === 0 && !r.refus) {
+            if (sien)
+                return texte(`@${pseudo} n'est pas dans la base viraldar des posts viraux.` + sien);
             // Arbitré le 18/11/2026 : un compte absent, c'est viraldar qui le relève ; la recherche vide le lui dit.
             await c.from("recherches").insert({ q: "@" + pseudo, n_resultats: 0 }).then(() => { }, () => { });
             return texte(`@${pseudo} n'est pas dans la base viraldar (aucun de ses posts n'a été relevé). C'est noté : viraldar `
@@ -318,7 +326,7 @@ export const outilsBase = (serveur, ctx) => {
                 + (p0?.mediane_compte != null ? ` · médiane de ses posts : ${nb(Math.round(p0.mediane_compte))} vues (n = ${p0.n_compte} posts de plus de 48 h, son catalogue)` : "")];
         if (p0?.mediane_compte == null)
             tete.push("Pas de médiane : son catalogue n'a pas encore été relevé.");
-        return texte(tete.join("\n") + "\n\n" + rendreListe(r, I, `Ses posts, tri ${a.tri || "outlier"}`, a.detail));
+        return texte(tete.join("\n") + "\n\n" + rendreListe(r, I, `Ses posts, tri ${a.tri || "outlier"}`, a.detail) + sien);
     }));
     // ---------- formats_similaires ----------
     serveur.registerTool("formats_similaires", {
@@ -538,7 +546,7 @@ export const outilsBase = (serveur, ctx) => {
         inputSchema: {},
     }, outil(async (_a, c) => {
         const { data, error } = await c.from("accueil")
-            .select("objectifs, compte, vend, lien, qui_filme, vues_visees, problemes, lecture, lu_le, fiche, fiche_le").maybeSingle();
+            .select("objectifs, compte, vend, lien, qui_filme, vues_visees, problemes, lecture, lu_le, fiche, fiche_le, corrections, corrections_le").maybeSingle();
         if (error)
             throw new Error("accueil : " + error.message);
         if (!data)
@@ -550,16 +558,45 @@ export const outilsBase = (serveur, ctx) => {
             `  lien : ${data.lien || "—"}${pg.nom ? ` (page lue : ⟦${externe(pg.nom)}${pg.genre ? ", " + externe(pg.genre) : ""}⟧)` : ""} · qui filme : ${data.qui_filme || "—"} · vues visées : ${data.vues_visees || "—"}`,
             `  ce qui bloque : ${(data.problemes || []).join(", ") || "—"}`,
         ];
-        const f = data.fiche;
+        // La fiche telle que la page la montre (site/js/produit.js, ficheVue) : chaque clé corrigée par l'utilisateur
+        // remplace celle de la fiche rédigée, et fait foi ; « note » (ce qu'on a mal compris) à part. Une correction à
+        // null (« Rétablir ») rend la clé rédigée.
+        const { note, ...corr } = (data.corrections || {});
+        const corrigees = new Set(Object.keys(corr).filter(k => corr[k] != null && k !== "recherche"));
+        const f = data.fiche || corrigees.size ? { ...(data.fiche || {}) } : null;
+        if (f)
+            for (const k of corrigees)
+                f[k] = corr[k];
+        const titre = (nom, k) => nom + (corrigees.has(k) ? " (correction de l'utilisateur)" : "") + " :";
         if (!f)
             l.push("", data.lu_le ? "Fiche produit : en cours de rédaction." : "Fiche produit : pas encore (il faut un lien et un @TikTok dans l'accueil).");
         else {
-            l.push("", `Fiche produit (rédigée le ${String(data.fiche_le).slice(0, 10)}) :`, `Produit : ${f.produit?.resume || "—"}`, liste(f.produit?.fonctions), "Clients :", liste(f.clients), "Problèmes résolus :", liste(f.problemes), `Positionnement : ${f.positionnement?.pitch || "—"}`, liste(f.positionnement?.differences), "Angles de vidéos :", liste(f.angles));
+            const quand = [data.fiche_le ? `rédigée le ${String(data.fiche_le).slice(0, 10)}` : "pas encore rédigée",
+                corrigees.size && data.corrections_le ? `corrigée par l'utilisateur le ${String(data.corrections_le).slice(0, 10)} ; ses corrections font foi` : ""]
+                .filter(Boolean).join(", ");
+            l.push("", `Fiche produit (${quand}) :`, `${titre("Produit", "produit")} ${f.produit?.resume || "—"}`, liste(f.produit?.fonctions), titre("Clients", "clients"), liste(f.clients), titre("Problèmes résolus", "problemes"), liste(f.problemes), `${titre("Positionnement", "positionnement")} ${f.positionnement?.pitch || "—"}`, liste(f.positionnement?.differences), titre("Angles de vidéos", "angles"), liste(f.angles));
             // Le reste (une stratégie, ajoutée plus tard), tel quel ; jamais le bloc `recherche`, réservé au propriétaire.
             const connus = new Set(["produit", "clients", "problemes", "positionnement", "angles", "recherche"]);
             for (const [k, v] of Object.entries(f))
-                if (!connus.has(k))
-                    l.push(`${k[0].toUpperCase() + k.slice(1)} :`, typeof v === "string" ? "  " + v : Array.isArray(v) ? liste(v) : "  " + JSON.stringify(v, null, 1).replace(/\n\s*/g, " "));
+                if (!connus.has(k) && v != null)
+                    l.push(titre(k[0].toUpperCase() + k.slice(1), k), typeof v === "string" ? "  " + v : Array.isArray(v) ? liste(v) : "  " + JSON.stringify(v, null, 1).replace(/\n\s*/g, " "));
+        }
+        if (typeof note === "string" && note.trim())
+            l.push("", `Ce que l'utilisateur dit qu'on a mal compris : ${note.trim()}`);
+        // (19/11/2026) sa page relue ne dit plus la même chose que celle dont la fiche est tirée : la fiche n'est pas
+        // réécrite ; l'agent s'appuie sur la page à jour pour ces points et peut proposer à l'utilisateur de corriger sa
+        // fiche dans Mon produit. Ses mots-clés ne changent jamais d'eux-mêmes.
+        const changes = Array.isArray(pg.depuis_fiche) ? pg.depuis_fiche : [];
+        if (f && changes.length) {
+            l.push("", `Sa page a changé depuis la fiche (${changes.join(", ")} ; relue le ${String(pg.lu_le).slice(0, 10)}) : `
+                + "pour ces points, la page à jour fait foi ; propose-lui de corriger sa fiche dans Mon produit.");
+            for (const k of ["promesse", "description", "prix", "fonctionnalites"]) {
+                const v = pg[k];
+                if (v == null || (Array.isArray(v) && !v.length))
+                    continue;
+                const t = Array.isArray(v) ? v.join(" · ") : String(v);
+                l.push(`  ${k} (page) : ⟦${externe(t.length > 1500 ? t.slice(0, 1500) + "…" : t)}⟧`);
+            }
         }
         return texte(l.join("\n"));
     }));

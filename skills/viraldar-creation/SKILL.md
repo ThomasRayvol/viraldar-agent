@@ -60,7 +60,8 @@ Références, à charger quand l'étape le demande (pas toutes d'un coup) :
 | base | `modifier_ma_strategie` / `ecrire_angle` | modifier l'objectif, le rythme, ce qu'il faut éviter ; créer ou modifier un angle — **seulement avec son accord**, la version d'avant est gardée |
 | base | `mon_planning` | ses plans, comptes et créneaux (aujourd'hui + 7 jours par défaut ; `a_produire` : ce qui reste à produire), chacun avec son modèle (post gardé) et/ou son idée (brief) |
 | base | `maj_creneaux` | fait avancer des créneaux : statut, titre, légende, format, modèle, idée liée, **angle** ; une fois publié, son lien TikTok et sa note d'exécution (1 à 5, fixée par lui) |
-| mesure | `relever_mes_posts` | (sur sa machine, yt-dlp) relève les vues de ses posts publiés, **sur ses seuls comptes déclarés**, et les rattache aux créneaux publiés |
+| mesure | `relever_mes_posts` | (sur sa machine, yt-dlp) relève les vues de ses posts publiés, **sur ses seuls comptes déclarés pour le produit**, les rattache aux créneaux publiés et garde **tous** les autres comme son historique (avant viraldar, hors planning) : la médiane de chaque compte dès le premier jour |
+| mesure | `mes_posts` / `classer_mes_posts` | son historique (posts sans créneau) avec légende, chiffres et verdict ; tu **proposes** l'angle de chaque post, **il valide** (seuls les rattachements validés comptent dans `bilan`) |
 | mesure | `noter_resultats` / `noter_execution` / `noter_conversions` | ses chiffres d'un post (s'il les donne), la **note d'exécution 1 à 5** qu'il fixe, ses conversions d'une période avec son critère |
 | mesure | `bilan` | verdict de chaque post (indice ÷ médiane du compte, avec n), lecture de chaque angle **croisée avec l'exécution**, conversions, relevés dus — seuils arbitrés le 19/11/2026 (gagnant × 10, au-dessus × 2,7, en dessous × 0,5, à 48 h) |
 | base | `mes_idees` / `ecrire_idee` | ses idées à produire (Bibliothèque → Créer) : lire, créer, modifier le brief, le statut et l'angle |
@@ -303,6 +304,12 @@ créent et se suppriment sur le site (Planning → Nouveau plan), pas par toi.
 
 Charge `references/lire-les-stats.md` (section « ses propres posts »). La boucle vit dans viraldar (stratégie v2), plus
 dans un `journal.md` :
+0. **son historique, dès le premier jour** : `relever_mes_posts` avec `posts: 200` relève tout ce qu'il a déjà publié sur
+   ses comptes ; `mes_posts` montre ces posts sans angle (légende, indice) : propose un angle de sa stratégie pour chacun
+   (ou un angle nouveau pour un groupe qui n'entre dans aucun ; un post sans légende, demande-lui), **montre-lui la
+   proposition en tableau**, puis `classer_mes_posts` avec `valide: true` pour ce qu'il approuve. `bilan` lit alors ce
+   que chaque angle a déjà donné, séparé de ce qu'il produit avec viraldar ; sans note d'exécution, un angle de
+   l'historique sous sa médiane est « à retester », jamais « il n'attire pas » ;
 1. un post publié passe à « publié » dans son planning avec son lien TikTok (`maj_creneaux`, `lien`) et son angle ;
 2. **relevés à 8 h, 48 h et 7 jours** : `relever_mes_posts` sur sa machine (ses comptes seulement), sinon ses chiffres et
    `noter_resultats` ; un post se juge à 48 h (un bon post croît encore après), à 8 h il peut seulement être déclaré gagnant ;
@@ -313,7 +320,7 @@ dans un `journal.md` :
    par compte (jeton de campagne App Store, UTM Google Play, code promo) ;
 5. **`bilan`** : verdict par post, lecture par angle (il porte / il n'attire pas / non concluant car mal exécuté / trop
    tôt), conversions ; décide avec lui (garder, refaire l'exécution, abandonner l'angle : `ecrire_angle`), puis remets
-   au planning. Les seuils du bilan sont proposés, pas encore arbitrés : dis-le.
+   au planning. Les seuils du bilan sont arbitrés (19/11/2026).
 
 Diagnostic, par format (après ≥ 3 posts du format, sinon « trop tôt ») :
 

@@ -79,7 +79,7 @@ is for and gives the command to type for your system. viraldar installs nothing 
 sign in (Google, or email and password) and authorize. **Your password never goes through Claude.**
 
 **The creation module** only needs a session for `relever_mes_posts` (it reads your declared accounts and records their
-views) and TikTok drafts. Those tools say "not connected"; your agent then calls `connexion` and gives you a
+views, including your posts from before viraldar) and TikTok drafts. Those tools say "not connected"; your agent then calls `connexion` and gives you a
 **viraldar.rayvol.net/agent** link (it also tries to open it): open it in the browser of your choice. If your browser
 asks for access to devices on your local network, allow it: that is your agent, on your machine (127.0.0.1). The agent
 gets its own session, stored in `~/.config/viraldar/session.json` (readable by you only); `deconnexion` revokes it.

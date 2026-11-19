@@ -82,7 +82,7 @@ viraldar.rayvol.net/agent, tu te connectes (Google, ou e-mail et mot de passe) e
 jamais par Claude.**
 
 **Le module création** n'a besoin d'une session que pour `relever_mes_posts` (il lit tes comptes déclarés et enregistre
-leurs vues) et les brouillons TikTok. Ces outils disent « pas connecté » ; ton agent appelle alors `connexion` et te
+leurs vues, y compris tes posts d'avant viraldar) et les brouillons TikTok. Ces outils disent « pas connecté » ; ton agent appelle alors `connexion` et te
 donne un lien **viraldar.rayvol.net/agent** (il essaie aussi de l'ouvrir) : ouvre-le dans le navigateur de ton choix.
 Si ton navigateur demande l'accès aux appareils du réseau local, accepte : c'est ton agent, sur ta machine
 (127.0.0.1). L'agent reçoit une session à lui, gardée dans `~/.config/viraldar/session.json` (lisible par toi seul) ;
