@@ -30,6 +30,31 @@ utilisateur, source citée). Préfère la médiane à la moyenne : un post à 20
 - Un format porté par un seul compte : « 5 posts, tous de @x : ça prouve @x, pas encore le format. »
 - Quand la base ne trouve rien : « 0 post dans la base pour ces mots » ; ne comble pas avec ta mémoire de TikTok.
 
+## Les paliers de vues sur TikTok (lecture absolue d'un post)
+
+Le ressenti du propriétaire de viraldar, tiré de sa pratique (18/11/2026). Ce n'est **pas** une règle mesurée sur la
+base : donne-le comme un repère d'expérience, à côté de la lecture relative (la médiane de ses posts, ci-dessous), qui
+reste la référence. Un post se lit à 48 h ; un bon post croît encore après.
+
+| vues (à 48 h) | ce que ça dit | quoi faire |
+|---|---|---|
+| **~250** | personne ne s'arrête : l'accroche ne retient pas, la qualité ne suffit pas, rien ne donne envie de regarder | refaire l'accroche et l'image ; ne rien conclure sur l'angle |
+| **~700** | un début d'intérêt, pas assez pour que TikTok pousse le post plus loin | renforcer l'accroche |
+| **1 000 à 1 200** | même cas, avec une exécution un peu plus propre | renforcer l'accroche, puis l'exécution |
+| **~5 000** | l'accroche commence à intéresser | garder l'accroche, travailler l'exécution |
+| **~7 000** | même cas, mais l'exécution laisse à désirer : il reste un écart à combler | combler l'écart d'exécution (comparer au modèle) |
+| **10 000 à 20 000** | un post de bonne qualité ; itérer dessus devrait reproduire ces résultats | itérer : des variations, une chose à la fois |
+| **100 000 et plus** | une accroche forte, un post bien filmé et bien exécuté | itérer sur ce post |
+
+**Ce que ça veut dire** : **sous 10 000 vues**, tout se joue sur ce qu'on maîtrise : l'accroche, l'exécution, la
+qualité de l'image, ce qui fait qu'un post se regarde. **Au-dessus**, les posts se ressemblent : tous sont bien filmés
+et bien faits, même ceux qui ont l'air simples ; l'écart entre 100 000 et un million tient surtout au hasard de
+l'algorithme. N'en tire pas de leçon sur l'angle.
+
+Avec la **note d'exécution** (1 à 5) : un post sous 10 000 vues noté 4 ou 5 mérite une relecture honnête de la note
+(comparer au modèle) avant de conclure que l'angle n'attire pas ; noté 1 ou 2, il est non concluant, on refait
+l'exécution.
+
 ## Ses propres posts (étape 8)
 
 - Juge à **48 h** (comme viraldar, qui ne compte dans la médiane d'un compte que les posts de plus de 48 h) puis à 7 j.

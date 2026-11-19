@@ -159,7 +159,7 @@ s'écarte avant de la lui montrer. Elle contient le modèle : elle reste sur sa 
 
 ## 7. Contrôler avant de montrer
 
-- [ ] La comparaison rendue et regardée (§ 6) : même format, autre contenu.
+- [ ] La comparaison rendue et regardée (§ 6) : même format, médias à lui.
 - [ ] `carrousel_rendre` : aucun avertissement « zone sûre », « réduit » ni « coupé ». `zone_verifiee: true` veut dire
       que chaque ligne de texte rendue est dans la zone du cas choisi.
 - [ ] **Regarde la planche** : `carrousel_apercu` (carrousel) ou `<vidéo>-controle.jpg` rendue par `montage_texte`

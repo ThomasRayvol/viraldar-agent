@@ -11,10 +11,11 @@ d'une base de posts TikTok relevés dans la niche de l'utilisateur, pas des mod�
 fais s'appuie sur des posts réels de la base, cités avec leurs chiffres. Une idée sans post derrière est une hypothèse,
 et tu le dis.
 
-**On copie un format qui a marché, exactement ; on n'en copie jamais le contenu.** Le format, c'est la mécanique
-mesurée sur la vidéo : la forme du hook, le nombre de plans et leur durée, les fonds, les polices, les couleurs,
-l'orientation, la voix, les stickers. Le contenu, c'est ce qui appartient au créateur : ses phrases, ses images, sa
-voix, son histoire. Une mécanique « adaptée » (plus lente, redressée en 9:16, sans voix, une police à la place de deux)
+**On copie un format qui a marché, exactement.** Le format, c'est la mécanique mesurée sur la vidéo : la forme du
+hook, le nombre de plans et leur durée, les fonds, les polices, les couleurs, l'orientation, la voix, les stickers.
+Son contenu (les phrases, l'idée, l'histoire, la liste, la chute) peut se reprendre aussi, tel quel ou presque, quand
+il colle au produit ; seuls les **médias** du créateur ne se republient pas (sa vidéo, ses images, sa voix, sa
+personne : TikTok ne recommande pas un contenu ré-uploadé). Une mécanique « adaptée » (plus lente, redressée en 9:16, sans voix, une police à la place de deux)
 n'est plus le format qui a marché. D'où la règle qui commande tout le reste : **décortiquer chaque modèle avant
 d'écrire une ligne.**
 
@@ -40,23 +41,29 @@ Références, à charger quand l'étape le demande (pas toutes d'un coup) :
 
 | famille | outil | ce qu'il fait |
 |---|---|---|
-| session | `qui_suis_je` / `connexion` / `deconnexion` | état de la session ; sans session, rien ne marche : `connexion` rend tout de suite un lien (et essaie de l'ouvrir) ; montre-le à l'utilisateur, qui l'ouvre dans le navigateur où il est connecté et autorise ; puis `connexion` avec `attendre: true` (1 min au plus, rappelle-le tant qu'il n'a pas fini). « Injoignable (réseau) » n'est pas une déconnexion : réessaie plus tard, sans `connexion` |
+| session | `qui_suis_je` / `connexion` / `deconnexion` | le **connecteur** se connecte dans les réglages de Claude (Connecteurs → viraldar), sans ces outils ; s'il dit que la connexion a pris fin, l'utilisateur la refait là. Le **module création** a sa propre session, qui ne sert qu'à `relever_mes_posts` et aux brouillons : `connexion` rend tout de suite un lien (et essaie de l'ouvrir) ; montre-le à l'utilisateur, qui l'ouvre dans le navigateur où il est connecté et autorise ; puis `connexion` avec `attendre: true` (1 min au plus, rappelle-le tant qu'il n'a pas fini). « Injoignable (réseau) » n'est pas une déconnexion : réessaie plus tard, sans `connexion` |
+| accueil | `bienvenue` | ce que viraldar permet, en quelques lignes, avec des exemples de demandes ; au premier usage d'un client, le premier outil appelé te demande de le présenter |
+| création | `ma_machine` | ce qui est installé sur l'ordinateur pour fabriquer (Chrome, ffmpeg, yt-dlp, Whisper, Remotion), à quoi sert chacun et la commande à taper pour ce qui manque ; **à appeler avant la première fabrication** |
 | base | `mes_produits` / `choisir_produit` | un compte viraldar peut avoir plusieurs produits (chacun sa fiche, sa stratégie, ses mots-clés, ses posts gardés, ses idées, son planning et ses comptes TikTok) ; les outils portent sur le produit actif (`qui_suis_je` le dit) |
 | base | `infos_base` | langues, règles chiffrées, date d'export ; hors quota |
 | base | `chercher_posts` | recherche dans la base (mots-clés `mots_cles` / `mes_mots_cles`, mots libres, langue, format, publié depuis, vues, outlier, likes ≥ 2 %, 📲), 24 par page |
 | base | `petits_comptes_viraux` | les « petits comptes viraux » (règles plus bas), pour ses mots-clés, des mots-clés ou une langue |
 | base | `post` | un post : chiffres, compte, médiane du compte et son n, texte, hashtags, format, durée, 📲 (`detail: true` pour tout) |
 | base | `formats_similaires` | posts proches d'un post donné (hashtags, durée) |
-| base | `suggerer_mots_cles` | le vocabulaire de la base (nos mots-clés de recherche et les hashtags répandus) avec le nombre de posts de chaque terme ; hors quota |
-| base | `explorer_mots_cles` | trouver dans tout le vocabulaire les mots-clés cohérents avec son produit : `contient` (les termes qui contiennent un texte) et `voisins_de` / `voisins_de_mes_mots` (ceux qui reviennent sur les mêmes posts, avec leur lift) ; hors quota |
+| base | `mots_cles` | le vocabulaire de la base (nos mots-clés de recherche TikTok et les hashtags répandus, ~7 000 termes), chaque terme avec ses posts : `commence_par` (sans rien : les plus fournis), `contient` (les termes qui contiennent un texte) et `voisins_de` / `voisins_de_mes_mots` (ceux qui reviennent sur les mêmes posts, avec leur lift) ; pour trouver les mots-clés cohérents avec son produit ; hors quota |
+| base | `compte` | un compte de la base (concurrent, modèle) : abonnés, médiane de ses posts avec son n, ses posts du plus au-dessus de sa médiane au moins ; un compte absent est noté pour que viraldar le relève (jamais de recherche TikTok) |
 | base | `mes_mots_cles` / `modifier_mes_mots_cles` | lire ou modifier les mots-clés de son produit : le filtre de sa niche (les thèmes ont disparu en 0.5.0) |
 | base | `trier_post` / `noter_post` | garder un post (→ À reproduire), le passer ou le retirer ; noter le format et la raison |
 | base | `a_reproduire` | sa liste À reproduire, avec ses notes |
 | base | `ma_fiche` | sa fiche produit (produit, clients, problèmes, positionnement, angles) et son profil, dont **qui filme** |
-| base | `ma_strategie` | sa stratégie rédigée (cap, piliers, formats retenus, cadence, premiers posts, jalons) ; sinon les repères calculés de ses mots-clés et le format que suggèrent les chiffres |
+| base | `ma_strategie` | sa stratégie : objectif (critère de conversion, cible, échéance), **angles** (pour qui, douleur, promesse, preuves, accroches, hypothèse, statut, part visée, avec leurs idées, créneaux et publiés), rythme, à éviter ; puis les repères calculés de sa niche |
+| base | `modifier_ma_strategie` / `ecrire_angle` | modifier l'objectif, le rythme, ce qu'il faut éviter ; créer ou modifier un angle — **seulement avec son accord**, la version d'avant est gardée |
 | base | `mon_planning` | ses plans, comptes et créneaux (aujourd'hui + 7 jours par défaut ; `a_produire` : ce qui reste à produire), chacun avec son modèle (post gardé) et/ou son idée (brief) |
-| base | `maj_creneaux` | fait avancer des créneaux : statut, titre, légende, format, modèle, idée liée |
-| base | `mes_idees` / `ecrire_idee` | ses idées à produire (Bibliothèque → Créer) : lire, créer, modifier le brief et le statut |
+| base | `maj_creneaux` | fait avancer des créneaux : statut, titre, légende, format, modèle, idée liée, **angle** ; une fois publié, son lien TikTok et sa note d'exécution (1 à 5, fixée par lui) |
+| mesure | `relever_mes_posts` | (sur sa machine, yt-dlp) relève les vues de ses posts publiés, **sur ses seuls comptes déclarés**, et les rattache aux créneaux publiés |
+| mesure | `noter_resultats` / `noter_execution` / `noter_conversions` | ses chiffres d'un post (s'il les donne), la **note d'exécution 1 à 5** qu'il fixe, ses conversions d'une période avec son critère |
+| mesure | `bilan` | verdict de chaque post (indice ÷ médiane du compte, avec n), lecture de chaque angle **croisée avec l'exécution**, conversions, relevés dus — seuils arbitrés le 19/11/2026 (gagnant × 10, au-dessus × 2,7, en dessous × 0,5, à 48 h) |
+| base | `mes_idees` / `ecrire_idee` | ses idées à produire (Bibliothèque → Créer) : lire, créer, modifier le brief, le statut et l'angle |
 | modèle | `modele_decortiquer` | la vidéo d'un modèle analysée sur sa machine (avec son accord) : planche d'images, coupes détectées, nombre et durée des plans, orientation, transcription horodatée si Whisper est installé |
 | création | `carrousel_modeles` / `carrousel_rendre` / `carrousel_apercu` | modèles HTML (citation, liste, notes, contraste, ecran, revelation, natif = texte de l'éditeur TikTok sur photo) → images au `format` du modèle (9:16, 3:4, 4:5, 1:1…) ; le texte est posé et **vérifié** dans la zone sûre du cas `zone` (`description` par défaut, `sans_description`, `pub`) ; **regarde toujours l'aperçu** |
 | création | `montage_infos`, `montage_format_tiktok`, `montage_decouper`, `montage_assembler`, `montage_diaporama`, `montage_texte`, `montage_couverture` | montage ffmpeg : au `format` du modèle (9:16, 16:9, 4:3, 1:1, 2,35:1), découpe, enchaînement en **coupe franche** (le défaut) avec une **durée par plan** (`duree` ou `images` par plan, `dureePlan` / `imagesParPlan` pour une cadence commune), mouvement sur image fixe (`mouvement`, `amplitude`), diaporama vidéo, voix posée sur le montage (`dureeSurMusique` : le montage dure autant que la voix), texte à l'écran et sous-titres (SRT ou segments) dans la zone sûre, avec temps de lecture contrôlé et planche de contrôle, couverture |
@@ -65,6 +72,19 @@ Références, à charger quand l'étape le demande (pas toutes d'un coup) :
 | publication | `comptes_tiktok` | ses comptes TikTok reliés à viraldar et leurs droits |
 | publication | `envoyer_brouillon_video` / `envoyer_brouillon_photos` | envoie dans la boîte de réception TikTok de l'utilisateur ; **il publie lui-même depuis l'app** |
 | publication | `statut_brouillon` | état d'un envoi |
+
+**Connecteur et module création** : la base, les mots-clés, la stratégie, le planning, les idées et la mesure
+(`noter_*`, `bilan`) viennent du connecteur viraldar (`https://mcp.viraldar.rayvol.net/mcp`, ajouté dans Claude) ; la
+fabrication (`ma_machine`, `carrousel_*`, `montage_*`, `modele_decortiquer`, `montage_comparaison`, `remotion_*`,
+`relever_mes_posts`, brouillon vidéo) vient du module création, installé à part sur l'ordinateur (depuis la 0.6.0, il ne
+porte plus la base par défaut). Si les outils de l'un ou de l'autre ne sont pas dans ta liste, dis ce qu'ils apportent et
+qu'il les ajoute depuis viraldar → Agentique ; n'improvise pas à leur place. Les deux gardent chacun leur produit actif :
+s'il en a plusieurs, donne le produit à `relever_mes_posts` (`produit`).
+
+**Avant de fabriquer** : `ma_machine`, puis explique à l'utilisateur ce qui manque **pour sa demande** (sans ffmpeg, pas de
+vidéo ; sans Whisper, on décortique les plans mais pas les paroles ; sans yt-dlp, il donne lui-même le fichier du modèle),
+demande-lui ce qu'il veut installer et attends : c'est lui qui tape les commandes, viraldar n'installe rien. Ne lance pas
+un travail qui échouera faute d'un programme.
 
 Pas d'outil de synthèse vocale : la voix off vient de l'utilisateur ou d'un service qu'il choisit (`production.md`,
 « Voix off »).
@@ -97,6 +117,14 @@ l'étape 3 avant de produire.
 
 ### 1. Comprendre le produit, la cible et les ressources
 
+S'il veut fabriquer (vidéo, carrousel, analyse d'un modèle), `ma_machine` dès cette étape : ce que la machine permet
+borne les formats autant que « qui filme ».
+
+**Sa stratégie** (`ma_strategie`) : explique-lui, s'il ne les connaît pas, les trois gestes qui la font vivre — **tester
+des angles** (un par post, une seule chose qui change), **juger l'exécution** (chaque post publié noté de 1 à 5 : un
+angle ne s'abandonne que sur des posts bien exécutés), **boucler** (relevés, conversions, `bilan`, décision, planning).
+Un indé qui n'a jamais fait de marketing les découvre ici ; ne les saute pas.
+
 Vérifie d'abord le produit actif (`qui_suis_je` ou `mes_produits`) : s'il y en a plusieurs et que la demande en vise
 un autre, `choisir_produit` avant toute lecture ou production, et dis-le à l'utilisateur.
 
@@ -118,7 +146,7 @@ les étapes 2 et 7. Sinon, pose **en un seul message**, au plus 7 questions :
 ressources ne permettent pas de reproduire tel quel n'est pas un modèle pour lui. Sa base de contenus vérifiés, quand
 elle existe, est **la** source du texte (citations, chiffres, affirmations).
 
-Puis `mes_mots_cles` : vérifie que ses mots-clés collent à sa niche. Pour en trouver : `explorer_mots_cles` avec `contient` sur les mots de sa fiche (produit, problème, concurrents, formats qu'il veut produire), puis `voisins_de` des meilleurs (un `lift` élevé = propre à sa niche ; écarte les homonymes et les termes d'une autre langue que son public). Propose une liste courte, chaque terme avec son nombre de posts et sa raison ; `modifier_mes_mots_cles` seulement avec son accord.
+Puis `mes_mots_cles` : vérifie que ses mots-clés collent à sa niche. Pour en trouver : `mots_cles` avec `contient` sur les mots de sa fiche (produit, problème, concurrents, formats qu'il veut produire), puis `voisins_de` des meilleurs (un `lift` élevé = propre à sa niche ; écarte les homonymes et les termes d'une autre langue que son public). Propose une liste courte, chaque terme avec son nombre de posts et sa raison ; `modifier_mes_mots_cles` seulement avec son accord.
 
 **Livrable** : `fiche.md` — produit, cible, 3 à 5 douleurs dans les mots du client, ressources de production (visage,
 voix, temps, captures de l'app, médias, polices), base de contenus vérifiés (chemin), objectif et mesure, mots-clés retenus.
@@ -167,15 +195,17 @@ séparer le format de ce qui tient à ce post) :
 4. **Faisable avec ses ressources ?** Si non (visage, lieu, objet, voix qu'il n'a pas), dis-le et propose un autre
    modèle faisable (`a_reproduire`, `petits_comptes_viraux` filtrés), au lieu d'adapter celui-ci.
 
-**Livrable** : `modeles/<id>/mecanique.md`, avec ce qui est **le format** (à reprendre exactement) et ce qui est **le
-contenu** du créateur (à remplacer), montré à l'utilisateur avant le brief.
+**Livrable** : `modeles/<id>/mecanique.md`, avec ce qui est **le format** (à reprendre exactement), **le contenu**
+(texte, idée : repris ou réécrit, au choix de l'utilisateur) et **les médias** du créateur (à refaire avec les siens),
+montré à l'utilisateur avant le brief.
 
-### 4. Reprendre la mécanique, changer le contenu
+### 4. Reprendre la mécanique, et le contenu s'il colle
 
 Charge `references/brief.md` et `references/accroches.md`. On reprend la **mécanique exacte** de la fiche (forme du
-hook, nombre et durée des plans, fonds, polices, couleurs, orientation, voix, stickers, place du produit) ; on change
-**tout le contenu** : le texte, les images, la voix, l'histoire viennent du produit, de `fiche.md` et de sa base de
-contenus vérifiés.
+hook, nombre et durée des plans, fonds, polices, couleurs, orientation, voix, stickers, place du produit). Le texte et
+l'idée du modèle se reprennent quand ils collent au produit (même liste, même histoire, mêmes phrases), sinon ils se
+réécrivent depuis `fiche.md` et sa base de contenus vérifiés ; demande-lui ce qu'il préfère. Les images, la vidéo et
+la voix sont les siennes.
 
 - **Le hook garde la forme exacte du modèle** : même syntaxe, même longueur, même ponctuation et même casse. Une formule
   générique se reprend telle quelle (« Tu connais Schopenhauer ? » → « Tu connais <auteur> ? ») ; seul ce qui est propre
@@ -184,8 +214,8 @@ contenus vérifiés.
 - Le produit apparaît là où il apparaît dans le modèle, montré en train de servir, pas récité.
 - Texte tiré de sa base de contenus vérifiés quand elle existe ; une phrase qui n'en vient pas est marquée « hors base »
   et validée par lui. Une citation est exacte au mot près, avec sa source.
-- Côte à côte (étape 5, `montage_comparaison`), on doit reconnaître **le même format** et voir **un autre contenu** :
-  aucune phrase, image, voix ou séquence reprise du modèle.
+- Côte à côte (étape 5, `montage_comparaison`), on doit reconnaître **le même format** ; les images, la voix et les
+  séquences sont les siennes, aucune n'est tirée du fichier du modèle.
 
 **Livrable** : un brief par post, `briefs/AAAA-MM-JJ-<format>-<n>.md`, avec la fiche de mécanique recopiée et le texte
 plan par plan (ou slide par slide), validé par l'utilisateur **avant** de produire.
@@ -242,15 +272,48 @@ Charge `references/calendrier.md`. Fixe avec l'utilisateur, d'après le temps qu
 - plusieurs comptes seulement s'il le demande et s'il peut les tenir : chacun avec une identité vraie et distincte
   (angle, voix, public), jamais pour se faire passer pour des clients indépendants ni pour gonfler l'engagement.
 
+**Les angles dans le planning** (stratégie v2) : sa stratégie liste ses angles (`ma_strategie`). Par défaut, **c'est toi
+qui les répartis** dans les créneaux à créer (`maj_creneaux` avec `angle`) :
+- tant qu'aucun angle n'a gagné, chaque post est un **essai** : un angle à tester, une seule chose qui change d'un post
+  à l'autre (l'angle, ou l'accroche, jamais les deux), chaque angle essayé sur au moins 3 posts avant de conclure ;
+- dès qu'un angle a gagné : deux essais pour une **sécurité** (l'angle gagnant, ou la variation d'un post gagnant) ;
+- respecte les parts visées quand il y en a, et les angles qu'il impose : il peut tester l'angle qu'il veut, comme il
+  veut ; dis-lui la répartition (« cette semaine : 4 posts sur l'angle A, 3 sur B ») avant de l'écrire ;
+- une idée ou un brief porte aussi son angle (`ecrire_idee` avec `angle`). Une idée de post (« la routine du soir en
+  3 étapes ») n'est pas un angle : elle **sert** un angle (une cible et sa douleur) et vit dans la Bibliothèque.
+Un angle nouveau, ou modifié, passe par lui (`ecrire_angle`) ; ne réécris jamais sa stratégie sans son accord.
+
+**Les points « à savoir » du planning qui viennent de sa stratégie** (`mon_planning`, et la réponse de `maj_creneaux`) ;
+jamais bloquants, mais tu les lui dis et tu proposes quoi faire :
+- **angle abandonné** sur des créneaux à venir : propose un angle en cours à la place ; s'il veut vraiment le
+  reprendre, c'est `ecrire_angle` (statut « à tester ») avec son accord, pas un créneau qui le contredit en silence ;
+- **angle d'un autre produit** : tu t'es trompé de produit (`qui_suis_je`) ou d'angle ; corrige le créneau ;
+- **part d'un angle loin de sa part visée** (plus de 20 points d'écart, sur 10 créneaux avec angle au moins) :
+  rééquilibre les créneaux à créer, ou demande-lui si la part visée doit changer (il a peut-être décidé de pousser un
+  angle qui marche) ;
+- **cadence au-dessus du rythme** de sa stratégie : dis-le ; c'est à lui de choisir entre alléger le plan et changer
+  le rythme (`modifier_ma_strategie`) ;
+- **format hors stratégie** : un modèle d'un format qu'aucun angle en cours ne retient ; garde-le seulement s'il le veut.
+
 **Livrable** : `calendrier.md` sur 2 semaines. S'il a un plan sur viraldar (`mon_planning`), c'est **son**
 calendrier : ne tiens pas un `calendrier.md` en double, travaille depuis le planning (section suivante). Les plans se
 créent et se suppriment sur le site (Planning → Nouveau plan), pas par toi.
 
 ### 8. Mesurer et itérer
 
-Charge `references/lire-les-stats.md` (section « ses propres posts »). Juge un post **à 48 h** et à 7 jours, jamais
-avant. Demande à l'utilisateur ses chiffres (vues, likes, commentaires, partages, enregistrements, abonnés gagnés) et
-ceux de son objectif (téléchargements, inscriptions, ventes) ; note-les dans `journal.md`.
+Charge `references/lire-les-stats.md` (section « ses propres posts »). La boucle vit dans viraldar (stratégie v2), plus
+dans un `journal.md` :
+1. un post publié passe à « publié » dans son planning avec son lien TikTok (`maj_creneaux`, `lien`) et son angle ;
+2. **relevés à 8 h, 48 h et 7 jours** : `relever_mes_posts` sur sa machine (ses comptes seulement), sinon ses chiffres et
+   `noter_resultats` ; un post se juge à 48 h (un bon post croît encore après), à 8 h il peut seulement être déclaré gagnant ;
+3. **la note d'exécution** de chaque post publié (`noter_execution`, 1 à 5 et un commentaire) : propose-la d'après la
+   comparaison modèle | nous, **c'est lui qui la fixe** ; sans elle, on confond « l'angle n'attire pas » et « la copie
+   n'était pas au niveau » ;
+4. **ses conversions**, avec son critère (`noter_conversions`) : c'est ce qui compte pour lui ; par compte s'il a un lien
+   par compte (jeton de campagne App Store, UTM Google Play, code promo) ;
+5. **`bilan`** : verdict par post, lecture par angle (il porte / il n'attire pas / non concluant car mal exécuté / trop
+   tôt), conversions ; décide avec lui (garder, refaire l'exécution, abandonner l'angle : `ecrire_angle`), puis remets
+   au planning. Les seuils du bilan sont proposés, pas encore arbitrés : dis-le.
 
 Diagnostic, par format (après ≥ 3 posts du format, sinon « trop tôt ») :
 
@@ -260,7 +323,9 @@ Diagnostic, par format (après ≥ 3 posts du format, sinon « trop tôt ») :
 | **vues basses** | refaire l'accroche (slide 1, 3 premières secondes) ; d'abord vérifier sur la comparaison que la mécanique était bien celle du modèle | changer de format |
 
 « Haut » et « bas » se lisent par rapport à **la médiane de ses propres posts** (avec son n), pas aux chiffres de la
-base. Note aussi les commentaires qui demandent le nom de l'app (c'est le 📲 de son compte). Après un succès (≥ 3 × sa
+base. Lis aussi chaque post sur **les paliers de vues** (`lire-les-stats.md`) et dis-les à l'utilisateur : sous
+10 000 vues, c'est l'accroche et l'exécution qui manquent (on les retravaille avant de juger l'angle) ; au-dessus,
+la qualité est là et l'écart tient surtout à l'algorithme. Note aussi les commentaires qui demandent le nom de l'app (c'est le 📲 de son compte). Après un succès (≥ 3 × sa
 médiane), refais la même accroche et la même mécanique avec un autre contenu avant de changer quoi que ce soit, **une
 seule chose à la fois** ; attends-toi à ce que la variante retombe vers × 1,3 (`production.md` § 8) : c'est normal, ce
 n'est pas un échec. Écris les leçons (pour, contre, statut) dans `journal.md`.
@@ -350,8 +415,8 @@ références ; les fichiers restent dans le dossier de travail.
 - [ ] **IA** : toute image ou vidéo générée ou fortement retouchée qui paraît réelle porte le label « contenu généré par
       l'IA » ; en France, un visage ou une silhouette générés par IA portent « Image virtuelle », un visage ou une silhouette
       retouchés « Image retouchée ». Une voix de synthèse réaliste : label IA aussi.
-- [ ] **Rien de protégé repris** : ni la vidéo, ni les images, ni la voix, ni le texte du modèle, ni une musique
-      ajoutée au fichier ; pas de logo, de personne réelle ou de voix clonée sans droit ; la voix de synthèse a une
+- [ ] **Aucun média du modèle republié** : ni sa vidéo, ni ses images, ni sa voix (son texte peut être repris), ni une
+      musique ajoutée au fichier ; pas de logo, de personne réelle ou de voix clonée sans droit ; la voix de synthèse a une
       licence commerciale.
 - [ ] **Vrai** : citations et chiffres tirés de sa base vérifiée ou sourcés ; pas de faux témoignage, de faux client, de
       résultat inventé ; les affirmations de santé (santé mentale, sommeil, nutrition) restent prudentes.
@@ -366,7 +431,7 @@ références ; les fichiers restent dans le dossier de travail.
   chiffres de praticiens cités dans les références sont des anecdotes, présentées comme telles.
 - **Écrire avant d'avoir décortiqué le modèle**, ou « adapter » sa mécanique (cadence, orientation, voix, polices).
 - **Adapter un modèle infaisable** avec ses ressources : on en propose un autre.
-- **Copier le contenu d'un post** (phrases, images, voix, séquences) : on en reprend la mécanique.
+- **Republier les médias d'un post** (sa vidéo, même recadrée, ses images, sa voix) : on les refait avec les siens.
 - **Récupérer la vidéo d'un modèle sans son accord**, la monter, l'envoyer ou la republier : elle sert à l'analyse et
   à la comparaison, sur sa machine.
 - **Publier ou envoyer sans accord.** Aucun brouillon envoyé sans un « oui » explicite pour ce post-là ; aucune

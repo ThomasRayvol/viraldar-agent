@@ -672,7 +672,7 @@ const ENTREES_REMOTION = ["src/index.ts", "src/index.tsx", "src/index.js", "src/
 
 interface ProjetRemotion { dossier: string; version: string; cli: string; entree?: string }
 
-async function projetRemotion(chemin?: string): Promise<ProjetRemotion | { manque: string }> {
+export async function projetRemotion(chemin?: string): Promise<ProjetRemotion | { manque: string }> {
   const candidat = chemin ?? process.env.VIRALDAR_REMOTION ?? process.env.REMOTION_PROJET;
   if (!candidat) return { manque: "aucun chemin donné, et ni VIRALDAR_REMOTION ni REMOTION_PROJET ne sont définies" };
   const dossier = resolve(candidat.startsWith("~") ? join(homedir(), candidat.slice(1)) : candidat);

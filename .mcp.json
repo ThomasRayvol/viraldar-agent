@@ -1,6 +1,10 @@
 {
   "mcpServers": {
     "viraldar": {
+      "type": "http",
+      "url": "https://mcp.viraldar.rayvol.net/mcp"
+    },
+    "viraldar-creation": {
       "command": "node",
       "args": ["${CLAUDE_PLUGIN_ROOT}/js/index.js"],
       "env": {

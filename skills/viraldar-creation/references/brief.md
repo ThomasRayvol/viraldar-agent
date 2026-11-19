@@ -61,8 +61,8 @@ vide : « ? » ou « sans objet ».
 - Mentions : contenu promotionnel <oui/non> · IA <oui/non> · « Publicité » / « Image virtuelle » <si applicable>
 - Compte : <@> · date prévue : <AAAA-MM-JJ>
 
-## Ce qui ne vient PAS du modèle
-- <confirmer : texte, images, voix, histoire, musique sont à l'utilisateur ; ce qui reste commun = la mécanique : …>
+## Ce qui vient du modèle, ce qui est à lui
+- <repris du modèle : la mécanique, et le texte / l'idée s'il les reprend ; à lui : images, vidéo, voix, musique>
 - <la vidéo du modèle, si elle a été récupérée (avec son accord), ne sert qu'à l'analyse et à la comparaison>
 
 ## Rendu (rempli après production)

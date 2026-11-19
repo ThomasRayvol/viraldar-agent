@@ -1,9 +1,11 @@
 {
   "name": "viraldar",
-  "version": "0.5.0",
-  "description": "viraldar for your agent: search a database of viral TikToks from small accounts, read your strategy and schedule, build carousels and edits on your machine, follow a proven content method (MCP server + skill).",
+  "version": "0.6.0",
+  "description": "viraldar for your agent: the viraldar connector (database of viral TikToks from small accounts, keywords, strategy, schedule) plus the local creation module (carousels, edits, model analysis, your own post stats) and the content method skill.",
   "author": { "name": "viraldar" },
   "homepage": "https://viraldar.rayvol.net",
+  "privacyPolicyUrl": "https://viraldar.rayvol.net/privacy",
+  "termsOfServiceUrl": "https://viraldar.rayvol.net/terms",
   "repository": "https://github.com/ThomasRayvol/viraldar-agent",
   "license": "Apache-2.0",
   "keywords": ["tiktok", "content", "mcp", "carousel", "marketing"],
@@ -17,7 +19,7 @@
     "outils": {
       "type": "string",
       "title": "Familles d'outils / Tool families",
-      "description": "base,carrousel,montage par défaut ; ajouter publication, remotion, ou « tout ».",
+      "description": "Module création : carrousel,montage par défaut ; ajouter publication, remotion, base (la base en local, si tu n'utilises pas le connecteur), ou « tout » / Creation module: carrousel,montage by default.",
       "required": false
     },
     "lecture": {

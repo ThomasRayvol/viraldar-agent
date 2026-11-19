@@ -14,7 +14,7 @@ function echapper(s: string): string {
 }
 
 
-function candidatsNavigateur(): string[] {
+export function candidatsNavigateur(): string[] {
   const c: (string | undefined)[] = [process.env.VIRALDAR_CHROMIUM, process.env.CHROME_PATH, process.env.PUPPETEER_EXECUTABLE_PATH];
   const p = process.platform;
   if (p === "win32") {

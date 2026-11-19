@@ -86,16 +86,19 @@ function caseDe(s, grand = 320) {
 const imageJpeg = async (chemin) => ({ type: "image", data: (await readFile(chemin)).toString("base64"), mimeType: "image/jpeg" });
 // ---------------------------------------------------------------------------------------------
 // Programmes facultatifs : yt-dlp, Whisper. Trouvés, jamais installés.
-function dansLePath(noms) {
+// Claude Desktop sur macOS lance le MCP avec le PATH réduit des apps (sans Homebrew ni ~/.local/bin, relevé le
+// 18/11/2026) : un programme installé par `brew` ou `pipx` y serait introuvable. On regarde donc aussi là.
+const EN_PLUS = process.platform === "win32" ? [] : ["/opt/homebrew/bin", "/usr/local/bin", join(homedir(), ".local", "bin")];
+export function dansLePath(noms) {
     const exe = process.platform === "win32" ? [".exe", ".cmd", ""] : [""];
-    for (const d of (process.env.PATH ?? "").split(delimiter).filter(Boolean))
+    for (const d of [...(process.env.PATH ?? "").split(delimiter).filter(Boolean), ...EN_PLUS])
         for (const n of noms)
             for (const e of exe)
                 if (existsSync(join(d, n + e)))
                     return join(d, n + e);
     return undefined;
 }
-const trouverYtDlp = () => process.env.VIRALDAR_YTDLP && existsSync(process.env.VIRALDAR_YTDLP) ? process.env.VIRALDAR_YTDLP : dansLePath(["yt-dlp"]);
+export const trouverYtDlp = () => process.env.VIRALDAR_YTDLP && existsSync(process.env.VIRALDAR_YTDLP) ? process.env.VIRALDAR_YTDLP : dansLePath(["yt-dlp"]);
 /** Une URL TikTok, et rien d'autre (https, tiktok.com ou ses liens courts). */
 function urlTiktok(brute) {
     let u;
@@ -137,7 +140,7 @@ function genreDe(exe) {
 /** Un Whisper déjà installé : VIRALDAR_WHISPER (chemin), sinon le PATH (whisper-ctranslate2, faster-whisper, whisper,
  *  whisper-cli / whisper-cpp de whisper.cpp). whisper.cpp veut un modèle ggml : VIRALDAR_WHISPER_MODELE, sinon le
  *  premier ggml-*.bin des dossiers habituels. */
-async function trouverWhisper() {
+export async function trouverWhisper() {
     const impose = process.env.VIRALDAR_WHISPER;
     const exe = impose && existsSync(impose) ? impose
         : dansLePath(["whisper-ctranslate2", "faster-whisper", "faster-whisper-xxl", "whisper", "whisper-cli", "whisper-cpp"]);

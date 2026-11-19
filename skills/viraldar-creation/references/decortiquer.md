@@ -1,7 +1,7 @@
 # Décortiquer un modèle
 
-But : mesurer **la mécanique** (ce qui se reprend exactement) et la séparer du **contenu** (ce qui appartient au
-créateur). Chaque modèle se décortique **avant** d'écrire : relevé le 12/11/2026, douze textes écrits sans avoir vu
+But : mesurer **la mécanique** (ce qui se reprend exactement) et la séparer du **contenu** (le texte et l'idée, qui
+peuvent se reprendre aussi) et des **médias** du créateur (ce qui se refait). Chaque modèle se décortique **avant** d'écrire : relevé le 12/11/2026, douze textes écrits sans avoir vu
 les modèles ratèrent la moitié des mécaniques (voix off, paysage, mème, cadence) et durent être refaits deux fois.
 Quand le format compte d'autres posts, décortique-en 2 de plus : ce qui est commun aux trois est le format.
 
@@ -58,7 +58,7 @@ POURQUOI ÇA MARCHE (hypothèses, 3 au plus) : …
 
 ## Mécanique ou contenu ?
 
-| à reprendre exactement (mécanique) | à remplacer (contenu) |
+| à reprendre exactement (mécanique) | contenu (texte : repris ou réécrit ; médias : refaits) |
 |---|---|
 | la forme du hook : syntaxe, longueur, ponctuation, casse ; une formule générique (« Tu connais X ? ») telle quelle | ce que le hook dit de propre au créateur |
 | le nombre de plans ou de slides, la durée d'un plan, les transitions | les plans eux-mêmes, les images, la personne |

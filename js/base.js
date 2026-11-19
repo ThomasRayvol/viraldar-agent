@@ -105,7 +105,7 @@ export const outilsBase = (serveur, ctx) => {
         return lignes.filter(Boolean).join("\n");
     }
     function rendreListe(r, I, titre, detail = false) {
-        const ent = [titre + (r.total != null ? ` — ${r.total} posts${r.comptes != null ? ` de ${r.comptes} comptes` : ""}` : "")
+        const ent = [titre + (r.total != null ? ` — ${r.total} posts${r.comptes != null ? ` de ${r.comptes} compte${r.comptes > 1 ? "s" : ""}` : ""}` : "")
                 + ` · page ${r.page}, ${r.posts.length} montrés` + (r.suite ? ` · suite : page ${r.page + 1}` : " · fin de la liste")];
         if (quota)
             ent.push(`quota du jour : ${quota.servis}/${quota.max} posts distincts vus`);
@@ -120,7 +120,7 @@ export const outilsBase = (serveur, ctx) => {
     const filtres = {
         mots: z.string().max(200).optional().describe("Tous ces mots, chacun comme un début de mot (« app » trouve appli, pas happy), dans le texte, le compte ou les mots-clés (accents ignorés)."),
         mots_cles: z.array(z.string()).max(60).optional().describe("Des mots-clés du vocabulaire viraldar (nos mots-clés de "
-            + "recherche et les hashtags répandus : `suggerer_mots_cles`, `explorer_mots_cles`), l'un OU l'autre. Précis et rapide."),
+            + "recherche et les hashtags répandus : `mots_cles`), l'un OU l'autre. Précis et rapide."),
         mes_mots_cles: z.boolean().optional().describe("Ajoute les mots-clés du produit actif (`mes_mots_cles`)."),
         langues: z.array(z.enum(LANGUES)).optional(),
         vues_min: z.number().int().optional(),
@@ -186,7 +186,7 @@ export const outilsBase = (serveur, ctx) => {
     serveur.registerTool("infos_base", {
         title: "Ce que contient la base viraldar",
         description: "Les langues, les règles chiffrées (recommandés, critères) et la date du dernier export. Ne coûte rien "
-            + "sur le quota. Les sujets de la base se trouvent par mots-clés : `suggerer_mots_cles`, `explorer_mots_cles`.",
+            + "sur le quota. Les sujets de la base se trouvent par mots-clés : `mots_cles`.",
         inputSchema: {},
     }, outil(async (_a, c) => {
         const I = await lireInfos(c);
@@ -224,7 +224,7 @@ export const outilsBase = (serveur, ctx) => {
         if (f.mots?.trim() && !f.page && r.total != null)
             await c.from("recherches").insert({ q: f.mots.trim().slice(0, 200), n_resultats: r.total }).then(() => { }, () => { });
         return texte(rendreListe(r, I, "Recherche", f.detail) + (r.total === 0
-            ? "\n\nRien dans la base pour cette recherche (notée pour le prochain relevé). Essaie d’autres mots, des mots-clés voisins (`explorer_mots_cles`), ou moins de filtres." : ""));
+            ? "\n\nRien dans la base pour cette recherche (notée pour le prochain relevé). Essaie d’autres mots, des mots-clés voisins (`mots_cles`), ou moins de filtres." : ""));
     }));
     // ---------- petits_comptes_viraux ----------
     serveur.registerTool("petits_comptes_viraux", {
@@ -252,11 +252,11 @@ export const outilsBase = (serveur, ctx) => {
         const { id, compte } = lireRef(ref);
         if (parId.has(id))
             return parId.get(id);
-        // Pas encore vu dans cette session : par son compte (2 pages au plus, dans le quota).
+        // Pas encore vu dans cette session (le connecteur n'en garde aucune) : parmi les posts de son compte, par le filtre
+        // exact `compte` de posts_page (19/11/2026, index posts_filtre_compte), du plus vu au moins vu, 3 pages au plus.
         if (compte) {
-            const mots = plier(compte).split(/\s+/).filter(m => m.length > 1);
-            for (let p = 0; p < 2 && mots.length; p++) {
-                const r = await page(c, { p_mode: "recherche", p_mots: mots, p_tri: "vues", p_page: p });
+            for (let p = 0; p < 3; p++) {
+                const r = await page(c, { p_mode: "recherche", p_filtres: { compte }, p_tri: "vues", p_page: p });
                 if (parId.has(id))
                     return parId.get(id);
                 if (!r.suite)
@@ -268,9 +268,8 @@ export const outilsBase = (serveur, ctx) => {
     serveur.registerTool("post", {
         title: "Détail d'un post",
         description: "Toutes les stats d'un post de la base (likes, partages, enregistrements, son, mots-clés qui l'ont trouvé, "
-            + "exemples de commentaires qui demandent l'app, ta note s'il est gardé). Prend un id ou une URL TikTok. Un post déjà "
-            + "rendu par un autre outil pendant cette session ne coûte rien ; sinon il faut son URL (avec le @compte) : il est "
-            + "cherché parmi les posts de ce compte, dans le quota.",
+            + "exemples de commentaires qui demandent l'app, ta note s'il est gardé). Prend un id ou une URL TikTok. Donne son URL "
+            + "complète (avec le @compte) : il est retrouvé parmi les posts de ce compte, dans le quota.",
         inputSchema: { post: z.string().describe("Id du post, ou son URL TikTok.") },
     }, outil(async ({ post }, c) => {
         const I = await lireInfos(c);
@@ -280,6 +279,46 @@ export const outilsBase = (serveur, ctx) => {
             return erreur("Post introuvable : il n'est pas dans la base, ou n'a pas encore été vu dans cette session — "
                 + "donne son URL TikTok complète (avec @compte), ou retrouve-le par `chercher_posts`.");
         return texte(lignePost(p, I, true) + "\n\n" + DONNEES);
+    }));
+    // ---------- compte (19/11/2026) : un compte de la base, ses posts, sa médiane, ses meilleurs ----------
+    function lirePseudo(x) {
+        const m = x.match(/@([A-Za-z0-9._]{1,40})/);
+        return (m ? m[1] : x.trim().replace(/^@/, "")).toLowerCase();
+    }
+    serveur.registerTool("compte", {
+        title: "Un compte de la base (concurrent, modèle)",
+        description: "Tous les posts d'un compte TikTok présents dans la base viraldar : ses chiffres (abonnés, médiane de ses "
+            + "posts de plus de 48 h avec son n), puis ses posts du plus au-dessus de sa médiane au moins (tri `outlier`, par "
+            + "défaut) ou par vues ou date, 24 par page. Pour étudier un concurrent ou un compte modèle : ce qui marche chez lui, "
+            + "et à quel point. Seulement la base — aucune recherche sur TikTok : un compte absent est noté, et c'est viraldar "
+            + "qui le relève. Compte dans le quota du jour.",
+        inputSchema: {
+            compte: z.string().min(2).max(120).describe("@pseudo, pseudo, ou l'URL de son profil ou d'un de ses posts."),
+            tri: z.enum(["outlier", "vues", "publie", "ratio_abonnes"]).optional().describe("outlier (défaut) : vues ÷ sa médiane."),
+            page: z.number().int().min(0).optional(),
+            detail: z.boolean().optional(),
+        },
+    }, outil(async (a, c) => {
+        const pseudo = lirePseudo(a.compte);
+        if (!/^[a-z0-9._]{2,40}$/.test(pseudo))
+            throw new Error(`Pseudo illisible : ${a.compte}`);
+        const I = await lireInfos(c);
+        await lireFavoris(c);
+        const r = await page(c, { p_mode: "recherche", p_filtres: { compte: pseudo }, p_tri: a.tri || "outlier", p_page: a.page || 0 });
+        if (r.total === 0 && !r.refus) {
+            // Arbitré le 18/11/2026 : un compte absent, c'est viraldar qui le relève ; la recherche vide le lui dit.
+            await c.from("recherches").insert({ q: "@" + pseudo, n_resultats: 0 }).then(() => { }, () => { });
+            return texte(`@${pseudo} n'est pas dans la base viraldar (aucun de ses posts n'a été relevé). C'est noté : viraldar `
+                + "relève les comptes demandés lors de ses prochaines collectes. En attendant, cherche les posts de sa niche "
+                + "(`chercher_posts`, `petits_comptes_viraux` avec ses mots-clés), sans aller sur TikTok.");
+        }
+        const p0 = r.posts[0];
+        const tete = [`@${pseudo} dans la base : ${r.total ?? "?"} post(s)`
+                + (p0?.abonnes != null ? ` · ${nb(p0.abonnes)} abonnés (au relevé)` : "")
+                + (p0?.mediane_compte != null ? ` · médiane de ses posts : ${nb(Math.round(p0.mediane_compte))} vues (n = ${p0.n_compte} posts de plus de 48 h, son catalogue)` : "")];
+        if (p0?.mediane_compte == null)
+            tete.push("Pas de médiane : son catalogue n'a pas encore été relevé.");
+        return texte(tete.join("\n") + "\n\n" + rendreListe(r, I, `Ses posts, tri ${a.tri || "outlier"}`, a.detail));
     }));
     // ---------- formats_similaires ----------
     serveur.registerTool("formats_similaires", {
@@ -316,40 +355,37 @@ export const outilsBase = (serveur, ctx) => {
     }));
     const ligneTerme = (m) => `${m.terme} — ${m.n} posts dont ${m.n_recents} publiés ≤ 90 jours`
         + (m.origine && m.origine !== "utilisateur" ? ` (proposé : ${m.origine})` : "");
-    serveur.registerTool("suggerer_mots_cles", {
-        title: "Suggérer des mots-clés",
-        description: "Le vocabulaire de la base (nos mots-clés de recherche TikTok et les hashtags répandus) : les termes qui "
-            + "commencent par `debut` (accents, espaces et tirets ignorés : « study with me » = #studywithme), les plus fournis "
-            + "d'abord, avec leur nombre de posts ; sans `debut`, les plus fournis. Hors quota. Un terme absent n'a pas encore de "
-            + "posts : il peut quand même aller dans `modifier_mes_mots_cles` (c'est ce qui dit quoi relever).",
-        inputSchema: { debut: z.string().max(80).optional(), n: z.number().int().min(1).max(50).optional() },
-    }, outil(async ({ debut, n }, c) => {
-        const { data, error } = await c.rpc("mots_suggerer", { p_debut: debut || "", p_n: n || 20 });
-        if (error)
-            throw new Error("mots_suggerer : " + error.message);
-        const ms = (data || []);
-        return texte(ms.length ? ms.map(ligneTerme).join("\n") : `Aucun terme ne commence par « ${debut} » dans la base.`);
-    }));
-    serveur.registerTool("explorer_mots_cles", {
-        title: "Explorer les mots-clés de la base",
-        description: "Pour proposer à l'utilisateur les mots-clés les plus cohérents avec son produit et ce qu'il veut produire, "
-            + "parmi tout le vocabulaire de la base (nos mots-clés de recherche TikTok et les hashtags répandus, ~7 000 termes). "
-            + "Deux recherches, combinables : `contient` (chaque texte donné : les termes qui le contiennent, « focus » → "
-            + "focusflight, focusonyourself… ; tire-les de sa fiche, de son produit, de ses concurrents, des formats visés) et "
-            + "`voisins_de` / `voisins_de_mes_mots` (les termes qui reviennent le plus sur les mêmes posts — le vocabulaire réel "
-            + "de sa niche ; `lift` > 3 : propre à la niche, ≈ 1 : répandu partout ; méfie-toi des homonymes, « pomodoro » "
-            + "attire aussi la cuisine italienne). Chaque terme avec ses posts (n) et ceux publiés ≤ 90 jours. Hors quota. "
-            + "Méthode : `ma_fiche` → `contient` sur ses mots → `voisins_de` des meilleurs → trie par cohérence avec son produit "
-            + "et son public (langue comprise), écarte le hors-sujet, propose une liste courte avec la raison de chacun, puis "
-            + "`modifier_mes_mots_cles` seulement avec son accord.",
+    serveur.registerTool("mots_cles", {
+        title: "Mots-clés de la base",
+        description: "Le vocabulaire de la base (nos mots-clés de recherche TikTok et les hashtags répandus, ~7 000 termes), chaque "
+            + "terme avec ses posts (n) et ceux publiés ≤ 90 jours. Hors quota. Trois recherches, combinables : `commence_par` "
+            + "(les termes qui commencent par un texte, accents, espaces et tirets ignorés : « study with me » = #studywithme ; "
+            + "sans rien : les plus fournis), `contient` (les termes qui contiennent chaque texte : « focus » → focusflight, "
+            + "focusonyourself… ; tire-les de sa fiche, de son produit, de ses concurrents, des formats visés) et `voisins_de` / "
+            + "`voisins_de_mes_mots` (les termes qui reviennent le plus sur les mêmes posts — le vocabulaire réel de sa niche ; "
+            + "`lift` > 3 : propre à la niche, ≈ 1 : répandu partout ; méfie-toi des homonymes, « pomodoro » attire aussi la "
+            + "cuisine italienne). Méthode : `ma_fiche` → `contient` sur ses mots → `voisins_de` des meilleurs → trie par cohérence "
+            + "avec son produit et son public (langue comprise), écarte le hors-sujet, propose une liste courte avec la raison de "
+            + "chacun, puis `modifier_mes_mots_cles` seulement avec son accord. Un terme absent n'a pas encore de posts : il peut "
+            + "quand même aller dans ses mots-clés (c'est ce qui dit quoi relever).",
         inputSchema: {
+            commence_par: z.string().max(80).optional().describe("Les termes qui commencent par ce texte ; vide : les plus fournis."),
             contient: z.array(z.string().min(2).max(60)).max(12).optional().describe("Des textes : les termes qui les contiennent."),
             voisins_de: z.array(z.string().max(80)).max(60).optional().describe("Des termes : ceux qui reviennent avec eux sur les mêmes posts."),
             voisins_de_mes_mots: z.boolean().optional().describe("Ajoute à `voisins_de` les mots-clés du produit actif."),
-            n: z.number().int().min(5).max(100).optional().describe("Termes par recherche (30 par défaut)."),
+            n: z.number().int().min(1).max(100).optional().describe("Termes par recherche (20 pour `commence_par`, 30 sinon)."),
         },
-    }, outil(async ({ contient, voisins_de, voisins_de_mes_mots, n }, c) => {
+    }, outil(async ({ commence_par, contient, voisins_de, voisins_de_mes_mots, n }, c) => {
         const parties = [];
+        const avecVoisins = (voisins_de || []).length > 0 || !!voisins_de_mes_mots;
+        if (commence_par !== undefined || (!(contient || []).length && !avecVoisins)) {
+            const { data, error } = await c.rpc("mots_suggerer", { p_debut: commence_par || "", p_n: Math.min(n || 20, 50) });
+            if (error)
+                throw new Error("mots_suggerer : " + error.message);
+            const ms = (data || []);
+            parties.push((commence_par ? `Commence par « ${commence_par} » :\n` : "Les plus fournis :\n")
+                + (ms.map(ligneTerme).join("\n") || "— aucun terme"));
+        }
         for (const x of contient || []) {
             const { data, error } = await c.rpc("mots_chercher", { p_texte: x, p_n: n || 30 });
             if (error)
@@ -357,7 +393,7 @@ export const outilsBase = (serveur, ctx) => {
             const ms = (data || []);
             parties.push(`Contient « ${x} » :\n` + (ms.map(ligneTerme).join("\n") || "— aucun terme"));
         }
-        if ((voisins_de || []).length || voisins_de_mes_mots) {
+        if (avecVoisins) {
             const { data, error } = await c.rpc("mots_voisins", { p_termes: voisins_de || [], p_mes_mots: !!voisins_de_mes_mots, p_n: n || 30 });
             if (error)
                 throw new Error("mots_voisins : " + error.message);
@@ -368,8 +404,6 @@ export const outilsBase = (serveur, ctx) => {
                     + vs.map(v => `${ligneTerme(v)} · avec eux sur ${v.ensemble} posts · lift ${v.lift}`).join("\n")
                 : `Voisins de ${de} : aucun (ces termes n'ont pas encore de posts dans la base).`);
         }
-        if (!parties.length)
-            throw new Error("Donne `contient`, `voisins_de` ou `voisins_de_mes_mots`.");
         return texte(parties.join("\n\n"));
     }));
     serveur.registerTool("mes_mots_cles", {
@@ -383,7 +417,7 @@ export const outilsBase = (serveur, ctx) => {
             throw new Error("mes_mots_cles : " + error.message);
         const ms = (data || []);
         return texte(ms.length ? `Mes mots-clés (${ms.length}) :\n` + ms.map(ligneTerme).join("\n")
-            : "Aucun mot-clé pour ce produit : `suggerer_mots_cles` puis `modifier_mes_mots_cles`.");
+            : "Aucun mot-clé pour ce produit : `mots_cles` puis `modifier_mes_mots_cles`.");
     }));
     serveur.registerTool("modifier_mes_mots_cles", {
         title: "Modifier Mes mots-clés",

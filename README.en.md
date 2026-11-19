@@ -3,24 +3,36 @@
 *[Version française](README.md)*
 
 Plug your Claude into **viraldar**: it searches a database of viral TikTok posts collected in your niche (mostly from
-small accounts, with their numbers), explains why they worked, then builds your carousels and video edits **on your
-own computer**, following a proven content method. It also reads your viraldar strategy and schedule: it knows what
-to make, for which account and when, and moves slots forward up to "ready" (you publish). Nothing you create is sent
-to viraldar.
+small accounts, with their numbers), explains why they worked, keeps your strategy (goal, marketing angles, measurement)
+and schedule with you, then builds your carousels and video edits **on your own computer**, following a proven content
+method. Nothing you create is sent to viraldar.
 
-This folder holds three things, built from the same code:
+viraldar plugs in as two parts:
 
-- a local **MCP server** (`js/index.js`, Node 22+): the database, your strategy and schedule, carousels, video editing;
-- the **skill** `viraldar-creation` (`skills/`): the method your agent follows, also served by the MCP server (tool
-  `methode`, prompt `methode_viraldar`) for clients that do not read skills;
-- packaging for **Claude Code** (plugin) and **Claude Desktop** (`.mcpb` extension).
+| | what | how |
+|---|---|---|
+| **the connector** (required) | the database, your keywords, kept posts, product sheet, strategy, schedule, ideas, measurement | a URL to add in Claude: `https://mcp.viraldar.rayvol.net/mcp` |
+| **the creation module** (optional) | carousels, video edits, model video analysis, comparison, your own post stats, TikTok drafts | this folder: a local MCP server (`js/index.js`, Node 22+) |
 
-You need a viraldar account (free during testing): https://viraldar.rayvol.net. Tool names and outputs are in
-French; your agent answers in your language.
+This folder also holds the **skill** `viraldar-creation` (`skills/`): the method your agent follows, also served by the
+MCP server (tool `methode`, prompt `methode_viraldar`), and packaging for **Claude Code** (plugin: connector, creation
+module and skill in one step) and **Claude Desktop** (`.mcpb` extension of the creation module).
+
+You need a viraldar account (free during testing): https://viraldar.rayvol.net. Step-by-step instructions are in the
+app, **Agentique** tab. Tool names and outputs are in French; your agent answers in your language.
 
 ## Install
 
-### Claude Code (plugin: MCP server and skill in one step)
+### 1. The connector
+
+- **Claude Desktop, claude.ai, Claude on your phone**: Settings → Connectors → Add custom connector →
+  `https://mcp.viraldar.rayvol.net/mcp`. Claude opens viraldar in your browser: sign in and authorize.
+- **Claude Code**: the plugin below adds it; without the plugin:
+  `claude mcp add --transport http viraldar https://mcp.viraldar.rayvol.net/mcp`, then `/mcp` to sign in.
+
+### 2. The creation module (to build on your computer)
+
+**Claude Code** (plugin: connector, creation module and skill in one step):
 
 ```sh
 claude plugin marketplace add ThomasRayvol/viraldar-agent
@@ -28,8 +40,7 @@ claude plugin install viraldar@viraldar
 ```
 
 Or inside Claude Code: `/plugin marketplace add ThomasRayvol/viraldar-agent`, then `/plugin install viraldar@viraldar`.
-Claude Code installs the
-dependencies itself (from `package-lock.json`, no install scripts). Optional settings:
+Claude Code installs the dependencies itself (from `package-lock.json`, no install scripts). Optional settings:
 `claude plugin configure viraldar@viraldar` (working folder, tool families, extra readable folders).
 It also installs from the git URL: `claude plugin marketplace add https://github.com/ThomasRayvol/viraldar-agent.git`.
 
@@ -38,45 +49,51 @@ and restart Claude Code** (every window). `/mcp` is not enough: it restarts the 
 version, and the new tools do not show up. Same after changing a setting (`claude plugin configure`). viraldar →
 Agentique lists every connected agent with its version.
 
-### Claude Desktop (extension)
+**Claude Desktop** ("viraldar création" extension): download `viraldar.mcpb` (the repository's Releases page), open it
+(double-click) and click "Install". Claude Desktop ships Node: nothing else to install. In the extension settings:
+working folder, tool families and extra readable folders. The method is served by the extension (tool `methode`); to
+have it trigger on its own, also add the skill (`viraldar-creation.zip`) in Settings → Capabilities.
 
-Download `viraldar.mcpb` (the repository's Releases page), open it (double-click) and click "Install". Claude Desktop ships Node: nothing else to
-install. In the extension settings: working folder, tool families and extra readable folders. The method is served by the extension (tool
-`methode`); to have it trigger on its own, also add the skill (`viraldar-creation.zip`) in Settings → Capabilities.
-
-### Other MCP clients
+**Other MCP clients**:
 
 ```json
-{ "mcpServers": { "viraldar": { "command": "node", "args": ["/path/to/viraldar-agent/js/index.js"] } } }
+{ "mcpServers": { "viraldar-creation": { "command": "node", "args": ["/path/to/viraldar-agent/js/index.js"] } } }
 ```
 
 after `npm ci --omit=dev` in the folder. (An npm package for `npx -y viraldar-mcp` is not published yet.)
 
+**Without the connector**: the creation module can carry the database itself, `VIRALDAR_OUTILS=base,carrousel,montage`
+("tool families" setting), as before 0.6.0.
+
 ### Also needed
+
+Ask your agent "what's missing on my machine?": the `ma_machine` tool checks what is installed, says what each program
+is for and gives the command to type for your system. viraldar installs nothing itself.
 
 - **Chrome, Chromium, Edge or Brave** for carousels (otherwise `npx playwright install chromium`);
 - **ffmpeg** for videos, optional (`brew install ffmpeg`, `winget install Gyan.FFmpeg`, `apt install ffmpeg`).
 
 ## Sign in
 
-Tell your agent "connect to viraldar". It immediately gives you a **viraldar.rayvol.net/agent** link (and tries to
-open it in your default browser): open it in the browser of your choice, for instance the one where you are signed in
-to viraldar. If your browser asks for access to devices on your local network, allow it: that is your agent, on your
-machine (127.0.0.1). You sign in (Google,
-or email and password) and authorize the agent. **Your password never goes through the agent.** The agent gets its
-own session, separate from your browser's, stored in `~/.config/viraldar/session.json` (readable by you only).
-`deconnexion` revokes it. Every connected agent is listed on viraldar.rayvol.net under
-the **Agentique** tab, where you can revoke it: the agent can no longer renew its session and asks you to
-reconnect it (within 30 minutes at most). Signing out of the website does not disconnect the agent. The session
-renews itself, even after a long break; if the network is down at that moment, the agent says to try again, without
-asking you to reconnect.
+**The connector** signs in from Claude (Settings → Connectors → viraldar): Claude opens viraldar.rayvol.net/agent, you
+sign in (Google, or email and password) and authorize. **Your password never goes through Claude.**
+
+**The creation module** only needs a session for `relever_mes_posts` (it reads your declared accounts and records their
+views) and TikTok drafts. Those tools say "not connected"; your agent then calls `connexion` and gives you a
+**viraldar.rayvol.net/agent** link (it also tries to open it): open it in the browser of your choice. If your browser
+asks for access to devices on your local network, allow it: that is your agent, on your machine (127.0.0.1). The agent
+gets its own session, stored in `~/.config/viraldar/session.json` (readable by you only); `deconnexion` revokes it.
+
+Every connection (connector or module) is listed on viraldar.rayvol.net under the **Agentique** tab, where you can
+revoke it: it can no longer renew (within 30 minutes at most). Signing out of the website does not disconnect your
+agents.
 
 ## Settings
 
 | variable | default | |
 |---|---|---|
 | `VIRALDAR_DOSSIER` | `~/viraldar` | where carousels and edits go; only videos in this folder can be sent as TikTok drafts |
-| `VIRALDAR_OUTILS` | `base,carrousel,montage` | tool families to load (`publication`, `remotion`, or `tout` for all): every tool costs agent context |
+| `VIRALDAR_OUTILS` | `carrousel,montage` | tool families to load (`publication`, `remotion`, `base` — the database locally, without the connector —, or `tout` for all): every tool costs agent context |
 | `VIRALDAR_LECTURE` | — (strict) | empty: tools read **only the working folder** (copy your media there). To widen it, **your choice**: extra folders (`:`-separated, `;` on Windows), or `partout` (the whole disk except hidden folders) |
 | `VIRALDAR_CHROMIUM` | — | browser path |
 | `VIRALDAR_FFMPEG` | — | ffmpeg path |

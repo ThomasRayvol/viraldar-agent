@@ -10,7 +10,7 @@ import { typeImage } from "../chemins.js";
 function echapper(s) {
     return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
-function candidatsNavigateur() {
+export function candidatsNavigateur() {
     const c = [process.env.VIRALDAR_CHROMIUM, process.env.CHROME_PATH, process.env.PUPPETEER_EXECUTABLE_PATH];
     const p = process.platform;
     if (p === "win32") {

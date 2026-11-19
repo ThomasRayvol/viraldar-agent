@@ -597,7 +597,7 @@ async function plancheControle(video, textes, segments, duree, cas, tmp) {
 // Remotion (chez l'utilisateur seulement)
 const MODELES_REMOTION = fileURLToPath(sousRacine("modeles/montage/remotion/"));
 const ENTREES_REMOTION = ["src/index.ts", "src/index.tsx", "src/index.js", "src/index.jsx", "remotion/index.ts", "remotion/index.tsx", "app/remotion/index.ts", "index.ts", "index.js"];
-async function projetRemotion(chemin) {
+export async function projetRemotion(chemin) {
     const candidat = chemin ?? process.env.VIRALDAR_REMOTION ?? process.env.REMOTION_PROJET;
     if (!candidat)
         return { manque: "aucun chemin donné, et ni VIRALDAR_REMOTION ni REMOTION_PROJET ne sont définies" };

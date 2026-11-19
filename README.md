@@ -3,24 +3,36 @@
 *[English version](README.en.md)*
 
 Branche ton Claude sur **viraldar** : il cherche dans une base de posts TikTok viraux relevés dans ta niche (surtout
-de petits comptes, avec leurs chiffres), te dit pourquoi ils ont marché, puis fabrique tes carrousels et tes montages
-**sur ton ordinateur**, en suivant une méthode de création éprouvée. Il lit aussi ta stratégie et ton planning
-viraldar : il sait quoi produire, pour quel compte et pour quand, et fait avancer les créneaux jusqu'à « prêt » (c'est
-toi qui publies). Rien de ce que tu crées n'est envoyé chez viraldar.
+de petits comptes, avec leurs chiffres), te dit pourquoi ils ont marché, tient avec toi ta stratégie (objectif, angles
+marketing, mesure) et ton planning, puis fabrique tes carrousels et tes montages **sur ton ordinateur**, en suivant une
+méthode de création éprouvée. Rien de ce que tu crées n'est envoyé chez viraldar.
 
-Ce dossier contient trois choses, construites depuis le même code :
+viraldar se branche en deux parties :
 
-- un **serveur MCP** local (`js/index.js`, Node 22 ou plus) : la base, ta stratégie et ton planning, les carrousels,
-  le montage ;
-- le **skill** `viraldar-creation` (`skills/`) : la méthode que suit ton agent, aussi servie par le MCP (outil
-  `methode`, prompt `methode_viraldar`) pour les clients qui ne lisent pas les skills ;
-- l'emballage pour **Claude Code** (plugin) et **Claude Desktop** (extension `.mcpb`).
+| | quoi | comment |
+|---|---|---|
+| **le connecteur** (indispensable) | la base, tes mots-clés, posts gardés, fiche, stratégie, planning, idées, mesure | une URL à ajouter dans Claude : `https://mcp.viraldar.rayvol.net/mcp` |
+| **le module création** (facultatif) | carrousels, montages, analyse d'une vidéo modèle, comparaison, relevé de tes posts, brouillons TikTok | ce dossier : un serveur MCP local (`js/index.js`, Node 22 ou plus) |
 
-Il te faut un compte viraldar (gratuit pendant les tests) : https://viraldar.rayvol.net.
+Ce dossier contient aussi le **skill** `viraldar-creation` (`skills/`) : la méthode que suit ton agent, aussi servie par
+le MCP (outil `methode`, prompt `methode_viraldar`), et l'emballage pour **Claude Code** (plugin : connecteur, module
+création et skill d'un coup) et **Claude Desktop** (extension `.mcpb` du module création).
+
+Il te faut un compte viraldar (gratuit pendant les tests) : https://viraldar.rayvol.net. La marche à suivre, avec
+captures, est dans l'app, onglet **Agentique**.
 
 ## Installer
 
-### Claude Code (plugin : MCP et skill d'un coup)
+### 1. Le connecteur
+
+- **Claude Desktop, claude.ai, Claude sur téléphone** : Réglages → Connecteurs → Ajouter un connecteur personnalisé →
+  `https://mcp.viraldar.rayvol.net/mcp`. Claude ouvre viraldar dans ton navigateur : connecte-toi et autorise.
+- **Claude Code** : le plugin ci-dessous l'ajoute ; sans plugin :
+  `claude mcp add --transport http viraldar https://mcp.viraldar.rayvol.net/mcp`, puis `/mcp` pour te connecter.
+
+### 2. Le module création (pour fabriquer sur ton ordinateur)
+
+**Claude Code** (plugin : connecteur, module création et skill d'un coup) :
 
 ```sh
 claude plugin marketplace add ThomasRayvol/viraldar-agent
@@ -28,56 +40,64 @@ claude plugin install viraldar@viraldar
 ```
 
 Ou dans Claude Code : `/plugin marketplace add ThomasRayvol/viraldar-agent`, puis `/plugin install viraldar@viraldar`.
-Claude Code installe lui-même
-les dépendances (d'après `package-lock.json`, sans script). Réglages facultatifs :
+Claude Code installe lui-même les dépendances (d'après `package-lock.json`, sans script). Réglages facultatifs :
 `claude plugin configure viraldar@viraldar` (dossier de travail, familles d'outils, lecture de fichiers en plus).
 On peut aussi l'installer par l'URL git : `claude plugin marketplace add https://github.com/ThomasRayvol/viraldar-agent.git`.
 
 **Mettre à jour** : `claude plugin marketplace update viraldar` puis `claude plugin update viraldar@viraldar`, puis
 **quitte et relance Claude Code** (toutes ses fenêtres). `/mcp` ne suffit pas : il relance le serveur de l'ancienne
 version, encore en cache, et les nouveaux outils n'apparaissent pas. Même chose après un changement de réglage
-(`claude plugin configure`). `qui_suis_je` ne dit pas la version ; viraldar → Agentique, si : chaque agent connecté y
-apparaît avec la sienne.
+(`claude plugin configure`). viraldar → Agentique montre chaque agent connecté avec sa version.
 
-### Claude Desktop (extension)
+**Claude Desktop** (extension « viraldar création ») : télécharge `viraldar.mcpb` (page Releases du dépôt), ouvre-le
+(double-clic) et clique sur « Installer ». Claude Desktop fournit Node : rien d'autre à installer. Dans les réglages de
+l'extension : le dossier de travail, les familles d'outils et la lecture de fichiers en plus. La méthode est servie par
+l'extension (outil `methode`) ; pour qu'elle se déclenche seule, ajoute aussi le skill (`viraldar-creation.zip`) dans
+Réglages → Capacités.
 
-Télécharge `viraldar.mcpb` (page Releases du dépôt), ouvre-le (double-clic) et clique sur « Installer ». Claude Desktop fournit Node : rien
-d'autre à installer. Dans les réglages de l'extension : le dossier de travail, les familles d'outils et la lecture de fichiers en plus. La méthode est
-servie par l'extension (outil `methode`) ; pour qu'elle se déclenche seule, ajoute aussi le skill
-(`viraldar-creation.zip`) dans Réglages → Capacités.
-
-### Autres clients MCP
+**Autres clients MCP** :
 
 ```json
-{ "mcpServers": { "viraldar": { "command": "node", "args": ["/chemin/vers/viraldar-agent/js/index.js"] } } }
+{ "mcpServers": { "viraldar-creation": { "command": "node", "args": ["/chemin/vers/viraldar-agent/js/index.js"] } } }
 ```
 
 après `npm ci --omit=dev` dans le dossier. (Un paquet npm, pour `npx -y viraldar-mcp`, n'est pas encore publié.)
 
+**Sans le connecteur** : le module création peut porter la base lui-même, `VIRALDAR_OUTILS=base,carrousel,montage`
+(réglage « familles d'outils »), comme avant la 0.6.0.
+
 ### Ce qu'il faut en plus
+
+Demande à ton agent « qu'est-ce qui manque sur ma machine ? » : l'outil `ma_machine` regarde ce qui est installé, dit à
+quoi sert chaque programme et donne la commande à taper pour ton système. viraldar n'installe rien lui-même.
+
 
 - **Chrome, Chromium, Edge ou Brave** pour les carrousels (sinon `npx playwright install chromium`) ;
 - **ffmpeg** pour les vidéos, facultatif (`brew install ffmpeg`, `winget install Gyan.FFmpeg`, `apt install ffmpeg`).
 
 ## Se connecter
 
-Dis à ton agent « connecte-toi à viraldar ». Il te donne aussitôt un lien **viraldar.rayvol.net/agent** (et essaie de
-l'ouvrir dans ton navigateur par défaut) : ouvre-le dans le navigateur de ton choix, celui où tu es connecté à
-viraldar par exemple. Si ton navigateur demande l'accès aux appareils du réseau local, accepte : c'est ton agent, sur
-ta machine (127.0.0.1). Tu te connectes (Google, ou e-mail et mot de passe) et autorises l'agent. **Ton mot de passe ne passe jamais par l'agent.**
-L'agent reçoit une session à lui, distincte de celle de ton navigateur, gardée dans `~/.config/viraldar/session.json`
-(lisible par toi seul). `deconnexion` la révoque. Chaque agent connecté apparaît sur viraldar.rayvol.net, dans
-l'onglet **Agentique**, d'où tu peux le révoquer : l'agent ne peut plus renouveler sa session et te demande de
-le reconnecter (au plus tard 30 minutes après). Te déconnecter du site ne coupe pas l'agent. La session se renouvelle
-seule, même après une longue pause ; si le réseau manque à ce moment-là, l'agent dit de réessayer, sans te
-redemander de connexion.
+**Le connecteur** se connecte depuis Claude (Réglages → Connecteurs → viraldar) : Claude ouvre
+viraldar.rayvol.net/agent, tu te connectes (Google, ou e-mail et mot de passe) et autorises. **Ton mot de passe ne passe
+jamais par Claude.**
+
+**Le module création** n'a besoin d'une session que pour `relever_mes_posts` (il lit tes comptes déclarés et enregistre
+leurs vues) et les brouillons TikTok. Ces outils disent « pas connecté » ; ton agent appelle alors `connexion` et te
+donne un lien **viraldar.rayvol.net/agent** (il essaie aussi de l'ouvrir) : ouvre-le dans le navigateur de ton choix.
+Si ton navigateur demande l'accès aux appareils du réseau local, accepte : c'est ton agent, sur ta machine
+(127.0.0.1). L'agent reçoit une session à lui, gardée dans `~/.config/viraldar/session.json` (lisible par toi seul) ;
+`deconnexion` la révoque.
+
+Chaque connexion (connecteur ou module) apparaît sur viraldar.rayvol.net, dans l'onglet **Agentique**, d'où tu peux la
+révoquer : elle ne peut plus se renouveler (au plus tard 30 minutes après). Te déconnecter du site ne coupe pas tes
+agents.
 
 ## Réglages
 
 | variable | défaut | |
 |---|---|---|
 | `VIRALDAR_DOSSIER` | `~/viraldar` | où ranger carrousels et montages ; seules les vidéos de ce dossier peuvent partir en brouillon TikTok |
-| `VIRALDAR_OUTILS` | `base,carrousel,montage` | familles d'outils chargées (`publication`, `remotion`, ou `tout`) : chaque outil pèse sur le contexte de l'agent |
+| `VIRALDAR_OUTILS` | `carrousel,montage` | familles d'outils chargées (`publication`, `remotion`, `base` — la base en local, sans le connecteur —, ou `tout`) : chaque outil pèse sur le contexte de l'agent |
 | `VIRALDAR_LECTURE` | — (lecture stricte) | vide : les outils ne lisent **que le dossier de travail** (copie-y tes médias). Pour élargir, **ton choix** : des dossiers en plus (séparés par `:`, `;` sous Windows), ou `partout` (tout le disque, sauf les dossiers cachés) |
 | `VIRALDAR_CHROMIUM` | — | chemin du navigateur |
 | `VIRALDAR_FFMPEG` | — | chemin de ffmpeg |
@@ -89,7 +109,7 @@ redemander de connexion.
 
 Le détail est dans [SECURITY.md](SECURITY.md).
 
-- La base se lit avec **ta** session et **tes** quotas (600 posts distincts par jour, 30 appels par minute, partagés
+- La base (par le connecteur, ou la famille `base`) se lit avec **ta** session et **tes** quotas (600 posts distincts par jour, 30 appels par minute, partagés
   avec le site) ; aucun outil ne cherche sur TikTok ni ne garde de post sur ta machine.
 - Les textes des posts (descriptions, commentaires) sont écrits par des inconnus : ils arrivent à l'agent entre
   `⟦ ⟧`, marqués comme des données, jamais comme des consignes.
@@ -126,10 +146,11 @@ s'appliquent (600 posts distincts par jour, 30 appels par minute) ; un post revu
 | outil | ce qu'il fait |
 |---|---|
 | `infos_base` | langues, règles chiffrées, date d'export |
-| `suggerer_mots_cles` / `explorer_mots_cles` | les mots-clés de la base (nos mots-clés de recherche et les hashtags répandus) : ceux qui commencent par, contiennent ou accompagnent d'autres termes, avec leur nombre de posts |
+| `mots_cles` | les mots-clés de la base (nos mots-clés de recherche et les hashtags répandus) : ceux qui commencent par, contiennent ou accompagnent d'autres termes, avec leur nombre de posts |
 | `mes_mots_cles` / `modifier_mes_mots_cles` | lire ou changer les mots-clés de ton produit, le filtre de ta niche |
 | `chercher_posts` | recherche par mots-clés, mots, langue, vues, outlier, date, taille du compte, format, 📲, avec tri |
 | `petits_comptes_viraux` | les recommandés : comptes ≤ 50 k abonnés, ≥ 300 k vues et ≥ 20 × les abonnés |
+| `compte` | un compte de la base (concurrent, modèle) : abonnés, médiane de ses posts avec son n, ses posts du plus au-dessus de sa médiane au moins ; un compte absent est noté pour le prochain relevé |
 | `post` | toutes les stats d'un post (id ou URL) |
 | `formats_similaires` | posts aux hashtags communs et à la durée proche d'un post |
 | `trier_post` / `noter_post` | garder, passer, retirer un post ; noter ce qu'on en reprend |

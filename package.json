@@ -1,10 +1,10 @@
 {
   "name": "viraldar-mcp",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "private": true,
   "license": "Apache-2.0",
   "repository": { "type": "git", "url": "git+https://github.com/ThomasRayvol/viraldar-agent.git" },
-  "description": "viraldar pour ton propre agent (MCP + skill) : chercher dans la base viraldar des TikTok viraux, créer carrousels et montages sur ta machine, lire sa stratégie et son planning, envoyer en brouillon TikTok",
+  "description": "viraldar création pour ton agent (MCP local + skill) : carrousels, montages, analyse d'une vidéo modèle et relevé de tes posts sur ta machine ; la base, la stratégie et le planning viennent du connecteur viraldar",
   "type": "module",
   "main": "js/index.js",
   "bin": {
