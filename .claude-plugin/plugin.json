@@ -1,6 +1,6 @@
 {
   "name": "viraldar",
-  "version": "0.8.2",
+  "version": "0.8.3",
   "description": "viraldar for your agent: the viraldar connector (database of viral TikToks from small accounts, keywords, strategy, schedule) plus the local creation module (carousels, edits, model analysis, your own post stats) and the content method skill.",
   "author": { "name": "viraldar" },
   "homepage": "https://viraldar.rayvol.net",

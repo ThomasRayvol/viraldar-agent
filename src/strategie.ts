@@ -241,7 +241,9 @@ export const outilsStrategie: Module = (serveur, ctx: Contexte) => {
   const profil = (p: Ligne) => {
     const f = p.profil || {};
     if (!TAUX.some(([k]) => f[k] != null)) return p.vues != null && p.vues < 100 ? "profil : — (moins de 100 vues)" : "profil : — (pas de repère sur le compte)";
-    return `profil ${TAUX.map(([k, n]) => `${n} ${fois(f[k])}`).join(" · ")} (${REF[p.ref_engagement] || "—"})`;
+    const nb = p.nombres || {}, cpt: Record<string, string> = { likes: "likes", commentaires: "commentaires", enregistrements: "enregistrements", partages: "partages" };
+    return `profil en taux ${TAUX.map(([k, n]) => `${n} ${fois(f[k])}`).join(" · ")} (${REF[p.ref_engagement] || "—"})`
+      + (TAUX.some(([k]) => nb[k] != null) ? ` ; en nombre ${TAUX.map(([k, n]) => `${entier(p[cpt[k]!])} ${n} (${fois(nb[k])})`).join(" · ")} (${REF[p.ref_nombres] || "—"})` : "");
   };
   /** Les signes d'engagement d'un post, en phrases : des descriptions et des questions, jamais un jugement. */
   function phrases(p: Ligne): string[] {
@@ -253,6 +255,11 @@ export const outilsStrategie: Module = (serveur, ctx: Contexte) => {
     if (s.has("likes_fort")) o.push(`très aimé (${fois(f.likes)}) : adhésion`);
     if (s.has("vues_sans_engagement")) o.push("beaucoup de vues, aucun taux à la moitié de son habitude : vu sans être retenu (audience hors de sa cible ?)");
     else if (s.has("likes_faible") && !s.has("commentaires_fort")) o.push(`peu de likes pour ses vues (${fois(f.likes)}) : vu, peu d'adhésion ?`);
+    // l'ampleur (arbitré le 19/11/2026) : le nombre est haut, le taux dans la norme — les vues font le nombre
+    const AMPLEUR: Record<string, [string, string]> = { likes_nombre: ["likes", "likes"], commentaires_nombre: ["commentaires", "commentaires"],
+      enregistrements_nombre: ["enregistrements", "enregistrements"], partages_nombre: ["partages", "partages"] };
+    const amp = Object.entries(AMPLEUR).filter(([c]) => s.has(c)).map(([, [k, n]]) => `${entier(p[k])} ${n} (${fois(p.nombres?.[k])} son habitude en nombre, ${fois(f[k])} en taux)`);
+    if (amp.length) o.push(`en nombre : ${amp.join(", ")} — l'ampleur vient des vues, la proportion reste la sienne`);
     if (s.has("engagement_sans_vues")) o.push("peu de vues, mais ceux qui le voient réagissent : l'accroche ou la diffusion manque, pas forcément le fond");
     return o;
   }
@@ -273,6 +280,7 @@ export const outilsStrategie: Module = (serveur, ctx: Contexte) => {
     return `  ${nom} — ${entier(x.n)} post(s) mûr(s) ; vues : indice médian ${fois(x.indice_med)} (n = ${entier(x.n_indice)}), `
       + `${entier(x.gagnants)} gagnant(s), ${entier(x.au_dessus)} au-dessus, ${entier(x.en_dessous)} en dessous ; profil médian : `
       + TAUX.map(([k, n]) => `${n} ${fois(f[k]?.indice_med)} (n = ${entier(f[k]?.n)})`).join(", ")
+      + (TAUX.some(([k]) => f[k]?.nombre_med != null) ? ` ; en nombre : ${TAUX.map(([k, n]) => `${n} ${fois(f[k]?.nombre_med)}`).join(", ")}` : "")
       + ` ; taux médians : ${TAUX.map(([k, n]) => `${n} ${pc(f[k]?.taux_med)}`).join(", ")}`
       + (x.vues_sans_engagement ? ` ; ${x.vues_sans_engagement} vu(s) sans être retenu(s)` : "")
       + (x.engagement_sans_vues ? ` ; ${x.engagement_sans_vues} qui engagent sans vues` : "")
@@ -285,7 +293,7 @@ export const outilsStrategie: Module = (serveur, ctx: Contexte) => {
       + `${entier(q.validees)} post(s) lu(s) et validé(s), ${entier(q.a_valider)} lecture(s) proposée(s) à valider, ${entier(q.sans_lecture)} sans lecture `
       + `sur ${entier(q.posts)} ; support connu : ${entier(q.support?.diaporama)} diaporama(s), ${entier(q.support?.video)} vidéo(s), ${entier(q.support?.inconnu)} inconnu(s).`);
     const S = E.seuils || {};
-    l.push(`  Engagement (${E.statut}) : ${E.mesure}. Seuils de l'indice : ${TAUX.map(([k, n]) => `${n} faible < ${fois(S[k]?.faible)}, fort ≥ ${fois(S[k]?.fort)}`).join(" ; ")} `
+    l.push(`  Engagement (${E.statut} ; formules : \`methode\`, references/lire-un-post) : ${E.mesure}. Seuils de l'indice (sur les taux seulement) : ${TAUX.map(([k, n]) => `${n} faible < ${fois(S[k]?.faible)}, fort ≥ ${fois(S[k]?.fort)}`).join(" ; ")} `
       + `(fort : ${entier(E.actions_min)} actions au moins) ; pas de taux sous ${entier(E.vues_min)} vues. Ce sont des descriptions, pas des verdicts : `
       + "jamais « pub » sur ses posts, il sait s'il a payé.");
     for (const [c, v] of Object.entries(L.comptes || {}) as [string, any][]) {
@@ -337,11 +345,11 @@ export const outilsStrategie: Module = (serveur, ctx: Contexte) => {
       + "viraldar ou hors planning), comparé aux posts produits avec viraldar, et ce que chaque angle y a donné ; la LECTURE "
       + "CROISÉE (19/11/2026) : sur les posts dont l'utilisateur a validé la lecture (`lire_mes_posts`), l'indice des vues et "
       + "le PROFIL D'ENGAGEMENT (likes, commentaires, enregistrements, partages ÷ vues, chacun rapporté à son compte et au même "
-      + "support, avec les repères de la niche) par série "
+      + "support, et les mêmes en NOMBRE rapportés à la médiane des nombres du compte, avec les repères de la niche) par série "
       + "(format), par déclencheur, par support, par sujet soudé, par angle × déclencheur, et visé / obtenu pour les créneaux ; "
       + "par angle, chaque chiffre avec son n. L'engagement dit comment le post a touché (adhésion, débat, utilité, partage) ; "
       + "ce sont des descriptions à dire en phrases, jamais un verdict « pub » sur ses posts (il sait s'il a payé). Seuils des "
-      + "vues arbitrés le 19/11/2026 ; ceux de l'engagement proposés, à arbitrer. Ne passe un angle à « abandonne » que sur des posts bien exécutés, et toujours avec l'accord "
+      + "vues et de l'engagement arbitrés par le propriétaire le 19/11/2026 (sur les taux ; les nombres disent l'ampleur). Ne passe un angle à « abandonne » que sur des posts bien exécutés, et toujours avec l'accord "
       + "de l'utilisateur (`ecrire_angle`).",
     inputSchema: {},
     annotations: { readOnlyHint: true },
@@ -411,7 +419,7 @@ export const outilsStrategie: Module = (serveur, ctx: Contexte) => {
       + "Pour PROPOSER l'angle de chaque post (lis la légende, rapproche-la des angles ; un groupe de posts qui ne va dans "
       + "aucun angle peut en former un nouveau), montre la proposition à l'utilisateur, puis `classer_mes_posts`. Avec sa "
       + "LECTURE (19/11/2026) : support, série (format), déclencheur, sujet soudé, variables (proposée / validée) et "
-      + "son profil d'engagement (quatre taux rapportés à son compte et au même support, en phrases ; repères de la niche). Filtre `a_lire` : les posts à lire d'abord (gagnants, au-dessus, puis "
+      + "son profil d'engagement (quatre taux rapportés à son compte et au même support, et les mêmes en nombre, en phrases ; repères de la niche). Filtre `a_lire` : les posts à lire d'abord (gagnants, au-dessus, puis "
       + "sous la médiane), pour `lire_mes_posts` ; la lecture se fait chez l'utilisateur (couverture, planche, légende).",
     inputSchema: {
       filtre: z.enum(["a_classer", "a_valider", "valides", "a_lire", "lecture_a_valider", "lus", "tous"]).optional().describe("a_classer (défaut) : sans angle validé ; a_valider : angle proposé ; valides : angle validé ; a_lire : sans lecture validée, gagnants et au-dessus d'abord, puis sous la médiane ; lecture_a_valider : lecture proposée ; lus : lecture validée ; tous."),

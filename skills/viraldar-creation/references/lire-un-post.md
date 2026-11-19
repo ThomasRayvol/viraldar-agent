@@ -80,9 +80,15 @@ support, par sujet soudé, par angle × déclencheur ; chaque ligne avec son n.
 - **Le profil d'engagement** : quatre taux — likes, commentaires, enregistrements, partages, chacun ÷ vues — et leur
   indice : le taux du post ÷ la médiane du même taux sur ses posts mûrs **du même compte et du même support** (5 au
   moins ; sinon le compte tous supports, la sortie le dit). × 1 = d'habitude. Pas de taux sous 100 vues ; un taux
-  « fort » demande 3 actions au moins. Seuils proposés (à arbitrer) : likes faible < × 0,5 / fort ≥ × 1,8 ;
-  commentaires < × 0,5 / ≥ × 3,5 ; enregistrements < × 0,3 / ≥ × 2,5 ; partages < × 0,45 / ≥ × 3,8. Les **repères de la
-  niche** (10e centile, médiane, 90e de chaque taux dans la base, par support et tranche de vues) situent ses taux.
+  « fort » demande 3 actions au moins ; une médiane nulle a pour plancher « une action sur un post typique du compte »
+  (1 ÷ médiane des vues). Seuils arbitrés le 19/11/2026 : likes faible < × 0,5 / fort ≥ × 1,8 ; commentaires < × 0,5 /
+  ≥ × 3,5 ; enregistrements < × 0,3 / ≥ × 2,5 ; partages < × 0,45 / ≥ × 3,8 (≈ 10e ou 25e et 90e centiles de l'indice
+  sur plus de 3 millions de posts de catalogues). Les **repères de la niche** (10e centile, médiane, 90e de chaque taux
+  dans la base, par support et tranche de vues) situent ses taux.
+- **Les nombres en plus des taux** : likes, commentaires, enregistrements, partages en nombre, rapportés à la médiane
+  des nombres du compte (même support s'il a 5 posts mûrs). Ils disent l'**ampleur**, sans seuil propre : les phrases
+  « fort / faible » restent sur les taux. Un nombre haut avec un taux dans la norme se dit comme tel (« 25 commentaires,
+  × 25 son habitude en nombre, × 1,1 en taux : l'ampleur vient des vues »).
 - **Chaque déclencheur a sa signature** : ne résume jamais l'engagement en un chiffre. Beaucoup d'enregistrements :
   utile, à relire ; beaucoup de partages : on l'envoie à quelqu'un ; beaucoup de commentaires sans likes : fait réagir
   sans adhérer ? ; des likes : adhésion. Dis-le **en phrases, comme des descriptions et des questions**, jamais comme un
