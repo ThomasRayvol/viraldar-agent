@@ -766,6 +766,11 @@ export const outilsPlan = (serveur, ctx) => {
         let t = plans.filter((p) => p.id.startsWith(q));
         if (!t.length)
             t = plans.filter((p) => p.nom.toLowerCase().includes(q));
+        if (t.length > 1) {
+            const exact = t.filter((p) => p.nom.toLowerCase() === q);
+            if (exact.length === 1)
+                t = exact;
+        }
         if (t.length !== 1)
             throw new Error(`${t.length ? "Plusieurs plans" : "Aucun plan"} pour « ${ref} ». Ses plans : `
                 + plans.map((p) => `« ${p.nom} » (${court(p.id)})`).join(", ") + ".");
@@ -824,6 +829,176 @@ export const outilsPlan = (serveur, ctx) => {
         if (eu)
             throw new Error("Pas enregistré : " + (eu.code === "23505" ? `@${v.pseudo} est déjà dans ce plan.` : eu.message));
         return texte(`Compte corrigé dans « ${p.nom} » : @${k.pseudo}${v.pseudo ? ` → @${v.pseudo}` : ""}${a.angle !== undefined ? ` · angle : ${v.angle || "—"}` : ""}.`);
+    }));
+    // ======================================================================================================
+    // modifier_plan / supprimer_plan (19/11/2026 : l'agent ne pouvait ni l'un ni l'autre). Rien de mesuré ne se perd : un
+    // créneau qui part avec des relevés ou un lien TikTok devient un post de l'historique (migration plan_modifier_supprimer).
+    // ======================================================================================================
+    const HEURE = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/);
+    const statutsTexte = (s) => ST_CRENEAU.filter(k => s[k]).map(k => {
+        const lib = LIB_CRENEAU[k].replace(" (à produire)", "").toLowerCase();
+        return `${s[k]} ${s[k] > 1 && (k === "pret" || k === "publie") ? lib + "s" : lib}`;
+    }).join(", ");
+    const MESURES = "Les relevés de vues des posts publiés ne se perdent pas : chacun devient un post de l'historique "
+        + "(avec son angle et ses relevés ; `bilan` le compte « hors plan ») ; sa note d'exécution part avec le créneau.";
+    serveur.registerTool("modifier_plan", {
+        title: "Modifier un plan",
+        description: PRODUIT_ACTIF + "Modifie un plan du planning en un appel : son nom, son premier jour (tout le plan se décale, refusé "
+            + "si un créneau est publié), sa fin (`jours` ou `fin` : allonger crée les créneaux « à créer » des nouveaux jours, "
+            + "raccourcir supprime ceux d'après ; 31 jours au plus), le nombre de posts par jour (`par_jour` 1 à 5, avec les "
+            + "heures par défaut du site décalées de 4 min par compte) ou les heures (`heures` pour tous les comptes, décalées de "
+            + "4 min par compte ; `heures_compte` pour un compte, telles quelles), ajouter des comptes (20 au plus) ou en retirer "
+            + "(tous leurs créneaux partent ; il en reste au moins un). Les heures ne touchent qu'aux créneaux à venir et pas "
+            + "publiés : une heure remplacée y déplace ses créneaux (même jour, contenu gardé), une heure en moins supprime les "
+            + "siens, une heure en plus en crée. Supprimer un créneau qui n'est pas « à créer » vierge (en production, prêt, en "
+            + "brouillon, publié, ou avec une idée ou une légende) n'est PAS fait sans `confirmer: true` : la réponse dit ce qui "
+            + "partirait, à montrer à l'utilisateur ; ne confirme qu'avec son accord. Rien de mesuré ne se perd (un post publié "
+            + "qui part garde ses relevés dans l'historique) ; les idées de la Bibliothèque restent. Corriger un @ ou l'angle d'un "
+            + "compte : `modifier_compte_plan` ; un créneau : `maj_creneaux`.",
+        inputSchema: {
+            plan: z.string().max(80).describe("Référence (8 caractères) ou nom du plan."),
+            nom: z.string().min(1).max(80).optional().describe("Nouveau nom (sinon un nom par défaut « Semaine du … » / « Du … au … » suit la période)."),
+            debut: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().describe("Nouveau premier jour (AAAA-MM-JJ) : tout le plan se décale."),
+            jours: z.number().int().min(1).max(31).optional().describe("Nouvelle durée en jours (la fin bouge, le début reste)."),
+            fin: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().describe("Nouveau dernier jour (AAAA-MM-JJ), à la place de `jours`."),
+            par_jour: z.number().int().min(1).max(5).optional().describe("Posts par jour et par compte, aux heures par défaut du site."),
+            heures: z.array(HEURE).min(1).max(5).optional().describe("Les heures de publication de tous les comptes (HH:MM, fuseau du plan), décalées de 4 min d'un compte à l'autre."),
+            heures_compte: z.record(z.string().max(31), z.array(HEURE).min(1).max(5)).optional().describe("Les heures d'un ou plusieurs comptes, telles quelles : { \"@compte\": [\"09:00\", \"19:30\"] }."),
+            ajouter: z.array(z.object({
+                compte: z.string().max(31).describe("Le @ à ajouter."),
+                heures: z.array(HEURE).min(1).max(5).optional().describe("Ses heures (sinon celles du plan, décalées de 4 min)."),
+                angle: z.string().max(60).optional().describe("Son angle (« marque », « fondateur »…)."),
+            })).max(20).optional(),
+            retirer: z.array(z.string().max(31)).max(20).optional().describe("Les @ à retirer du plan, avec tous leurs créneaux."),
+            confirmer: z.boolean().optional().describe("L'utilisateur a vu ce qui partirait (créneaux en production, prêts, publiés…) et l'accepte."),
+        },
+    }, outil(async (a, c) => {
+        const p = await planDe(c, a.plan);
+        if (a.jours && a.fin)
+            throw new Error("`jours` ou `fin`, pas les deux.");
+        if (a.par_jour && a.heures)
+            throw new Error("`par_jour` ou `heures`, pas les deux (`heures` donne déjà le nombre de posts par jour).");
+        const debut = a.debut || p.debut;
+        const jours = a.fin ? ecart(debut, a.fin) + 1 : a.jours ?? p.jours;
+        if (jours < 1 || jours > 31)
+            throw new Error(`De 1 à 31 jours : du ${jourCourt(debut)} au ${a.fin ? jourCourt(a.fin) : "…"}, cela en fait ${jours}.`);
+        const decale = debut !== p.debut;
+        if (decale) {
+            const { count } = await c.from("plan_creneaux").select("id", { count: "exact", head: true }).eq("plan_id", p.id).eq("statut", "publie");
+            if (count)
+                throw new Error(`Pas modifié : ${count} créneau${count > 1 ? "x sont" : " est"} déjà publié${count > 1 ? "s" : ""}, le plan ne se décale plus (déplace les autres un par un : \`maj_creneaux\`).`);
+        }
+        // le nom : celui donné, sinon un nom par défaut suit la période
+        const nom = a.nom?.trim() || ((decale || jours !== p.jours) && estNomDefaut(p.nom, p.debut, p.jours) ? nomDefaut(debut, jours) : null);
+        const m = {};
+        if (nom && nom !== p.nom && !decale)
+            m.nom = nom;
+        if (jours !== p.jours)
+            m.jours = jours;
+        if (a.par_jour)
+            m.par_jour = a.par_jour;
+        if (a.heures)
+            m.heures = a.heures;
+        if (a.heures_compte)
+            m.heures_compte = Object.fromEntries(Object.entries(a.heures_compte).map(([k, v]) => [k.replace(/^@/, ""), v]));
+        if (a.ajouter?.length)
+            m.ajouter = a.ajouter.map(x => ({ pseudo: x.compte.trim().replace(/^@/, ""), ...(x.heures ? { heures: x.heures } : {}), ...(x.angle ? { angle: x.angle } : {}) }));
+        if (a.retirer?.length)
+            m.retirer = a.retirer.map(x => x.trim().replace(/^@/, ""));
+        if (!Object.keys(m).length && !decale)
+            throw new Error("Rien à changer : `nom`, `debut`, `jours` / `fin`, `par_jour` / `heures`, `ajouter`, `retirer`.");
+        let r = null;
+        if (Object.keys(m).length) {
+            const { data, error } = await c.rpc("plan_modifier", { p_plan: p.id, p: m, p_confirmer: !!a.confirmer });
+            if (error)
+                throw new Error("Pas modifié : " + error.message);
+            r = data;
+            if (!r.applique)
+                return texte([`Rien n'est modifié : ce changement supprimerait ${statutsTexte(r.supprimes)} dans « ${p.nom} », `
+                        + `dont ${r.a_confirmer} qui ${r.a_confirmer > 1 ? "ne sont pas des créneaux « à créer » vierges" : "n'est pas un créneau « à créer » vierge"} (déjà commencé, prêt, publié, ou avec une idée ou une légende).`,
+                    r.mesures_gardees ? `${r.mesures_gardees} ${r.mesures_gardees > 1 ? "ont" : "a"} des relevés ou un lien TikTok : ${MESURES}` : "",
+                    "Dis-le à l'utilisateur ; s'il accepte, rappelle `modifier_plan` avec les mêmes paramètres et `confirmer: true`. "
+                        + "Sinon, déplace d'abord ces créneaux (`maj_creneaux` : `jour`, `heure`, `compte`)."].filter(Boolean).join("\n"));
+        }
+        let decales = 0;
+        if (decale) {
+            const { data, error } = await c.rpc("decaler_plan", { p_plan: p.id, p_debut: debut, p_nom: nom });
+            if (error)
+                throw new Error((r ? "Modifié, mais pas décalé : " : "Pas décalé : ") + error.message);
+            decales = data.decales;
+        }
+        const nomFinal = nom || p.nom;
+        const l = [`Plan « ${nomFinal} » (plan ${court(p.id)}) modifié : du ${jourLong(debut)} au ${jourLong(ajout(debut, jours - 1))} (${jours} jours).`];
+        if (nom && nom !== p.nom)
+            l.push(`  · renommé (avant : « ${saisi(p.nom, 80)} »)`);
+        if (decale) {
+            const d = ecart(p.debut, debut);
+            l.push(`  · décalé de ${d > 0 ? "+" : ""}${d} jour${Math.abs(d) > 1 ? "s" : ""} : ${decales} créneau${decales > 1 ? "x déplacés" : " déplacé"} à la même heure`);
+        }
+        if (r) {
+            if (r.crees)
+                l.push(`  · ${r.crees} créneau${r.crees > 1 ? "x" : ""} « à créer » ajouté${r.crees > 1 ? "s" : ""} (à venir seulement)`);
+            if (r.deplaces)
+                l.push(`  · ${r.deplaces} créneau${r.deplaces > 1 ? "x déplacés" : " déplacé"} à leur nouvelle heure, contenu gardé`);
+            const s = statutsTexte(r.supprimes || {});
+            if (s)
+                l.push(`  · supprimés : ${s}`);
+            if (r.mesures_gardees)
+                l.push(`  · ${r.mesures_gardees} post${r.mesures_gardees > 1 ? "s" : ""} publié${r.mesures_gardees > 1 ? "s" : ""} gardé${r.mesures_gardees > 1 ? "s" : ""} dans l'historique avec ${r.mesures_gardees > 1 ? "leurs" : "ses"} relevés`);
+            l.push(`Comptes : ${(r.comptes || []).map((k) => `@${k.pseudo} (${k.heures.join(", ")})`).join(" · ")}.`);
+        }
+        l.push("`mon_planning` pour voir le plan ; les idées de la Bibliothèque ne bougent pas.");
+        return texte(l.join("\n"));
+    }));
+    serveur.registerTool("supprimer_plan", {
+        title: "Supprimer un plan",
+        description: PRODUIT_ACTIF + "Supprime un plan du planning, ses comptes et tous ses créneaux (comme « Supprimer le plan » sur le "
+            + "site). Sans `confirmer: true`, ne supprime rien et dit ce qui partirait (nombre de créneaux, dont publiés, prêts, "
+            + "en production) : montre-le à l'utilisateur et ne confirme qu'avec son accord explicite. Rien de mesuré ne se "
+            + "perd : chaque post publié qui a des relevés ou un lien TikTok devient un post de l'historique, avec ses relevés et "
+            + "son angle (la note d'exécution part avec le créneau) ; un créneau qui a des relevés mais pas de lien bloque la "
+            + "suppression (ajoute d'abord son lien : `maj_creneaux` `lien`). Les idées de la Bibliothèque restent. "
+            + "Pour seulement raccourcir le plan ou retirer un compte : `modifier_plan`.",
+        inputSchema: {
+            plan: z.string().max(80).describe("Référence (8 caractères) ou nom du plan."),
+            confirmer: z.boolean().optional().describe("L'utilisateur a vu ce qui part et veut supprimer le plan."),
+        },
+    }, outil(async (a, c) => {
+        const p = await planDe(c, a.plan);
+        const cr = await lireTout(() => c.from("plan_creneaux").select("id, statut, tiktok_url, brief_id").eq("plan_id", p.id).order("id"));
+        const parStatut = {};
+        cr.forEach(x => { parStatut[x.statut] = (parStatut[x.statut] || 0) + 1; });
+        // les relevés ne peuvent être que sur des créneaux publiés ou qui ont un lien
+        const suivis = cr.filter(x => x.statut === "publie" || x.tiktok_url);
+        const releves = new Set();
+        for (let i = 0; i < suivis.length; i += 200) {
+            const { data, error } = await c.from("resultats").select("creneau_id").in("creneau_id", suivis.slice(i, i + 200).map(x => x.id));
+            if (error)
+                throw new Error("resultats : " + error.message);
+            (data || []).forEach((r) => releves.add(r.creneau_id));
+        }
+        const lien = (u) => /\/(video|photo)\/\d{8,25}/.test(String(u ?? ""));
+        const bloquants = suivis.filter(x => releves.has(x.id) && !lien(x.tiktok_url));
+        const gardes = suivis.filter(x => lien(x.tiktok_url) || releves.has(x.id)).length - bloquants.length;
+        const idees = new Set(cr.map(x => x.brief_id).filter(Boolean)).size;
+        const quoi = `« ${p.nom} » (plan ${court(p.id)}, du ${jourCourt(p.debut)} au ${jourCourt(ajout(p.debut, p.jours - 1))}) : `
+            + `${cr.length} créneau${cr.length > 1 ? "x" : ""}${cr.length ? ` (${statutsTexte(parStatut)})` : ""}`;
+        if (bloquants.length)
+            return texte(`Pas supprimé : ${bloquants.length} créneau${bloquants.length > 1 ? "x publiés ont" : " publié a"} des relevés de vues mais pas de lien TikTok `
+                + `(${bloquants.slice(0, 8).map(x => court(x.id)).join(", ")}) ; ses mesures seraient perdues. Ajoute d'abord le lien de chacun `
+                + "(`maj_creneaux` avec `lien`, l'URL du post publié), puis rappelle `supprimer_plan`.");
+        const garde = [gardes ? `${gardes} post${gardes > 1 ? "s" : ""} publié${gardes > 1 ? "s" : ""} gardé${gardes > 1 ? "s" : ""} dans l'historique avec ${gardes > 1 ? "leurs" : "ses"} relevés.` : "",
+            idees ? `Les ${idees} idée${idees > 1 ? "s" : ""} de la Bibliothèque liée${idees > 1 ? "s" : ""} restent.` : ""].filter(Boolean).join(" ");
+        if (!a.confirmer)
+            return texte([`Rien n'est supprimé. Supprimer ${quoi}.`, garde,
+                "Montre-le à l'utilisateur ; s'il confirme, rappelle `supprimer_plan` avec `confirmer: true`. Pour seulement raccourcir le plan ou retirer un compte : `modifier_plan`."].filter(Boolean).join("\n"));
+        const { data, error } = await c.from("plan_plans").delete().eq("id", p.id).select("id");
+        if (error)
+            throw new Error("Pas supprimé : " + error.message);
+        if (!data?.length)
+            throw new Error("Pas supprimé : plan introuvable (déjà supprimé, ou d'un autre produit).");
+        cr.forEach(x => ids.plan_creneaux.delete(x.id));
+        return texte([`Supprimé : ${quoi}.`, garde].filter(Boolean).join("\n"));
     }));
     // ======================================================================================================
     // mes_idees / ecrire_idee (Bibliothèque → Créer)

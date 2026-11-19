@@ -168,6 +168,7 @@ Aucun outil ne publie ni n'envoie en brouillon depuis le planning : c'est toi qu
 | `ma_strategie` | ta stratégie rédigée (cap, piliers, formats retenus, cadence, premiers posts, jalons) ; sinon les repères calculés de tes mots-clés (critères, petits comptes viraux, diaporama contre vidéo, chaque médiane avec son n) et le format que suggèrent les chiffres |
 | `mon_planning` | tes plans, leurs comptes et les créneaux d'une période (par défaut aujourd'hui et les 7 jours suivants, à l'heure du plan) : heure, compte, statut, et ce qu'il faut reproduire (le post gardé qui sert de modèle, l'idée et son brief) ; `a_produire` : ce qui reste à produire |
 | `maj_creneaux` | fait avancer un ou plusieurs créneaux : statut (à créer → en production → prêt), titre, légende, format, modèle, idée liée |
+| `modifier_plan` / `supprimer_plan` | modifier un plan (nom, début, fin, posts par jour, heures, comptes) ou le supprimer ; rien ne part sans `confirmer: true`, les relevés des posts publiés restent dans ton historique |
 | `mes_idees` / `ecrire_idee` | lire, créer et modifier les idées à produire de la Bibliothèque (brief, statut, format, compte, post modèle) |
 
 ## Brouillons TikTok
