@@ -4,7 +4,7 @@
 // Mêmes tables et mêmes règles que la page (site/js/strategie.js, planning.js, bibliotheque.js), lues et écrites avec la
 // session de l'utilisateur (RLS : ses lignes seulement) :
 //   strategies (lecture seule ; format en tête de src/strategie.py) et la RPC strategie_reperes (agrégats, hors quota) ;
-//   plan_plans, plan_comptes, plan_creneaux, et les RPC plan_maj_creneaux (modifications en lot), decaler_plan et
+//   plan_plans, plan_comptes, plan_creneaux, et les RPC plan_creer (creer_plan), plan_maj_creneaux (modifications en lot), decaler_plan et
 //   plan_modifier (nom, période, heures, comptes) ; la suppression d'un plan comme sur la page (delete sous RLS : la base
 //   garde les relevés des posts publiés, migration plan_modifier_supprimer) ;
 //   bibliotheque_idees (lecture, création, modification ; pas de suppression : elle se fait sur le site).
@@ -17,6 +17,7 @@ import { DONNEES, PRODUIT_ACTIF, erreur, externe, nb, pct, sig, texte, urlPost, 
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 type Ligne = Record<string, any>;
+type ArgsPlanning = { plan?: string; du?: string; jours?: number; compte?: string; a_produire?: boolean };
 
 // ---------- les statuts, dans l'ordre du flux (comme la page) ----------
 const ST_CRENEAU = ["a_creer", "en_production", "pret", "brouillon", "publie"] as const;
@@ -386,11 +387,12 @@ export const outilsPlan: Module = (serveur, ctx: Contexte) => {
       compte: z.string().max(31).optional().describe("Un seul compte (@pseudo)."),
       a_produire: z.boolean().optional().describe("Seulement ce qui reste à produire : à créer et en production."),
     },
-  }, outil<{ plan?: string; du?: string; jours?: number; compte?: string; a_produire?: boolean }>(async (a, c) => {
+  }, outil<ArgsPlanning>((a, c) => monPlanning(a, c)));
+  async function monPlanning(a: ArgsPlanning, c: SupabaseClient): Promise<ReturnType<typeof texte>> {
     const { data: plans, error } = await c.from("plan_plans").select("*").order("debut", { ascending: false });
     if (error) throw new Error("plan_plans : " + error.message);
-    if (!plans.length) return texte("Aucun plan. L'utilisateur en crée un sur viraldar (Planning → Nouveau plan : ses @, 1 à 5 posts par jour, "
-      + "7 à 28 jours). En attendant, ce qu'il y a à produire vient de `ma_strategie` (premiers posts), `mes_idees` et `a_reproduire`.");
+    if (!plans.length) return texte("Aucun plan. Avec son accord, `creer_plan` en crée un (ses @, 1 à 5 posts par jour, 1 à 31 jours ; "
+      + "ou lui sur viraldar : Planning → Nouveau plan). En attendant, ce qu'il y a à produire vient de `ma_strategie` (premiers posts), `mes_idees` et `a_reproduire`.");
     const fin = (p: Ligne) => ajout(p.debut, p.jours - 1);
     const n = a.jours ?? 8;
     let choisis: Ligne[];
@@ -558,7 +560,7 @@ export const outilsPlan: Module = (serveur, ctx: Contexte) => {
     }
     if (choisis.length < plans.length) l.push("", tous);
     return texte(l.join("\n"));
-  }));
+  }
 
   // ======================================================================================================
   // maj_creneaux
@@ -767,12 +769,79 @@ export const outilsPlan: Module = (serveur, ctx: Contexte) => {
   // créneau qui part avec des relevés ou un lien TikTok devient un post de l'historique (migration plan_modifier_supprimer).
   // ======================================================================================================
   const HEURE = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/);
+  // ======================================================================================================
+  // creer_plan (arbitré le 19/11/2026) : la RPC plan_creer, comme « Nouveau plan » du site (mêmes bornes, mêmes heures
+  // par défaut, décalées de 4 min d'un compte à l'autre, même nom par défaut).
+  // ======================================================================================================
+  const PL_HEURES: Record<number, string[]> = { 1: ["18:00"], 2: ["12:30", "19:30"], 3: ["09:00", "13:00", "19:30"],
+    4: ["08:00", "12:30", "17:30", "21:00"], 5: ["08:00", "11:30", "14:30", "18:00", "21:30"] };   // PL_HEURES, site/js/planning.js
+  const PL_DECALAGE = 4;
+  const minutes = (hhmm: string, n: number) => { const [h, m] = hhmm.split(":").map(Number), t = Math.min(23 * 60 + 59, h * 60 + m + n);
+    return String(Math.floor(t / 60)).padStart(2, "0") + ":" + String(t % 60).padStart(2, "0"); };
+  const pseudoPropre = (s: string) => {
+    const p = s.trim().replace(/^https?:\/\/(www\.)?(tiktok|instagram)\.com\//i, "").replace(/^@/, "").replace(/[/?].*$/, "");
+    if (!/^[A-Za-z0-9._]{1,30}$/.test(p)) throw new Error(`« ${s} » n'est pas un @ valide (lettres, chiffres, point, tiret bas ; 30 au plus).`);
+    return p;
+  };
+  serveur.registerTool("creer_plan", {
+    title: "Créer un plan",
+    description: PRODUIT_ACTIF + "Crée un plan du planning, comme « Nouveau plan » sur le site : des comptes (@, sans connexion TikTok), "
+      + "un nombre de posts par jour et par compte (1 à 5, défaut 3) aux heures par défaut du site ou aux `heures` données, "
+      + "décalées de 4 min d'un compte à l'autre (`decaler: false` pour des heures identiques), un premier jour (défaut : lundi "
+      + "prochain) et une durée (1 à 31 jours, défaut 7, ou `fin`). Tous les créneaux sont créés « à créer » (à produire). "
+      + "Bornes : 20 comptes, 12 plans par produit. Le nom par défaut suit la période (« Semaine du … », « Du … au … »). "
+      + "Rend le plan comme `mon_planning`. À faire avec l'accord de l'utilisateur (comptes, cadence, période) ; la cadence "
+      + "de sa stratégie (`ma_strategie`, rythme) est le repère. Ensuite : lier les modèles et les idées (`maj_creneaux`).",
+    inputSchema: {
+      comptes: z.array(z.object({
+        compte: z.string().max(80).describe("Le @ (ou l'URL du profil TikTok)."),
+        angle: z.string().max(60).optional().describe("Son angle (« marque », « fondateur »…), en texte."),
+        heures: z.array(HEURE).min(1).max(5).optional().describe("Ses heures à lui, telles quelles (HH:MM)."),
+      })).min(1).max(20),
+      par_jour: z.number().int().min(1).max(5).optional().describe("Posts par jour et par compte (défaut 3), aux heures par défaut du site."),
+      heures: z.array(HEURE).min(1).max(5).optional().describe("Les heures de publication (HH:MM, fuseau du plan), à la place de `par_jour`."),
+      decaler: z.boolean().optional().describe("Décaler les heures de 4 min d'un compte à l'autre (défaut : oui, comme le site)."),
+      debut: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().describe("Premier jour (AAAA-MM-JJ) ; défaut : lundi prochain."),
+      jours: z.number().int().min(1).max(31).optional().describe("Durée en jours (défaut 7)."),
+      fin: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().describe("Dernier jour (AAAA-MM-JJ), à la place de `jours`."),
+      nom: z.string().min(1).max(80).optional().describe("Nom du plan (sinon d'après la période)."),
+      fuseau: z.string().max(64).optional().describe("Fuseau des heures (défaut Europe/Paris)."),
+    },
+  }, outil<{ comptes: { compte: string; angle?: string; heures?: string[] }[]; par_jour?: number; heures?: string[]; decaler?: boolean;
+    debut?: string; jours?: number; fin?: string; nom?: string; fuseau?: string }>(async (a, c) => {
+    if (a.par_jour && a.heures) throw new Error("`par_jour` ou `heures`, pas les deux (`heures` donne déjà le nombre de posts par jour).");
+    if (a.jours && a.fin) throw new Error("`jours` ou `fin`, pas les deux.");
+    const fuseau = a.fuseau || "Europe/Paris";
+    const auj = jourDe(new Date(), fuseau), jsem = new Date(auj + "T12:00:00Z").getUTCDay();
+    const debut = a.debut || ajout(auj, ((8 - jsem) % 7) || 7);
+    const jours = a.fin ? ecart(debut, a.fin) + 1 : a.jours ?? 7;
+    if (jours < 1 || jours > 31) throw new Error(`De 1 à 31 jours : du ${jourCourt(debut)} au ${a.fin ? jourCourt(a.fin) : "…"}, cela en fait ${jours}.`);
+    const base = [...new Set(a.heures || PL_HEURES[a.par_jour ?? 3])].sort();
+    const vus = new Set<string>();
+    const comptes = a.comptes.map((k, i) => {
+      const pseudo = pseudoPropre(k.compte);
+      if (vus.has(pseudo.toLowerCase())) throw new Error(`@${pseudo} est deux fois dans la liste.`);
+      vus.add(pseudo.toLowerCase());
+      const heures = k.heures ? [...new Set(k.heures)].sort() : [...new Set(base.map(h => a.decaler === false ? h : minutes(h, i * PL_DECALAGE)))].sort();
+      return { pseudo, reseau: "tiktok", heures, ...(k.angle?.trim() ? { angle: k.angle.trim() } : {}) };
+    });
+    const nom = a.nom?.trim() || nomDefaut(debut, jours);
+    const { data: id, error } = await c.rpc("plan_creer", { p_nom: nom, p_debut: debut, p_jours: jours, p_comptes: comptes, p_fuseau: fuseau });
+    if (error) throw new Error("Pas créé : " + error.message + (/plans au plus/.test(error.message) ? " (`supprimer_plan` sur un plan fini, avec son accord)." : ""));
+    const n = comptes.reduce((t, k) => t + k.heures.length, 0) * jours;
+    const vue = await monPlanning({ plan: String(id), du: debut, jours: Math.min(jours, 8) }, c);
+    const tete = `Plan créé : « ${nom} » (plan ${court(String(id))}), du ${jourLong(debut)} au ${jourLong(ajout(debut, jours - 1))} — `
+      + `${comptes.length} compte${comptes.length > 1 ? "s" : ""} × ${base.length} post${base.length > 1 ? "s" : ""} par jour × ${jours} jours = ${n} créneaux « à créer ». `
+      + "Prochaine étape : donner à chaque créneau son modèle ou son idée (`maj_creneaux`), avec l'utilisateur.\n\n";
+    return { ...vue, content: vue.content.map((x, i) => i === 0 && x.type === "text" ? { ...x, text: tete + x.text } : x) };
+  }));
+
   const statutsTexte = (s: Record<string, number>) => ST_CRENEAU.filter(k => s[k]).map(k => {
     const lib = LIB_CRENEAU[k].replace(" (à produire)", "").toLowerCase();
     return `${s[k]} ${s[k] > 1 && (k === "pret" || k === "publie") ? lib + "s" : lib}`;
   }).join(", ");
   const MESURES = "Les relevés de vues des posts publiés ne se perdent pas : chacun devient un post de l'historique "
-    + "(avec son angle et ses relevés ; `bilan` le compte « hors plan ») ; sa note d'exécution part avec le créneau.";
+    + "(avec son angle, ses relevés et sa note d'exécution ; `bilan` le compte « hors plan »).";
   serveur.registerTool("modifier_plan", {
     title: "Modifier un plan",
     description: PRODUIT_ACTIF + "Modifie un plan du planning en un appel : son nom, son premier jour (tout le plan se décale, refusé "
@@ -780,7 +849,8 @@ export const outilsPlan: Module = (serveur, ctx: Contexte) => {
       + "raccourcir supprime ceux d'après ; 31 jours au plus), le nombre de posts par jour (`par_jour` 1 à 5, avec les "
       + "heures par défaut du site décalées de 4 min par compte) ou les heures (`heures` pour tous les comptes, décalées de "
       + "4 min par compte ; `heures_compte` pour un compte, telles quelles), ajouter des comptes (20 au plus) ou en retirer "
-      + "(tous leurs créneaux partent ; il en reste au moins un). Les heures ne touchent qu'aux créneaux à venir et pas "
+      + "(arbitré le 19/11/2026 : tous ses créneaux partent, publiés compris — les publiés passent dans l'historique avec leurs "
+      + "relevés, leur angle et leur note d'exécution — ; `confirmer` dès qu'un n'est pas vierge ; il reste au moins un compte). Les heures ne touchent qu'aux créneaux à venir et pas "
       + "publiés : une heure remplacée y déplace ses créneaux (même jour, contenu gardé), une heure en moins supprime les "
       + "siens, une heure en plus en crée. Supprimer un créneau qui n'est pas « à créer » vierge (en production, prêt, en "
       + "brouillon, publié, ou avec une idée ou une légende) n'est PAS fait sans `confirmer: true` : la réponse dit ce qui "
@@ -854,7 +924,7 @@ export const outilsPlan: Module = (serveur, ctx: Contexte) => {
       if (r.deplaces) l.push(`  · ${r.deplaces} créneau${r.deplaces > 1 ? "x déplacés" : " déplacé"} à leur nouvelle heure, contenu gardé`);
       const s = statutsTexte(r.supprimes || {});
       if (s) l.push(`  · supprimés : ${s}`);
-      if (r.mesures_gardees) l.push(`  · ${r.mesures_gardees} post${r.mesures_gardees > 1 ? "s" : ""} publié${r.mesures_gardees > 1 ? "s" : ""} gardé${r.mesures_gardees > 1 ? "s" : ""} dans l'historique avec ${r.mesures_gardees > 1 ? "leurs" : "ses"} relevés`);
+      if (r.mesures_gardees) l.push(`  · ${r.mesures_gardees} post${r.mesures_gardees > 1 ? "s" : ""} publié${r.mesures_gardees > 1 ? "s" : ""} gardé${r.mesures_gardees > 1 ? "s" : ""} dans l'historique avec ${r.mesures_gardees > 1 ? "leurs" : "ses"} relevés, angle et note d'exécution`);
       l.push(`Comptes : ${(r.comptes || []).map((k: Ligne) => `@${k.pseudo} (${k.heures.join(", ")})`).join(" · ")}.`);
     }
     l.push("`mon_planning` pour voir le plan ; les idées de la Bibliothèque ne bougent pas.");
@@ -867,7 +937,7 @@ export const outilsPlan: Module = (serveur, ctx: Contexte) => {
       + "site). Sans `confirmer: true`, ne supprime rien et dit ce qui partirait (nombre de créneaux, dont publiés, prêts, "
       + "en production) : montre-le à l'utilisateur et ne confirme qu'avec son accord explicite. Rien de mesuré ne se "
       + "perd : chaque post publié qui a des relevés ou un lien TikTok devient un post de l'historique, avec ses relevés et "
-      + "son angle (la note d'exécution part avec le créneau) ; un créneau qui a des relevés mais pas de lien bloque la "
+      + "son angle et sa note d'exécution ; un créneau qui a des relevés mais pas de lien bloque la "
       + "suppression (ajoute d'abord son lien : `maj_creneaux` `lien`). Les idées de la Bibliothèque restent. "
       + "Pour seulement raccourcir le plan ou retirer un compte : `modifier_plan`.",
     inputSchema: {
@@ -896,7 +966,7 @@ export const outilsPlan: Module = (serveur, ctx: Contexte) => {
     if (bloquants.length) return texte(`Pas supprimé : ${bloquants.length} créneau${bloquants.length > 1 ? "x publiés ont" : " publié a"} des relevés de vues mais pas de lien TikTok `
       + `(${bloquants.slice(0, 8).map(x => court(x.id)).join(", ")}) ; ses mesures seraient perdues. Ajoute d'abord le lien de chacun `
       + "(`maj_creneaux` avec `lien`, l'URL du post publié), puis rappelle `supprimer_plan`.");
-    const garde = [gardes ? `${gardes} post${gardes > 1 ? "s" : ""} publié${gardes > 1 ? "s" : ""} gardé${gardes > 1 ? "s" : ""} dans l'historique avec ${gardes > 1 ? "leurs" : "ses"} relevés.` : "",
+    const garde = [gardes ? `${gardes} post${gardes > 1 ? "s" : ""} publié${gardes > 1 ? "s" : ""} gardé${gardes > 1 ? "s" : ""} dans l'historique avec ${gardes > 1 ? "leurs" : "ses"} relevés, angle et note d'exécution.` : "",
       idees ? `Les ${idees} idée${idees > 1 ? "s" : ""} de la Bibliothèque liée${idees > 1 ? "s" : ""} restent.` : ""].filter(Boolean).join(" ");
     if (!a.confirmer) return texte([`Rien n'est supprimé. Supprimer ${quoi}.`, garde,
       "Montre-le à l'utilisateur ; s'il confirme, rappelle `supprimer_plan` avec `confirmer: true`. Pour seulement raccourcir le plan ou retirer un compte : `modifier_plan`."].filter(Boolean).join("\n"));

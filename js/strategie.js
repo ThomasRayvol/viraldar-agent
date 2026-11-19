@@ -154,8 +154,11 @@ export const outilsStrategie = (serveur, ctx) => {
     // Arbitré le 19/11/2026 : « avant viraldar » = publié avant la création du produit ; la date de publication se montre
     // partout où ces posts sont rendus.
     const ORIGINE = { avant: "avant viraldar", hors_plan: "depuis viraldar, hors planning" };
-    // L'historique n'a pas de note d'exécution : il dit « il a porté » ou « sous la médiane », jamais « il n'attire pas ».
+    // L'historique n'a en général pas de note d'exécution : il dit « il a porté » ou « sous la médiane ». Arbitré le
+    // 19/11/2026 : un post venu d'un créneau supprimé garde sa note, et l'historique se croise alors avec l'exécution comme
+    // les créneaux (« il n'attire pas », « non concluant »).
     const LECTURE_AVANT = { trop_tot: "trop peu de posts (moins de 3 avec un indice)", porte: "IL A PORTÉ",
+        n_attire_pas: LECTURE.n_attire_pas, non_concluant: LECTURE.non_concluant,
         sous_la_mediane: "sous la médiane du compte (sans note d'exécution : à retester bien exécuté avant de conclure)", a_suivre: "rien de net" };
     const PALIER = { "250": "~250 : personne ne s'arrête (accroche, qualité)", "700": "~700 : un début d'intérêt, pas assez pour être poussé",
         "1k": "1 000-1 200 : même cas, exécution un peu plus propre", "5k": "~5 000 : l'accroche commence à intéresser", "7k": "~7 000 : accroche intéressante, exécution à combler",
@@ -415,7 +418,8 @@ export const outilsStrategie = (serveur, ctx) => {
                 const av = x.avant;
                 if (av?.publies)
                     l.push(`  « ${externe(x.nom)} » dans l'historique : ${LECTURE_AVANT[av.lecture] || av.lecture} — ${entier(av.publies)} posts, indice médian `
-                        + `${fois(av.indice_med)} (n = ${entier(av.n_indice)}), ${entier(av.gagnants)} gagnant(s), ${entier(av.au_dessus)} au-dessus, ${entier(av.en_dessous)} en dessous.`);
+                        + `${fois(av.indice_med)} (n = ${entier(av.n_indice)}), ${entier(av.gagnants)} gagnant(s), ${entier(av.au_dessus)} au-dessus, ${entier(av.en_dessous)} en dessous`
+                        + (av.bien_executes || av.mal_executes ? ` ; exécution : ${entier(av.bien_executes)} bonnes (4-5), ${entier(av.mal_executes)} faibles (1-2), bien exécutés : indice médian ${fois(av.indice_med_bien)} (n = ${entier(av.n_bien)})` : "") + ".");
             }
             for (const x of h.angles_proposes || [])
                 l.push(`  Angle proposé, pas encore créé : « ${externe(x.nom)} » — ${entier(x.n)} post(s), indice médian ${fois(x.indice_med)}`
@@ -503,6 +507,7 @@ export const outilsStrategie = (serveur, ctx) => {
             l.push(`  post ${court(p.post)} · @${p.compte} · publié le ${String(p.publie_le).slice(0, 10)} (${ORIGINE[p.origine] || p.origine}) · ${entier(p.vues)} vues · ${VERDICT[p.verdict] || p.verdict}`
                 + `${p.indice != null ? ` ${fois(p.indice)}` : ""} · ${entier(p.likes)} likes, ${entier(p.commentaires)} comm., ${entier(p.partages)} partages, ${entier(p.enregistrements)} enreg.`
                 + `${x?.duree ? ` · ${x.duree} s` : ""} · ${angle}${x?.angle_pourquoi ? ` (${externe(x.angle_pourquoi)})` : ""}`
+                + (p.execution_note ? ` · exécution ${p.execution_note}/5${p.execution_commentaire ? ` (${externe(p.execution_commentaire)})` : ""} (notée sur son créneau, avant la suppression du plan)` : "")
                 + (() => {
                     const r = lu.get(p.post);
                     if (!r)
