@@ -234,14 +234,65 @@ export const outilsStrategie = (serveur, ctx) => {
     // Arbitré le 19/11/2026 : la lecture se fait chez l'utilisateur, par son agent (toi), jamais chez viraldar (aucune IA,
     // aucun OCR, aucune image gardée) ; l'agent propose, l'utilisateur valide, seul le validé compte ; le déclencheur est
     // un texte libre court (le bilan regroupe par texte normalisé : minuscules, espaces).
+    // L'engagement (arbitré le 19/11/2026, 0.8.2) : un PROFIL à quatre taux (likes, commentaires, enregistrements, partages
+    // ÷ vues), chacun rapporté à la médiane du compte et du même support ; des descriptions, jamais un verdict « pub » sur
+    // les posts de l'utilisateur (il sait s'il a payé).
     const pc = (x) => x == null ? "—" : `${(Number(x) * 100).toLocaleString("fr-FR", { maximumFractionDigits: 2 })} %`;
-    const ENG = { fort: "engagement fort", faible: "engagement faible", norme: "engagement habituel" };
     const SOUDE = { oui: "sujet soudé", partiel: "sujet en partie soudé", non: "sujet libre" };
-    const ligneGroupe = (x, nom) => `  ${nom} — ${entier(x.n)} post(s) mûr(s) ; vues : indice médian ${fois(x.indice_med)} (n = ${entier(x.n_indice)}), `
-        + `${entier(x.gagnants)} gagnant(s), ${entier(x.au_dessus)} au-dessus, ${entier(x.en_dessous)} en dessous ; engagement : indice médian ${fois(x.eng_med)} `
-        + `(n = ${entier(x.n_eng)}${x.eng_faible ? `, ${x.eng_faible} faible(s)` : ""}${x.eng_fort ? `, ${x.eng_fort} fort(s)` : ""}) ; taux médians : likes ${pc(x.taux_likes_med)}, `
-        + `enregistrements ${pc(x.taux_enreg_med)}, partages ${pc(x.taux_partages_med)} (n = ${entier(x.n_taux)})`
-        + (x.n_exec ? ` ; exécution médiane ${x.execution_med}/5 (n = ${x.n_exec})` : "");
+    const TAUX = [["likes", "likes"], ["commentaires", "comm."], ["enregistrements", "enreg."], ["partages", "partages"]];
+    const REF = { compte_support: "son compte, même support", compte: "son compte, tous supports" };
+    /** Le profil d'un post : « likes ×0,2 · comm. ×1,1 · enreg. ×0,1 · partages ×0 (son compte, même support) ». */
+    const profil = (p) => {
+        const f = p.profil || {};
+        if (!TAUX.some(([k]) => f[k] != null))
+            return p.vues != null && p.vues < 100 ? "profil : — (moins de 100 vues)" : "profil : — (pas de repère sur le compte)";
+        return `profil ${TAUX.map(([k, n]) => `${n} ${fois(f[k])}`).join(" · ")} (${REF[p.ref_engagement] || "—"})`;
+    };
+    /** Les signes d'engagement d'un post, en phrases : des descriptions et des questions, jamais un jugement. */
+    function phrases(p) {
+        const s = new Set(p.signes || []), f = p.profil || {}, o = [];
+        if (s.has("likes_faible") && s.has("commentaires_fort"))
+            o.push(`peu de likes, beaucoup de commentaires (${fois(f.commentaires)}) : fait réagir sans adhérer ?`);
+        else if (s.has("commentaires_fort"))
+            o.push(`beaucoup de commentaires (${fois(f.commentaires)}) : fait parler`);
+        if (s.has("enregistrements_fort"))
+            o.push(`très enregistré (${fois(f.enregistrements)}) : utile, à relire`);
+        if (s.has("partages_fort"))
+            o.push(`très partagé (${fois(f.partages)}) : on l'envoie à quelqu'un`);
+        if (s.has("likes_fort"))
+            o.push(`très aimé (${fois(f.likes)}) : adhésion`);
+        if (s.has("vues_sans_engagement"))
+            o.push("beaucoup de vues, aucun taux à la moitié de son habitude : vu sans être retenu (audience hors de sa cible ?)");
+        else if (s.has("likes_faible") && !s.has("commentaires_fort"))
+            o.push(`peu de likes pour ses vues (${fois(f.likes)}) : vu, peu d'adhésion ?`);
+        if (s.has("engagement_sans_vues"))
+            o.push("peu de vues, mais ceux qui le voient réagissent : l'accroche ou la diffusion manque, pas forcément le fond");
+        return o;
+    }
+    /** Les taux du post hors des repères de la niche (10e-90e centiles de la base, même support, même tranche de vues). */
+    function niche(p, R) {
+        const r = R?.[p.support === "diaporama" ? "diaporama" : p.support === "video" ? "video" : ""]?.[p.vues >= 100000 ? "100k+" : "1k-100k"];
+        if (!r || p.vues == null || p.vues < 100)
+            return "";
+        const cle = { likes: "taux_likes", commentaires: "taux_commentaires", enregistrements: "taux_enreg", partages: "taux_partages" };
+        const hors = TAUX.map(([k, n]) => {
+            const t = p[cle[k]], [b, , h] = r[k] || [];
+            if (t == null || b == null)
+                return "";
+            return t * 100 < b ? `${n} ${pc(t)} (bas)` : t * 100 > h ? `${n} ${pc(t)} (haut)` : "";
+        }).filter(Boolean);
+        return hors.length ? `niche (${p.support === "video" ? "vidéos" : "diaporamas"}, base) : ${hors.join(", ")}` : "";
+    }
+    const ligneGroupe = (x, nom) => {
+        const f = x.profil || {};
+        return `  ${nom} — ${entier(x.n)} post(s) mûr(s) ; vues : indice médian ${fois(x.indice_med)} (n = ${entier(x.n_indice)}), `
+            + `${entier(x.gagnants)} gagnant(s), ${entier(x.au_dessus)} au-dessus, ${entier(x.en_dessous)} en dessous ; profil médian : `
+            + TAUX.map(([k, n]) => `${n} ${fois(f[k]?.indice_med)} (n = ${entier(f[k]?.n)})`).join(", ")
+            + ` ; taux médians : ${TAUX.map(([k, n]) => `${n} ${pc(f[k]?.taux_med)}`).join(", ")}`
+            + (x.vues_sans_engagement ? ` ; ${x.vues_sans_engagement} vu(s) sans être retenu(s)` : "")
+            + (x.engagement_sans_vues ? ` ; ${x.engagement_sans_vues} qui engagent sans vues` : "")
+            + (x.n_exec ? ` ; exécution médiane ${x.execution_med}/5 (n = ${x.n_exec})` : "");
+    };
     function lectureCroisee(L, err, noms) {
         if (err || !L)
             return [`Lecture croisée : indisponible (${err || "vide"}).`];
@@ -249,12 +300,23 @@ export const outilsStrategie = (serveur, ctx) => {
         l.push(`Lecture croisée (format, déclencheur, support… de ses posts ; seule la lecture VALIDÉE par l'utilisateur compte) : `
             + `${entier(q.validees)} post(s) lu(s) et validé(s), ${entier(q.a_valider)} lecture(s) proposée(s) à valider, ${entier(q.sans_lecture)} sans lecture `
             + `sur ${entier(q.posts)} ; support connu : ${entier(q.support?.diaporama)} diaporama(s), ${entier(q.support?.video)} vidéo(s), ${entier(q.support?.inconnu)} inconnu(s).`);
-        l.push(`  Engagement (${E.statut}) : ${E.mesure} ; fort ≥ ${fois(E.fort)}, faible < ${fois(E.faible)} ; pas de taux sous ${entier(E.vues_min)} vues. `
-            + `Taux médian de chaque compte : ${Object.entries(L.comptes || {}).map(([k, v]) => `@${k} ${pc(v.taux_engagement_med)} (n = ${entier(v.n_taux)})`).join(", ") || "—"}.`);
-        const sans = (L.posts || []).filter((p) => (p.verdict === "gagnant" || p.verdict === "au_dessus") && p.engagement_lecture === "faible");
-        if (sans.length)
-            l.push(`  Vues sans engagement (${sans.length}) — au-dessus de la médiane en vues, engagement faible : vues poussées (pub) ou audience hors cible ; `
-                + `à ne pas copier sans comprendre : ${sans.slice(0, 6).map((p) => `${p.url} vues ${fois(p.indice)}, engagement ${fois(p.engagement)}`).join(" ; ")}.`);
+        const S = E.seuils || {};
+        l.push(`  Engagement (${E.statut}) : ${E.mesure}. Seuils de l'indice : ${TAUX.map(([k, n]) => `${n} faible < ${fois(S[k]?.faible)}, fort ≥ ${fois(S[k]?.fort)}`).join(" ; ")} `
+            + `(fort : ${entier(E.actions_min)} actions au moins) ; pas de taux sous ${entier(E.vues_min)} vues. Ce sont des descriptions, pas des verdicts : `
+            + "jamais « pub » sur ses posts, il sait s'il a payé.");
+        for (const [c, v] of Object.entries(L.comptes || {})) {
+            const t = v.taux || {}, ps = Object.entries(v.par_support || {});
+            l.push(`  @${c} : taux médians ${TAUX.map(([k, n]) => `${n} ${pc(t[k])}`).join(", ")} (n = ${entier(v.n_taux)})`
+                + (ps.length ? ` ; par support : ${ps.map(([sp, x]) => `${sp === "video" ? "vidéo" : sp} ${TAUX.map(([k, n]) => `${n} ${pc(x[k])}`).join(", ")} (n = ${entier(x.n_taux)})`).join(" ; ")}` : ""));
+        }
+        const R = E.reperes || {};
+        for (const [sp, tr] of Object.entries(R))
+            for (const [k, r] of Object.entries(tr))
+                l.push(`  Repère de la niche, ${sp === "video" ? "vidéos" : "diaporamas"} ${k} vues (base, n = ${entier(r.n)}, 10e / médiane / 90e) : `
+                    + TAUX.map(([t, n]) => `${n} ${(r[t] || []).map((x) => x.toLocaleString("fr-FR")).join(" / ")} %`).join(" ; "));
+        const marquants = (L.posts || []).filter((p) => p.post && phrases(p).length && p.verdict !== "a_relever").slice(0, 8);
+        if (marquants.length)
+            l.push("  Ce que dit l'engagement de ses posts les plus vus :", ...marquants.map((p) => `    ${p.url} (vues ${fois(p.indice)}) — ${phrases(p).join(" ; ")} — ${profil(p)}`));
         const bloc = (titre, xs, nom, max = 12) => {
             if (!xs?.length)
                 return;
@@ -264,6 +326,7 @@ export const outilsStrategie = (serveur, ctx) => {
         };
         bloc("Par série (format)", L.par_format, x => `« ${externe(x.nom)} »`);
         bloc("Par déclencheur", L.par_declencheur, x => `« ${externe(x.nom)} »`);
+        bloc("Par angle", L.par_angle, x => `« ${externe(noms.get(x.angle) || "?")} »`);
         bloc("Par support", L.par_support, x => x.nom === "video" ? "vidéo" : String(x.nom));
         bloc("Par sujet soudé", L.par_sujet_soude, x => SOUDE[x.nom] || String(x.nom));
         bloc("Par angle × déclencheur", (L.par_angle_declencheur || []).filter((x) => x.angle), x => `« ${externe(noms.get(x.angle) || "?")} » × « ${x.declencheur ? externe(x.declencheur) : "—"} »`, 10);
@@ -274,8 +337,8 @@ export const outilsStrategie = (serveur, ctx) => {
                 + `(n = ${entier(d.n_manque)}) ; série atteinte ${entier(vo.format?.atteint)}, manquée ${entier(vo.format?.manque)}.`);
             for (const x of vo.creneaux.slice(0, 10))
                 l.push(`    créneau ${court(x.creneau)} @${x.compte} : visé « ${externe(x.declencheur_vise || "—")} » / `
-                    + `obtenu « ${externe(x.declencheur || "à lire")} »${x.format_vise ? ` ; série visée « ${externe(x.format_vise)} » / « ${externe(x.format || "à lire")} »` : ""} · vues ${fois(x.indice)}, `
-                    + `engagement ${fois(x.engagement)}${x.execution_note ? `, exécution ${x.execution_note}/5` : ""}`);
+                    + `obtenu « ${externe(x.declencheur || "à lire")} »${x.format_vise ? ` ; série visée « ${externe(x.format_vise)} » / « ${externe(x.format || "à lire")} »` : ""} · vues ${fois(x.indice)}`
+                    + `${(x.signes || []).length ? ` · ${phrases(x).join(" ; ")}` : ""}${x.execution_note ? `, exécution ${x.execution_note}/5` : ""}`);
         }
         const aLire = (L.posts || []).filter((p) => p.post && !p.lecture_valide && ["gagnant", "au_dessus", "en_dessous"].includes(p.verdict));
         if (aLire.length)
@@ -292,10 +355,12 @@ export const outilsStrategie = (serveur, ctx) => {
             + "conversions déclarées ; les relevés dus ; son historique (posts sans créneau relevés par `relever_mes_posts` : avant "
             + "viraldar ou hors planning), comparé aux posts produits avec viraldar, et ce que chaque angle y a donné ; la LECTURE "
             + "CROISÉE (19/11/2026) : sur les posts dont l'utilisateur a validé la lecture (`lire_mes_posts`), l'indice des vues et "
-            + "l'ENGAGEMENT (likes, enregistrements, partages rapportés aux vues, et leur indice par rapport au compte) par série "
+            + "le PROFIL D'ENGAGEMENT (likes, commentaires, enregistrements, partages ÷ vues, chacun rapporté à son compte et au même "
+            + "support, avec les repères de la niche) par série "
             + "(format), par déclencheur, par support, par sujet soudé, par angle × déclencheur, et visé / obtenu pour les créneaux ; "
-            + "chaque chiffre avec son n. L'engagement dit si le post a touché la cible, sans le biais des vues achetées. Seuils "
-            + "arbitrés le 19/11/2026 (ceux de l'engagement : proposés, à arbitrer). Ne passe un angle à « abandonne » que sur des posts bien exécutés, et toujours avec l'accord "
+            + "par angle, chaque chiffre avec son n. L'engagement dit comment le post a touché (adhésion, débat, utilité, partage) ; "
+            + "ce sont des descriptions à dire en phrases, jamais un verdict « pub » sur ses posts (il sait s'il a payé). Seuils des "
+            + "vues arbitrés le 19/11/2026 ; ceux de l'engagement proposés, à arbitrer. Ne passe un angle à « abandonne » que sur des posts bien exécutés, et toujours avec l'accord "
             + "de l'utilisateur (`ecrire_angle`).",
         inputSchema: {},
         annotations: { readOnlyHint: true },
@@ -373,7 +438,7 @@ export const outilsStrategie = (serveur, ctx) => {
             + "Pour PROPOSER l'angle de chaque post (lis la légende, rapproche-la des angles ; un groupe de posts qui ne va dans "
             + "aucun angle peut en former un nouveau), montre la proposition à l'utilisateur, puis `classer_mes_posts`. Avec sa "
             + "LECTURE (19/11/2026) : support, série (format), déclencheur, sujet soudé, variables (proposée / validée) et "
-            + "l'engagement (indice par rapport au compte). Filtre `a_lire` : les posts à lire d'abord (gagnants, au-dessus, puis "
+            + "son profil d'engagement (quatre taux rapportés à son compte et au même support, en phrases ; repères de la niche). Filtre `a_lire` : les posts à lire d'abord (gagnants, au-dessus, puis "
             + "sous la médiane), pour `lire_mes_posts` ; la lecture se fait chez l'utilisateur (couverture, planche, légende).",
         inputSchema: {
             filtre: z.enum(["a_classer", "a_valider", "valides", "a_lire", "lecture_a_valider", "lus", "tous"]).optional().describe("a_classer (défaut) : sans angle validé ; a_valider : angle proposé ; valides : angle validé ; a_lire : sans lecture validée, gagnants et au-dessus d'abord, puis sous la médiane ; lecture_a_valider : lecture proposée ; lus : lecture validée ; tous."),
@@ -433,10 +498,11 @@ export const outilsStrategie = (serveur, ctx) => {
                     const r = lu.get(p.post);
                     if (!r)
                         return "";
-                    const eng = r.engagement != null ? `engagement ${fois(r.engagement)} (${ENG[r.engagement_lecture] || "—"} ; likes ${pc(r.taux_likes)}, enreg. ${pc(r.taux_enreg)}, partages ${pc(r.taux_partages)})` : "engagement : —";
+                    const ph = phrases(r), ni = niche(r, lec.data?.engagement?.reperes);
+                    const eng = `${profil(r)}${ph.length ? ` — ${ph.join(" ; ")}` : ""}${ni ? ` · ${ni}` : ""}`;
                     const champs = [r.format ? `série « ${externe(r.format)} »` : "", r.declencheur ? `déclencheur « ${externe(r.declencheur)} »` : "",
                         r.sujet_soude ? SOUDE[r.sujet_soude] : "", r.variables ? `variables : ${externe(r.variables)}` : ""].filter(Boolean).join(" · ");
-                    return `\n     support ${r.support === "video" ? "vidéo" : r.support || "inconnu"} · ${eng}`
+                    return `\n     support ${r.support === "video" ? "vidéo" : r.support || "inconnu"} · ${entier(r.commentaires)} comm. · ${eng}`
                         + `\n     lecture : ${champs ? `${champs} (${r.lecture_valide ? "validée" : "proposée, à valider"})` : "aucune"}`;
                 })()
                 + `\n     ${p.url}\n     ⟦${externe(x?.legende || "(sans légende)").slice(0, 400)}⟧`);

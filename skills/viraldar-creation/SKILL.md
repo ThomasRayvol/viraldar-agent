@@ -41,7 +41,7 @@ Références, à charger quand l'étape le demande (pas toutes d'un coup) :
 |---|---|
 | `references/decortiquer.md` | étape 3 et avant chaque créneau : la fiche de mécanique d'un modèle |
 | `references/lire-les-stats.md` | dès que tu cites un chiffre viraldar (étapes 2, 3, 8) |
-| `references/lire-un-post.md` | étape 8 et l'historique : lire ses posts (support, série, déclencheur, sujet soudé, variables, angle), le bilan croisé et l'engagement |
+| `references/lire-un-post.md` | étape 8 et l'historique : lire ses posts (support, série, déclencheur, sujet soudé, variables, angle), le bilan croisé et le profil d'engagement |
 | `references/accroches.md` | étapes 3-4, le catalogue d'accroches |
 | `references/formats.md` | étapes 2-5 : angle ou format (la grille), les formats, quand les choisir, comment les produire avec nos outils |
 | `references/brief.md` | étape 4, le gabarit de brief à remplir avant de produire |
@@ -186,7 +186,8 @@ Règles (détail dans `references/lire-les-stats.md`) :
 - toute médiane ou moyenne s'écrit avec son n : « 420 k vues médianes (n = 7) ».
 - préfère les formats portés par **plusieurs comptes** : 5 posts d'un seul compte prouvent ce compte, pas le format.
 - un post 📲 (on demande le nom de l'app dans les commentaires) vaut plus qu'un post vu deux fois plus sans 📲.
-- un post à moins de 2 % de likes est souvent une vidéo poussée en pub (`post` le marque « pub ? ») : pas un modèle.
+- un post de la base à moins de 2 % de likes est souvent une vidéo poussée en pub (`post` le marque « pub ? ») : pas un
+  modèle. Cette règle vaut pour les posts des autres, jamais pour ceux de l'utilisateur (il sait s'il a payé).
 - **faisable tel quel** avec ses ressources, sinon écarté : face caméra, duo de podcast, conférence filmée ne sont pas
   des modèles pour un profil sans visage. On n'« adapte » pas un format infaisable, on en choisit un autre.
 - **sujet soudé** hors de la niche de son produit : écarté (une vidéo de chien attendrit par le chien ; sans chien,
@@ -355,8 +356,9 @@ dans un `journal.md` :
 4. **ses conversions**, avec son critère (`noter_conversions`) : c'est ce qui compte pour lui ; par compte s'il a un lien
    par compte (jeton de campagne App Store, UTM Google Play, code promo) ;
 5. **`bilan`** : verdict par post, lecture par angle (il porte / il n'attire pas / non concluant car mal exécuté / trop
-   tôt), lecture croisée (par série, déclencheur, support, angle × déclencheur ; vues ET engagement, chaque chiffre avec
-   son n : l'engagement dit si la cible a été touchée, sans le biais des vues achetées), conversions ; décide avec lui (garder, refaire l'exécution, abandonner l'angle : `ecrire_angle`), puis remets
+   tôt), lecture croisée (par série, déclencheur, angle, support, angle × déclencheur ; vues ET profil d'engagement —
+   likes, commentaires, enregistrements, partages, chacun rapporté à son compte et au même support —, chaque chiffre
+   avec son n ; dis-le en phrases, jamais « pub » sur ses posts : il sait s'il a payé), conversions ; décide avec lui (garder, refaire l'exécution, abandonner l'angle : `ecrire_angle`), puis remets
    au planning. Les seuils du bilan sont arbitrés (19/11/2026).
 
 Diagnostic, par format (après ≥ 3 posts du format, sinon « trop tôt ») :

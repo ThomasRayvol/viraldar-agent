@@ -24,7 +24,7 @@ minuscules, espaces normalisés (« Révélation » et « révélation » font u
 
 ## L'ordre : du plus objectif au plus interprété
 
-1. **Le support** et **les chiffres** : vues, indice (vues ÷ médiane du compte), engagement (ci-dessous).
+1. **Le support** et **les chiffres** : vues, indice (vues ÷ médiane du compte), profil d'engagement (ci-dessous).
 2. **Le post entier, et la légende.** Sur sa machine : `modele_decortiquer` avec l'URL du post. Une vidéo : une
    planche, la cadence, la transcription si un Whisper est installé. Un **diaporama : toutes ses images**, téléchargées
    dans le dossier de travail, montrées une par une et numérotées, avec le texte de chacune par un OCR local si
@@ -39,7 +39,8 @@ minuscules, espaces normalisés (« Révélation » et « révélation » font u
    pas une preuve (la légende dit rarement la scène).
 4. **Le déclencheur** : l'accroche, puis ce que disent les commentaires (« c'est moi », « je savais pas »…), puis les
    ratios — beaucoup d'**enregistrements** : utile, ou révélation qu'on veut garder ; beaucoup de **partages** :
-   identification, humour, indignation (on l'envoie à quelqu'un) ; des likes sans le reste : aspiration légère.
+   identification, humour, indignation (on l'envoie à quelqu'un) ; des commentaires sans likes : débat, réaction sans
+   adhésion ; des likes sans le reste : aspiration légère. Le profil d'engagement de `mes_posts` te donne ces ratios.
 5. **Sujet soudé et variables** : seulement une fois la série reconnue, en comparant ses posts.
 6. **L'angle** en dernier : le plus interprété.
 
@@ -53,7 +54,7 @@ marche une fois sur deux ».
 
 ## Proposer, faire valider, enregistrer
 
-1. Montre ta lecture **en tableau** (post, indice, engagement, support, série, déclencheur, soudé, variables, angle),
+1. Montre ta lecture **en tableau** (post, indice, profil d'engagement, support, série, déclencheur, soudé, variables, angle),
    avec ce qui la fonde en une phrase quand c'est discutable.
 2. `lire_mes_posts` avec `valide: false` pour la proposition (il la retrouve « à valider »), ou directement
    `valide: true` pour ce qu'il a approuvé. Valider une proposition sans la réécrire : les mêmes posts, `valide: true`,
@@ -76,16 +77,22 @@ support, par sujet soudé, par angle × déclencheur ; chaque ligne avec son n.
 
 - **Vues** : l'indice médian (vues ÷ médiane du compte) et les verdicts (gagnant ≥ × 10, au-dessus ≥ × 2,7, en dessous
   < × 0,5 ; arbitrés).
-- **Engagement** : (likes + enregistrements + partages) ÷ vues, rapporté à la médiane du même taux sur le compte
-  (× 1 = d'habitude ; fort ≥ × 1,8, faible < × 0,5 ; proposé le 19/11/2026, à arbitrer), et les trois taux médians.
-  L'engagement dit si la série, le déclencheur et l'angle ont **touché la cible**, sans le biais des vues achetées : les
-  vues s'achètent, l'engagement beaucoup moins.
-- **Vues sans engagement** : au-dessus en vues, engagement faible. Vues poussées (pub) ou audience hors cible ; ne pas
-  le reproduire sans comprendre d'où viennent les vues.
-- **Engagement sans vues** : sous la médiane en vues, engagement habituel ou fort. Ceux qui le voient sont touchés ;
-  c'est l'accroche ou la diffusion qui manque, pas forcément le déclencheur.
+- **Le profil d'engagement** : quatre taux — likes, commentaires, enregistrements, partages, chacun ÷ vues — et leur
+  indice : le taux du post ÷ la médiane du même taux sur ses posts mûrs **du même compte et du même support** (5 au
+  moins ; sinon le compte tous supports, la sortie le dit). × 1 = d'habitude. Pas de taux sous 100 vues ; un taux
+  « fort » demande 3 actions au moins. Seuils proposés (à arbitrer) : likes faible < × 0,5 / fort ≥ × 1,8 ;
+  commentaires < × 0,5 / ≥ × 3,5 ; enregistrements < × 0,3 / ≥ × 2,5 ; partages < × 0,45 / ≥ × 3,8. Les **repères de la
+  niche** (10e centile, médiane, 90e de chaque taux dans la base, par support et tranche de vues) situent ses taux.
+- **Chaque déclencheur a sa signature** : ne résume jamais l'engagement en un chiffre. Beaucoup d'enregistrements :
+  utile, à relire ; beaucoup de partages : on l'envoie à quelqu'un ; beaucoup de commentaires sans likes : fait réagir
+  sans adhérer ? ; des likes : adhésion. Dis-le **en phrases, comme des descriptions et des questions**, jamais comme un
+  jugement.
+- **Jamais « pub » sur ses posts** : il sait s'il a payé. Des vues au-dessus de son habitude sans aucun taux à la moitié
+  du sien (« vu sans être retenu ») se décrivent — audience hors de sa cible ? — et se lisent avec lui.
+- **Engagement sans vues** : sous la médiane en vues, mais un taux fort. Ceux qui le voient réagissent ; c'est
+  l'accroche ou la diffusion qui manque, pas forcément le déclencheur.
 - Peu de posts par groupe (n = 3 contre 3) : **un indice, pas une règle**. Un groupe se juge comme un angle, sur 3
   posts mûrs au moins, et l'âge du compte se mêle aux premiers posts.
 
 Les critères d'évaluation d'un post : ses champs (série, déclencheur, soudé, variables, angle) + l'indice des vues +
-l'engagement + la note d'exécution.
+le profil d'engagement + la note d'exécution.
