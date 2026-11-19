@@ -94,7 +94,9 @@ export const outilsStrategie = (serveur, ctx) => {
             + "« abandonne » que sur des posts bien exécutés (note d'exécution 4 ou 5) qui n'ont pas marché ; à « gagnant » "
             + "quand ses posts mûrs le montrent (`bilan`). La version d'avant est gardée. Un angle est large (une cible et sa "
             + "douleur) ; une idée de post concrète (« la routine du soir en 3 étapes, l'app à la fin ») n'est pas un angle : "
-            + "elle va dans `ecrire_idee` avec `angle` (arbitré le 18/11/2026). Les accroches sont des phrases d'ouverture.",
+            + "elle va dans `ecrire_idee` avec `angle` (arbitré le 18/11/2026). Les accroches sont des phrases d'ouverture. "
+            + "`formats` liste des supports (diaporama, vidéo…) ; l'hypothèse peut dire par quel déclencheur (identification, "
+            + "aspiration…) on compte porter l'angle (méthode, `formats.md` « Angle ou format »).",
         inputSchema: {
             angle: z.string().max(36).optional().describe("Référence (`ma_strategie`) ou id complet ; absent = nouvel angle."),
             nom: z.string().min(1).max(120).optional().describe("Obligatoire pour un nouvel angle."),
@@ -363,13 +365,15 @@ export const outilsStrategie = (serveur, ctx) => {
         description: PRODUIT_ACTIF + "Rattache des posts de son historique (`mes_posts`) à un angle de sa stratégie, ou note un angle à créer "
             + "(`nouvel_angle`, son nom, tant que l'utilisateur ne l'a pas créé avec `ecrire_angle`). `valide: true` SEULEMENT pour "
             + "les rattachements que l'utilisateur a approuvés : ce sont les seuls que compte le bilan ; sans, c'est une proposition "
-            + "qu'il verra « à valider ». `angle: null` sans `nouvel_angle` retire l'angle. 100 posts au plus par appel.",
+            + "qu'il verra « à valider ». `angle: null` sans `nouvel_angle` retire l'angle. 100 posts au plus par appel. Un angle, c'est "
+            + "pour qui, quelle douleur ou quel désir, quelle promesse ; un motif de mécanique (« commente si tu te reconnais », un POV) "
+            + "est un format, pas un angle : note-le avec le déclencheur du post dans `pourquoi` (méthode, `formats.md` « Angle ou format »).",
         inputSchema: {
             posts: z.array(z.object({
                 post: z.string().max(36).describe("Référence du post (`mes_posts`, 8 caractères) ou id complet."),
                 angle: z.string().max(36).nullable().optional().describe("Référence de l'angle (`ma_strategie`, `mes_posts`)."),
                 nouvel_angle: z.string().min(1).max(120).optional().describe("Le nom d'un angle qui n'existe pas encore."),
-                pourquoi: z.string().max(300).optional().describe("En une phrase, ce qui le rattache à cet angle."),
+                pourquoi: z.string().max(300).optional().describe("En une phrase, ce qui le rattache à cet angle, et le déclencheur du post (identification, révélation…)."),
             })).min(1).max(100),
             valide: z.boolean().describe("true : l'utilisateur a approuvé ces rattachements ; false : une proposition."),
         },

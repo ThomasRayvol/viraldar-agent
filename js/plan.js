@@ -207,7 +207,8 @@ export const outilsPlan = (serveur, ctx) => {
             + "`ecrire_angle`), son rythme, ce qu'il faut éviter. Si elle n'existe pas encore, les repères calculés sur "
             + "la base pour ses mots-clés (critères, petits comptes viraux, « d'habitude », Demande l'app, diaporama contre vidéo, "
             + "chaque médiane avec son n) et le format que suggèrent les chiffres. À lire avant de produire ou de remplir le "
-            + "planning. Hors quota.",
+            + "planning. Hors quota. Ses « formats » (diaporama, vidéo) sont des supports ; un format de la base porte un de ces angles "
+            + "quand son déclencheur est celui de l'angle et que son sujet n'est pas soudé (méthode, `formats.md` « Angle ou format »).",
         inputSchema: {},
     }, outil(async (_a, c) => {
         const [acc, st, sel, R, an, cr, idl] = await Promise.all([

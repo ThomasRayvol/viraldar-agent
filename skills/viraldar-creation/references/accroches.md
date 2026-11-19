@@ -7,6 +7,8 @@ sert à nommer et varier, la base à prouver.
 
 Chaque accroche du brief porte son **type** (code ci-dessous) pour mesurer par type à l'étape 8.
 
+Le type d'accroche fait partie de la **structure** du format ; le **déclencheur** est l'émotion qu'elle provoque (`formats.md`, « Angle ou format »). POV, par exemple, est une accroche (A1 : une phrase « POV : tu… ») et un format (V1 : cette accroche plus un plan d'ambiance puis l'app), et son déclencheur est l'identification.
+
 ## Les types
 
 | code | type | gabarit | exemple (niche self-care / app) | va bien avec |

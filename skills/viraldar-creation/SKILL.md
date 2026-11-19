@@ -19,6 +19,16 @@ personne : TikTok ne recommande pas un contenu ré-uploadé). Une mécanique « 
 n'est plus le format qui a marché. D'où la règle qui commande tout le reste : **décortiquer chaque modèle avant
 d'écrire une ligne.**
 
+**Angle ou format ?** L'**angle**, c'est ce qu'on vend et à qui (pour qui, quel désir ou quelle douleur, quelle
+promesse) ; le **format**, c'est le contenant : une **structure** (hook, plans ou slides, cadence, visuel, voix, et le
+**support**, diaporama ou vidéo), un **déclencheur** (l'émotion qu'elle provoque : identification, révélation,
+aspiration, défi, indignation, attendrissement, nostalgie…) et des **variables** (ce qui change d'un post à l'autre).
+Un format porte un angle quand son déclencheur ne dépend pas de son sujet ; s'il en dépend (le chien d'une vidéo
+attendrissante), le **sujet est soudé** et le format ne sort pas de sa niche. Grille complète, exemples et test des
+commentaires : `references/formats.md`, « Angle ou format ». C'est une grille de lecture : la lecture est la tienne,
+le chiffre (n, médianes) tranche. Dans viraldar, les champs « format » (stratégie, idées, planning) désignent le
+**support** : dis « support » quand c'est de lui qu'il s'agit.
+
 Parle la langue de l'utilisateur. Travaille dans son dossier (`~/viraldar/<projet>/` par défaut) : tout ce que tu
 décides s'écrit dans des fichiers qu'il peut relire (`fiche.md`, `modeles/`, `briefs/`, `calendrier.md`, `journal.md`).
 
@@ -29,7 +39,7 @@ Références, à charger quand l'étape le demande (pas toutes d'un coup) :
 | `references/decortiquer.md` | étape 3 et avant chaque créneau : la fiche de mécanique d'un modèle |
 | `references/lire-les-stats.md` | dès que tu cites un chiffre viraldar (étapes 2, 3, 8) |
 | `references/accroches.md` | étapes 3-4, le catalogue d'accroches |
-| `references/formats.md` | étapes 2-5, les formats, quand les choisir, comment les produire avec nos outils |
+| `references/formats.md` | étapes 2-5 : angle ou format (la grille), les formats, quand les choisir, comment les produire avec nos outils |
 | `references/brief.md` | étape 4, le gabarit de brief à remplir avant de produire |
 | `references/production.md` | étapes 4, 5 et 8 : écrire, voix off, format et zone sûre, rendre, comparer, contrôler, varier (le process rodé, avec ses chiffres) |
 | `references/calendrier.md` | étape 7, cadence et plusieurs comptes |
@@ -124,7 +134,8 @@ borne les formats autant que « qui filme ».
 **Sa stratégie** (`ma_strategie`) : explique-lui, s'il ne les connaît pas, les trois gestes qui la font vivre — **tester
 des angles** (un par post, une seule chose qui change), **juger l'exécution** (chaque post publié noté de 1 à 5 : un
 angle ne s'abandonne que sur des posts bien exécutés), **boucler** (relevés, conversions, `bilan`, décision, planning).
-Un indé qui n'a jamais fait de marketing les découvre ici ; ne les saute pas.
+Un indé qui n'a jamais fait de marketing les découvre ici ; ne les saute pas. S'il confond l'angle (ce qu'il vend et à
+qui) et le format (le contenant), donne-lui la grille « Angle ou format » (plus haut) avant l'étape 2.
 
 Vérifie d'abord le produit actif (`qui_suis_je` ou `mes_produits`) : s'il y en a plusieurs et que la demande en vise
 un autre, `choisir_produit` avant toute lecture ou production, et dis-le à l'utilisateur.
@@ -158,11 +169,13 @@ Commence par `petits_comptes_viraux` sur ses mots-clés (`mes_mots_cles: true`) 
 percer (≤ 50 k abonnés, ≥ 300 k vues, ≥ 20 × ses abonnés). Puis `chercher_posts` avec ses mots (douleurs, usages, nom des
 concurrents) et les filtres : publié ≤ 90 jours, likes ≥ 2 %, outlier élevé ; un passage avec 📲 seul.
 
-Regroupe les posts en **formats** (même mécanique : type d'accroche + structure + support), pas en sujets. Pour chaque
-format, un tableau :
+Charge `references/formats.md` (« Angle ou format »). Regroupe les posts en **formats**, pas en sujets : même
+**structure** (type d'accroche, plans ou slides, cadence, visuel, voix, support) **et** même **déclencheur** (l'émotion
+qu'elle provoque, lue dans les commentaires plus que dans la légende). Deux posts de même structure qui ne déclenchent
+pas la même chose sont deux formats. Pour chaque format, un tableau :
 
-| format | n posts | n qui passent les critères | vues médianes (n) | outlier médian (n) | 📲 | exemples (id) |
-|---|---|---|---|---|---|---|
+| format (structure · déclencheur) | sujet soudé ? | n posts | n qui passent les critères | vues médianes (n) | outlier médian (n) | 📲 | angles qu'il peut porter | exemples (id) |
+|---|---|---|---|---|---|---|---|---|
 
 Règles (détail dans `references/lire-les-stats.md`) :
 - **fiable** = au moins 3 posts du format passent les critères (≥ 100 k vues, ≤ 90 jours, likes ≥ 2 %). Moins = « à tester ».
@@ -172,9 +185,20 @@ Règles (détail dans `references/lire-les-stats.md`) :
 - un post à moins de 2 % de likes est souvent une vidéo poussée en pub (`post` le marque « pub ? ») : pas un modèle.
 - **faisable tel quel** avec ses ressources, sinon écarté : face caméra, duo de podcast, conférence filmée ne sont pas
   des modèles pour un profil sans visage. On n'« adapte » pas un format infaisable, on en choisit un autre.
+- **sujet soudé** hors de la niche de son produit : écarté (une vidéo de chien attendrit par le chien ; sans chien,
+  plus rien). Une **preuve** soudée (le corps d'une transformation) ne se garde que s'il a une preuve visible
+  équivalente pour son produit.
+- **un angle à porter** : pour chaque format retenu, dis quel angle de sa stratégie (`ma_strategie`) il peut porter et
+  pourquoi, par **le test des commentaires** : son produit à la place du sujet du modèle, lirait-on les mêmes réactions
+  (« c'est moi », « je savais pas », « il faut que je m'y mette ») ? Le déclencheur du format doit être celui de l'angle
+  (un angle d'aspiration ne se porte pas avec un format d'attendrissement). Un format qui ne porte aucun de ses angles
+  n'est pas pour lui, quels que soient ses chiffres.
 
-Propose 3 formats au plus, classés, avec pour chacun pourquoi il convient à **son** produit et à **ses** ressources.
-Demande-lui lequel tester d'abord. `trier_post` (garder) les posts modèles, avec en note le format et la raison.
+Propose 3 formats au plus, classés, avec pour chacun pourquoi il convient à **son** produit, à **ses** ressources et à
+**quel angle**. C'est une lecture, pas une mesure : le chiffre tranche (fiable, médianes avec n, puis ses propres
+résultats). Demande-lui lequel tester d'abord. `trier_post` (garder) les posts modèles, avec en note « format ·
+déclencheur · soudé ou non » et l'angle visé ; l'hypothèse de l'angle (`ecrire_angle`, avec son accord) peut dire par
+quel déclencheur on compte le porter.
 
 **Livrable** : section « Formats » de `fiche.md`.
 
@@ -191,14 +215,16 @@ séparer le format de ce qui tient à ce post) :
    dans un montage, n'est jamais envoyée ni republiée. Sans son accord (ou sans l'outil) : il ouvre le post et te
    donne des captures (début, chaque changement de plan, fin) et la transcription de la voix, ou te les décrit.
 3. Remplis la **fiche de mécanique** : hook transcrit mot pour mot, nombre de plans, durée d'un plan, fonds, polices et
-   couleurs par rôle, orientation et ratio, voix (oui / non, type, débit), son, stickers, place du produit. « ? » pour
-   ce que tu ne sais pas, jamais une supposition.
+   couleurs par rôle, orientation et ratio, voix (oui / non, type, débit), son, stickers, place du produit, puis son
+   **déclencheur**, ses **variables**, si le sujet est **soudé** et les angles qu'il peut porter (test des
+   commentaires). « ? » pour ce que tu ne sais pas, jamais une supposition.
 4. **Faisable avec ses ressources ?** Si non (visage, lieu, objet, voix qu'il n'a pas), dis-le et propose un autre
    modèle faisable (`a_reproduire`, `petits_comptes_viraux` filtrés), au lieu d'adapter celui-ci.
 
-**Livrable** : `modeles/<id>/mecanique.md`, avec ce qui est **le format** (à reprendre exactement), **le contenu**
-(texte, idée : repris ou réécrit, au choix de l'utilisateur) et **les médias** du créateur (à refaire avec les siens),
-montré à l'utilisateur avant le brief.
+**Livrable** : `modeles/<id>/mecanique.md`, avec ce qui est **le format** (à reprendre exactement : structure et
+déclencheur), **les variables** (ce que son contenu remplace), **le contenu** (texte, idée : repris ou réécrit, au choix
+de l'utilisateur) et **les médias** du créateur (à refaire avec les siens), montré à l'utilisateur avant le brief. Le
+brief (étape 4) recopie le déclencheur et l'angle qu'il porte.
 
 ### 4. Reprendre la mécanique, et le contenu s'il colle
 
@@ -294,7 +320,8 @@ jamais bloquants, mais tu les lui dis et tu proposes quoi faire :
   angle qui marche) ;
 - **cadence au-dessus du rythme** de sa stratégie : dis-le ; c'est à lui de choisir entre alléger le plan et changer
   le rythme (`modifier_ma_strategie`) ;
-- **format hors stratégie** : un modèle d'un format qu'aucun angle en cours ne retient ; garde-le seulement s'il le veut.
+- **format hors stratégie** : un modèle d'un **support** (diaporama, vidéo…) qu'aucun angle en cours ne retient ;
+  garde-le seulement s'il le veut.
 
 **Livrable** : `calendrier.md` sur 2 semaines. S'il a un plan sur viraldar (`mon_planning`), c'est **son**
 calendrier : ne tiens pas un `calendrier.md` en double, travaille depuis le planning (section suivante). Les plans se
@@ -328,6 +355,10 @@ Diagnostic, par format (après ≥ 3 posts du format, sinon « trop tôt ») :
 |---|---|---|
 | **vues hautes** | décliner : plus de variantes, plus de cadence, un 2e compte | refaire le CTA et la place du produit |
 | **vues basses** | refaire l'accroche (slide 1, 3 premières secondes) ; d'abord vérifier sur la comparaison que la mécanique était bien celle du modèle | changer de format |
+
+Avant de conclure « changer de format » ou « l'angle n'attire pas », vérifie le **déclencheur** : les commentaires de
+ses posts disent-ils les mêmes réactions que sous le modèle ? Si non, la forme a été gardée et le moteur perdu (sujet
+soudé, ou déclencheur qui n'est pas celui de l'angle) : c'est le choix du format qu'il faut revoir, pas l'angle.
 
 « Haut » et « bas » se lisent par rapport à **la médiane de ses propres posts** (avec son n), pas aux chiffres de la
 base. Lis aussi chaque post sur **les paliers de vues** (`lire-les-stats.md`) et dis-les à l'utilisateur : sous

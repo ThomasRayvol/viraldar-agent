@@ -12,6 +12,7 @@ vide : « ? » ou « sans objet ».
 - Posts modèles : <id @compte : vues, outlier (médiane du compte, n), vues ÷ abonnés, 📲> (2-3)
 - Hypothèse testée : <ce qu'on apprend avec ce post, ex. « l'accroche A4 bat A3 sur ce format »>
 - Faisable tel quel avec ses ressources (qui filme : <…>) : <oui — sinon, autre modèle>
+- Déclencheur du format : <identification | révélation | aspiration | …> · sujet soudé : <non | oui : …> · angle porté : <angle de la stratégie> (test des commentaires : <les réactions attendues>)
 
 ## Mécanique du modèle (recopiée de modeles/<id>/mecanique.md, à reprendre exactement)
 - Orientation / ratio : <9:16 | 3:4 | 4:5 | 1:1 | 16:9 | 4:3 | 2,35:1> · bandes noires : <oui/non>

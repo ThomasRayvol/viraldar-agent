@@ -52,6 +52,13 @@ PRODUIT     : apparaît-il ? où (slide, seconde) ? comment (montré en usage, n
 CTA         : lequel, où, explicite ou implicite (« c'est quoi l'appli » dans les commentaires)
 LÉGENDE     : ce qui est dans la légende et pas dans la vidéo
 COMMENTAIRES : de quoi parlent les extraits (demande de l'app, « c'est moi », désaccord) → ce qui fait réagir
+DÉCLENCHEUR : l'émotion que la structure provoque (identification, révélation, aspiration, défi, indignation,
+              attendrissement, nostalgie…), lue dans les commentaires plus que dans la légende
+VARIABLES   : ce qui change d'un post à l'autre du format (la scène, la phrase, l'image, la liste)
+SOUDÉ ?     : non (le déclencheur tient avec un autre sujet) | oui : quoi (le chien, le corps…) → hors de cette niche,
+              pas un modèle ; preuve soudée → seulement avec une preuve visible équivalente pour le produit
+ANGLES      : les angles de sa stratégie que ce format peut porter (même déclencheur), avec le test des commentaires :
+              son produit à la place du sujet, les mêmes réactions ?
 POURQUOI ÇA MARCHE (hypothèses, 3 au plus) : …
 ? INCONNU   : ce qu'on ne sait pas (ne pas deviner)
 ```
@@ -70,6 +77,7 @@ POURQUOI ÇA MARCHE (hypothèses, 3 au plus) : …
 | le rôle de chaque partie et leur ordre, la chute | l'histoire, les exemples, les chiffres, les citations |
 | la place et la manière de montrer le produit | le produit (le sien) |
 | le ton (1re personne, liste, POV, mème) | les phrases, les blagues |
+| le déclencheur (l'émotion que provoque la structure) | le sujet, sauf s'il est soudé : alors il fait partie de la mécanique, et le modèle ne sort pas de sa niche |
 
 Un élément qui n'apparaît que dans 1 des 3 posts du format est du contenu, pas de la mécanique.
 

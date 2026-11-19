@@ -1,6 +1,40 @@
 # Catalogue de formats
 
-Un **format** = une mécanique reproductible (type d'accroche + structure + support), indépendante du sujet. Ce
+## Angle ou format : la grille de lecture
+
+- **L'angle**, c'est ce qu'on vend et à qui : pour qui, quel désir ou quelle douleur, quelle promesse (`ecrire_angle`).
+- **Le format**, c'est le contenant, en trois parties :
+  1. la **structure** : forme du hook (son type d'accroche, `accroches.md`), nombre de plans ou de slides, cadence,
+     visuel, voix ; le **support** (diaporama ou vidéo) en fait partie ;
+  2. le **déclencheur** : l'émotion que la structure provoque, quel que soit le contenu (identification, révélation,
+     aspiration, défi, indignation, attendrissement, nostalgie…) ;
+  3. les **variables** : ce qu'on change d'un post à l'autre (la scène, la phrase, l'image, la liste).
+- Le **support** n'est pas le format : les champs « format » de viraldar (stratégie, idées, planning, signalement
+  « format hors stratégie ») désignent le support (diaporama, vidéo…). Dis « support » quand c'est de lui qu'il s'agit.
+- **Sujet soudé** : un format ne porte un angle que si son déclencheur ne dépend pas de son sujet.
+  - **POV** (V1) : le déclencheur est l'identification ; il tient quelle que soit la scène → transposable à presque
+    tout angle ;
+  - **vidéo de chien** : l'attendrissement vient du chien ; sans lui, plus rien → sujet soudé, inutilisable hors de la
+    niche animaux ;
+  - **transformation à la salle de sport** : la structure avant / après se transpose, la preuve (le corps) est soudée →
+    reprenable seulement avec une preuve visible équivalente pour le produit.
+- **Le test des commentaires** : remplace le sujet du modèle par celui du produit et imagine les commentaires. Si on y
+  lirait les mêmes réactions que sous l'original (« c'est moi », « je savais pas », « il faut que je m'y mette »), le
+  déclencheur a tenu. Sinon, on a gardé la forme et perdu le moteur.
+- **Le déclencheur du format doit être celui de l'angle** : un angle d'aspiration se porte avec des formats
+  d'aspiration ou de révélation, pas avec un format d'attendrissement.
+
+C'est une grille de lecture, pas une science : elle sert à trier et à formuler des hypothèses ; ce qui tranche reste le
+chiffre (posts qui passent les critères, médianes avec leur n, puis les résultats de ses propres posts). La lecture
+(quel déclencheur, quel angle) est la tienne ; elle se **note dans le texte qui existe déjà** : la fiche de mécanique
+(`decortiquer.md`), la note d'un post gardé (`noter_post` : « format · déclencheur · soudé ou non »), le brief de
+l'idée, l'hypothèse de l'angle.
+
+## Le catalogue
+
+Un **format** = une mécanique reproductible : une structure (type d'accroche, plans ou slides, cadence, visuel, voix,
+support), le déclencheur qu'elle provoque, et ses variables. Il se reprend tel quel quand son déclencheur tient sans
+son sujet ; s'il a un **sujet soudé**, il ne vaut que dans la niche de ce sujet (grille ci-dessus). Ce
 catalogue sert à **nommer** ce que tu trouves dans la base et à savoir le **produire** ; il ne prouve rien. Avant de
 proposer un format, cherche-le dans la base (`chercher_posts` avec le type vidéo/diaporama, `petits_comptes_viraux`,
 `formats_similaires`) et dis s'il est fiable (≥ 3 posts qui passent les critères) dans **sa** niche. Les codes

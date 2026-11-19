@@ -209,7 +209,9 @@ export const outilsBase = (serveur, ctx) => {
             + "Filtres : mots-clés (`mots_cles`, `mes_mots_cles` : précis et rapides), mots, langue, vues, outlier, date, taille du compte, format, 📲. Tri au choix. 24 posts par page, "
             + "chacun avec son URL TikTok, ses vues, son outlier (avec la médiane du compte et son n), vues ÷ abonnés, 📲, "
             + "les mots-clés qui l’ont trouvé, langue, date. Compte dans le quota du jour (600 posts distincts). Pour des idées à reproduire sur de "
-            + "petits comptes, préfère `petits_comptes_viraux`.",
+            + "petits comptes, préfère `petits_comptes_viraux`. Regroupe ces posts en formats par structure et déclencheur, pas par "
+            + "sujet, et ne retiens que ceux dont le déclencheur sert un angle de l'utilisateur, sans sujet soudé hors de sa niche "
+            + "(méthode, `formats.md` « Angle ou format »).",
         inputSchema: {
             ...filtres,
             tri: z.enum(["score", "vues", "outlier", "ratio_abonnes", "publie", "enregistrements", "partages", "commentaires"]).optional()
@@ -232,7 +234,9 @@ export const outilsBase = (serveur, ctx) => {
         description: "Les recommandés de viraldar : des posts de comptes ≤ 50 k abonnés qui ont fait ≥ 300 k vues et ≥ 20 × "
             + "leurs abonnés, classés par vues ÷ abonnés, 2 au plus par compte, les 100 premiers — les formats qui marchent "
             + "sans audience, donc les plus reproductibles. Mêmes filtres que `chercher_posts` (mots-clés, `mes_mots_cles`, langue, "
-            + "mots…). Les posts déjà gardés ou passés par l'utilisateur n'y sont plus. Compte dans le quota du jour.",
+            + "mots…). Les posts déjà gardés ou passés par l'utilisateur n'y sont plus. Compte dans le quota du jour. Un même sujet "
+            + "ne fait pas un même format : lis la structure et le déclencheur de chaque post, et écarte ceux dont le sujet est soudé "
+            + "ou dont le déclencheur ne sert aucun de ses angles (méthode, `formats.md` « Angle ou format »).",
         inputSchema: filtres,
     }, outil(async (f, c) => {
         const I = await lireInfos(c);
@@ -333,7 +337,8 @@ export const outilsBase = (serveur, ctx) => {
         title: "Formats viraux similaires",
         description: "Des posts de la base qui partagent le plus de hashtags avec un post (ou avec une liste de hashtags), "
             + "puis de durée proche (± 50 %), puis le plus haut outlier ; 24 au plus, 2 par compte. Pour décliner un format "
-            + "qui marche. Compte dans le quota du jour.",
+            + "qui marche. Compte dans le quota du jour. Voisins par hashtags, donc par sujet : ne garde que ceux qui ont la même "
+            + "structure et le même déclencheur que le modèle, les autres sont un autre format (méthode, `formats.md` « Angle ou format »).",
         inputSchema: {
             post: z.string().optional().describe("Id ou URL d'un post déjà vu : ses hashtags et sa durée servent de modèle."),
             hashtags: z.array(z.string()).optional().describe("Sinon, des hashtags (sans #) ou mots."),
@@ -447,6 +452,7 @@ export const outilsBase = (serveur, ctx) => {
         title: "Garder ou passer un post",
         description: PRODUIT_ACTIF + "Comme les boutons du site : « garder » met le post dans À reproduire (avec une note facultative : ce "
             + "qu'on en reprend — hook, structure, visuel, son), « passer » le sort des recommandés, « retirer » efface le tri. "
+            + "La note d'un post gardé se lit avec la grille de la méthode : « format · déclencheur · sujet soudé ou non », puis l'angle visé. "
             + "Seul un post déjà montré à l'utilisateur ces 2 derniers jours (rendu par un outil de recherche) peut être trié.",
         inputSchema: {
             post: z.string().describe("Id ou URL du post."),
@@ -483,7 +489,8 @@ export const outilsBase = (serveur, ctx) => {
     }));
     serveur.registerTool("noter_post", {
         title: "Noter un post gardé",
-        description: PRODUIT_ACTIF + "Écrit (ou efface, avec une note vide) « ce que tu en reprends » sur un post déjà gardé dans À reproduire.",
+        description: PRODUIT_ACTIF + "Écrit (ou efface, avec une note vide) « ce que tu en reprends » sur un post déjà gardé dans À reproduire. "
+            + "Forme conseillée (méthode, `formats.md` « Angle ou format ») : « format · déclencheur · sujet soudé ou non », puis l'angle visé.",
         inputSchema: { post: z.string(), note: z.string().max(2000) },
     }, outil(async ({ post, note }, c) => {
         const F = await lireFavoris(c), { id } = lireRef(post);
