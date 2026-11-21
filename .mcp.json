@@ -10,7 +10,9 @@
       "env": {
         "VIRALDAR_DOSSIER": "${user_config.dossier}",
         "VIRALDAR_OUTILS": "${user_config.outils}",
-        "VIRALDAR_LECTURE": "${user_config.lecture}"
+        "VIRALDAR_LECTURE": "${user_config.lecture}",
+        "VIRALDAR_VISIONNEUSE": "${user_config.visionneuse}",
+        "VIRALDAR_LECTEUR": "${user_config.lecteur}"
       }
     }
   }

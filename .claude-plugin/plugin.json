@@ -1,6 +1,6 @@
 {
   "name": "viraldar",
-  "version": "0.8.6",
+  "version": "0.8.7",
   "description": "viraldar for your agent: the viraldar connector (database of viral TikToks from small accounts, keywords, strategy, schedule) plus the local creation module (carousels, edits, model analysis, your own post stats) and the content method skill.",
   "author": { "name": "viraldar" },
   "homepage": "https://viraldar.rayvol.net",
@@ -26,6 +26,18 @@
       "type": "string",
       "title": "Lecture de fichiers en plus / Extra readable folders",
       "description": "Vide (conseillé) : seul le dossier de travail est lu. Sinon des dossiers en plus (« : »), ou « partout » / Empty (recommended): only the working folder is read. Otherwise extra folders (\":\"-separated), or \"partout\" (anywhere but hidden folders).",
+      "required": false
+    },
+    "visionneuse": {
+      "type": "string",
+      "title": "Visionneuse d'images (revue) / Image viewer (review)",
+      "description": "Vide : trouvée seule (imv, feh, Aperçu…) ou le navigateur. Sinon le programme et ses options (ex. « imv ») / Empty: auto-detected, or the browser. Otherwise the program and its options.",
+      "required": false
+    },
+    "lecteur": {
+      "type": "string",
+      "title": "Lecteur vidéo (revue) / Video player (review)",
+      "description": "Vide : trouvé seul (mpv, VLC…) ou le navigateur. Sinon le programme et ses options (ex. « mpv --loop-file=inf ») / Empty: auto-detected, or the browser.",
       "required": false
     }
   }

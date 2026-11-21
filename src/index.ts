@@ -8,6 +8,7 @@
 //   creation/carrousel.ts  carrousels HTML -> PNG (Chromium headless)
 //   creation/montage.ts    montage ffmpeg, Remotion si l'utilisateur l'a
 //   creation/analyse.ts    voir un modèle (modele_decortiquer) et s'y comparer (montage_comparaison), famille montage
+//   creation/revue.ts      la revue du lot : planche avec la lecture, dossier revue/<jour>/, revue_ouvrir, famille montage
 //   methode.ts     la méthode (le skill) servie en prompt, ressources et outil
 //
 // Familles d'outils (VIRALDAR_OUTILS, séparées par des virgules ; « tout » pour toutes) : chaque outil chargé pèse
@@ -31,6 +32,7 @@ import { outilsPublication } from "./publication.ts";
 import { outilsCarrousel } from "./creation/carrousel.ts";
 import { outilsMontage } from "./creation/montage.ts";
 import { outilsAnalyse } from "./creation/analyse.ts";
+import { outilsRevue } from "./creation/revue.ts";
 import { servirMethode } from "./methode.ts";
 import { avecPremiereFois, outilBienvenue } from "./bienvenue.ts";
 import { outilsMachine } from "./creation/machine.ts";
@@ -108,6 +110,7 @@ const charger: [string | null, Module, ((nom: string) => boolean)?][] = [
   ["carrousel", outilsCarrousel],
   ["montage", outilsMontage, (n) => !n.startsWith("remotion_")],
   ["montage", outilsAnalyse],
+  ["montage", outilsRevue],
   ["remotion", outilsMontage, (n) => n.startsWith("remotion_")],
 ];
 for (const [famille, m, garder] of charger) {

@@ -9,6 +9,7 @@ import { candidatsNavigateur } from "./apercu.js";
 import { installationFfmpeg, projetRemotion, trouverFfmpeg } from "./montage.js";
 import { trouverWhisper, trouverYtDlp } from "./analyse.js";
 import { languesTesseract, trouverTesseract } from "./diaporama.js";
+import { resumeVisionneuses } from "./revue.js";
 const OS = process.platform === "darwin" || process.platform === "win32" ? process.platform : "linux";
 const NOM_OS = { darwin: "macOS", win32: "Windows", linux: "Linux" };
 const PROGRAMMES = [
@@ -125,6 +126,8 @@ export const outilsMachine = (serveur, ctx) => {
                 l.push(`  pour l'installer : ${typeof p.installer === "string" ? p.installer : p.installer[OS] ?? "voir le site du programme"}.`);
             }
         }
+        l.push(`• Revue (revue_ouvrir) — ${resumeVisionneuses()}. Facultatif : sans visionneuse, la revue s'ouvre dans le navigateur ou dans `
+            + "la conversation. L'utilisateur peut imposer la sienne (réglages « visionneuse » et « lecteur » : VIRALDAR_VISIONNEUSE, VIRALDAR_LECTEUR).");
         const manquent = etats.filter((e) => !e.ou).map((e) => e.p.nom);
         l.push("");
         if (!manquent.length)

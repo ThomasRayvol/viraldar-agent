@@ -2,7 +2,7 @@
   "manifest_version": "0.3",
   "name": "viraldar",
   "display_name": "viraldar création",
-  "version": "0.8.6",
+  "version": "0.8.7",
   "description": "Le module création de viraldar : carrousels, montages, analyse d'une vidéo modèle et relevé de tes posts, sur ton ordinateur. La base, la stratégie et le planning viennent du connecteur viraldar (https://mcp.viraldar.rayvol.net/mcp).",
   "long_description": "Le module création de viraldar fabrique sur ton ordinateur : carrousels (Chrome), montages (ffmpeg), analyse d'une vidéo modèle (plans, cadence, voix ; yt-dlp et Whisper s'ils sont installés), comparaison modèle | nous, et relevé des vues de tes propres posts publiés pour la boucle de mesure. Rien de ce que tu crées n'est envoyé chez viraldar. La base de posts viraux, tes mots-clés, ta stratégie et ton planning passent par le connecteur viraldar : ajoute https://mcp.viraldar.rayvol.net/mcp dans Réglages → Connecteurs. L'outil `ma_machine` dit ce qui manque sur ta machine ; la méthode de création est fournie (outil `methode`).",
   "author": { "name": "viraldar", "url": "https://viraldar.rayvol.net" },
@@ -19,7 +19,9 @@
       "env": {
         "VIRALDAR_DOSSIER": "${user_config.dossier}",
         "VIRALDAR_OUTILS": "${user_config.outils}",
-        "VIRALDAR_LECTURE": "${user_config.lecture}"
+        "VIRALDAR_LECTURE": "${user_config.lecture}",
+        "VIRALDAR_VISIONNEUSE": "${user_config.visionneuse}",
+        "VIRALDAR_LECTEUR": "${user_config.lecteur}"
       }
     }
   },
@@ -44,6 +46,20 @@
       "type": "string",
       "title": "Lecture de fichiers en plus",
       "description": "Vide (conseillé) : les outils ne lisent que le dossier de travail. Sinon des dossiers en plus, séparés par « : » (« ; » sous Windows), ou « partout » (tout le disque hors dossiers cachés).",
+      "required": false,
+      "default": ""
+    },
+    "visionneuse": {
+      "type": "string",
+      "title": "Visionneuse d'images (revue)",
+      "description": "Vide : trouvée seule (imv, feh, Aperçu…) ou le navigateur. Sinon le programme qui ouvre les planches de la revue, avec ses options (ex. « imv », « feh -F »).",
+      "required": false,
+      "default": ""
+    },
+    "lecteur": {
+      "type": "string",
+      "title": "Lecteur vidéo (revue)",
+      "description": "Vide : trouvé seul (mpv, VLC…) ou le navigateur. Sinon le programme qui ouvre les vidéos côte à côte de la revue (ex. « mpv --loop-file=inf »).",
       "required": false,
       "default": ""
     }

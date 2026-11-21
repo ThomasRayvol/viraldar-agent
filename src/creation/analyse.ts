@@ -3,7 +3,8 @@
 //   modele_decortiquer    une vidéo modèle du dossier de lecture (ou une URL TikTok, si yt-dlp est installé) : durée,
 //                         format, son, coupes détectées, nombre de plans et durée d'un plan, planche de N images,
 //                         transcription horodatée si un Whisper est DÉJÀ installé (jamais installé par nous)
-//   montage_comparaison   modèle | nous : planche (N + N images) et vidéo côte à côte, son au choix
+//   montage_comparaison   modèle | nous, vidéo ou carrousel : planche avec le bandeau de lecture (revue.ts), vidéo côte à
+//                         côte, son au choix ; rangée dans revue/<jour>/ si demandé (revue_ouvrir l'ouvre)
 //
 // Retours de la session du 12/11/2026 (§ 3.1, 3.2, 4.11) : les textes avaient été écrits sans voir les modèles, la
 // cadence se mesurait à la main, et 9 Whisper lancés en parallèle ont fait tomber la machine (OOM) — d'où une seule
@@ -15,10 +16,11 @@
 import { existsSync } from "node:fs";
 import { mkdir, mkdtemp, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import { homedir, tmpdir } from "node:os";
-import { basename, delimiter, extname, join } from "node:path";
+import { basename, delimiter, dirname, extname, join } from "node:path";
 import { z } from "zod";
 import type { Contexte, Module } from "../contexte.ts";
-import { EXT_VIDEOS } from "../chemins.ts";
+import { EXT_IMAGES, EXT_VIDEOS, dossierLu } from "../chemins.ts";
+import { ajouterARevue, lectureTexte, plancheComparaison, zLecture, zRevue } from "./revue.ts";
 import { DONNEES, externe } from "../rendu.ts";
 import { formatProche } from "./zones.ts";
 import { langueOcr, languesTesseract, lireDiaporama, ocr, plancheImages, reduire, telechargerImages, trouverTesseract } from "./diaporama.ts";
@@ -399,54 +401,74 @@ export const outilsAnalyse: Module = (serveur, ctx: Contexte) => {
   serveur.registerTool("montage_comparaison", {
     title: "Comparer au modèle",
     description:
-      "Modèle | nous, pour juger un rendu : une planche (N images du modèle en haut, N des nôtres en bas, aux mêmes moments relatifs ; renvoyée ici) " +
-      "et une vidéo côte à côte (modèle à gauche, nous à droite, même hauteur), son au choix (modele, nous, aucun). Donne aussi la cadence des deux " +
-      "(nombre de plans, durée d'un plan). Sorties : montages/<nom>-comparaison.jpg et .mp4.",
+      "Modèle | nous, pour juger un rendu, vidéo OU carrousel. Une planche (en haut le modèle, en bas nous : toutes les slides d'un carrousel, "
+      + "ou N images d'une vidéo aux mêmes moments relatifs ; numérotées ; renvoyée ici) avec, sous la ligne « nous », le bandeau `lecture` "
+      + "(angle, série, déclencheur, variables, place du produit) : donne-le TOUJOURS, c'est ce que l'utilisateur juge. Pour deux vidéos, aussi "
+      + "une vidéo côte à côte (modèle à gauche, nous à droite), son au choix, et la cadence des deux. Avec `revue` (la date de publication), "
+      + "la comparaison est aussi rangée dans revue/<revue>/ sous un nom stable, avec une page index.html ; `revue_ouvrir` ouvre ensuite "
+      + "tout le lot. Sorties : montages/<nom>-comparaison.jpg (et .mp4).",
     inputSchema: {
-      modele: z.string().describe("La vidéo modèle."),
-      nous: z.string().describe("Notre vidéo."),
-      images: z.number().int().min(2).max(12).optional().describe("Images par ligne de la planche (6)."),
+      modele: z.union([z.string(), z.array(z.string()).min(1).max(20)]).describe("Le modèle : une vidéo, un dossier d'images (les slides, dans l'ordre des noms) ou la liste des images dans l'ordre."),
+      nous: z.union([z.string(), z.array(z.string()).min(1).max(20)]).describe("Notre rendu : une vidéo, un dossier d'images ou la liste des images dans l'ordre."),
+      lecture: zLecture.optional(),
+      revue: zRevue.optional(),
+      titre: z.string().max(80).optional().describe("L'étiquette de notre ligne (ex. « 22/11 n°3 · curiosité ») ; le nom par défaut."),
+      source: z.string().max(80).optional().describe("L'étiquette du modèle (ex. « @compte ») ; le nom du fichier par défaut."),
+      images: z.number().int().min(2).max(12).optional().describe("Images tirées d'une vidéo (6 ; face à un carrousel, son nombre de slides)."),
       son: z.enum(["modele", "nous", "aucun"]).optional().describe("Le son de la vidéo côte à côte (nous par défaut)."),
       duree: z.enum(["plus_longue", "plus_courte"]).optional().describe("La vidéo côte à côte dure comme la plus longue (la plus courte tient sa dernière image) ou la plus courte (défaut : plus_longue)."),
-      video: z.boolean().optional().describe("Faire aussi la vidéo côte à côte (oui par défaut)."),
+      video: z.boolean().optional().describe("Faire aussi la vidéo côte à côte quand les deux sont des vidéos (oui par défaut)."),
       hauteur: z.number().int().min(360).max(1920).optional().describe("Hauteur de la vidéo côte à côte, px (960)."),
       qualite: zQualite, nom: zNom,
     },
   }, capture(async (a): Promise<ResultatImage> => {
-    const mod = await entree(a.modele, EXT_VIDEOS, "Vidéo modèle");
-    const nous = await entree(a.nous, EXT_VIDEOS, "Notre vidéo");
-    const [sm, sn] = [await sonder(mod), await sonder(nous)];
-    if (!sm.video || !sn.video) throw new ErreurMontage("Les deux fichiers doivent avoir une piste vidéo.");
-    const nom = a.nom ?? `${basename(nous, extname(nous))}`;
+    const [cm0, cn0] = [await cote(a.modele, "Modèle", ctx.dossierTravail), await cote(a.nous, "Notre rendu", ctx.dossierTravail)];
+    const nom = a.nom ?? nomDe(cn0);
     const lignes: string[] = [];
     const desc = (x: Sonde) => `${s2(x.duree)}, ${x.video!.largeur}×${x.video!.hauteur} (${formatProche(x.video!.largeur, x.video!.hauteur) ?? (x.video!.largeur / x.video!.hauteur).toFixed(3)}), ${x.audio ? "avec son" : "sans son"}`;
-    const [cm, cn] = [await detecterCoupes(mod, sm.duree), await detecterCoupes(nous, sn.duree)];
-    lignes.push(`Modèle : ${mod} — ${desc(sm)} ; cadence : ${resumeCadence(cm)}.`, `Nous : ${nous} — ${desc(sn)} ; cadence : ${resumeCadence(cn)}.`);
-    const fm = formatProche(sm.video.largeur, sm.video.hauteur), fn = formatProche(sn.video.largeur, sn.video.hauteur);
-    if (fm !== fn) lignes.push(`Formats différents (${fm ?? "?"} contre ${fn ?? "?"}) : refaire au format du modèle (paramètre \`format\`).`);
+    const sm = cm0.video ? await sonder(cm0.video) : null, sn = cn0.video ? await sonder(cn0.video) : null;
+    if ((sm && !sm.video) || (sn && !sn.video)) throw new ErreurMontage("Une vidéo donnée n'a pas de piste vidéo.");
+    if (sm) lignes.push(`Modèle : ${cm0.video} — ${desc(sm)} ; cadence : ${resumeCadence(await detecterCoupes(cm0.video!, sm.duree))}.`);
+    else lignes.push(`Modèle : ${cm0.images!.length} image(s) (carrousel).`);
+    if (sn) lignes.push(`Nous : ${cn0.video} — ${desc(sn)} ; cadence : ${resumeCadence(await detecterCoupes(cn0.video!, sn.duree))}.`);
+    else lignes.push(`Nous : ${cn0.images!.length} image(s) (carrousel).`);
+    if (sm && sn) {
+      const fm = formatProche(sm.video!.largeur, sm.video!.hauteur), fn = formatProche(sn.video!.largeur, sn.video!.hauteur);
+      if (fm !== fn) lignes.push(`Formats différents (${fm ?? "?"} contre ${fn ?? "?"}) : refaire au format du modèle (paramètre \`format\`).`);
+    }
+    if (cm0.images && cn0.images && cm0.images.length !== cn0.images.length)
+      lignes.push(`Nombre de slides différent : ${cm0.images.length} pour le modèle, ${cn0.images.length} pour nous. Même nombre que le modèle, sauf choix assumé.`);
 
-    // Planche : N + N, des cases communes (la plus large des deux proportions).
-    const n = a.images ?? 6;
-    const [km, kn] = [caseDe(sm, 300), caseDe(sn, 300)];
-    const cel = { l: Math.max(km.l, kn.l), h: Math.max(km.h, kn.h) };
-    const rel = Array.from({ length: n }, (_, i) => (i + 0.5) / n);
-    const planche = (await sortie(ctx, `${nom}-comparaison`, "comparaison", "jpg"));
+    const n = a.images ?? cm0.images?.length ?? cn0.images?.length ?? 6;
+    const planche = await sortie(ctx, `${nom}-comparaison`, "comparaison", "jpg");
     const tmp = await mkdtemp(join(tmpdir(), "viraldar-comparaison-"));
+    let texte = false;
     try {
-      await extraireCases(mod, sm.duree, rel.map((r) => r * sm.duree), tmp, "c", cel.l, cel.h, 0);
-      await extraireCases(nous, sn.duree, rel.map((r) => r * sn.duree), tmp, "c", cel.l, cel.h, n);
-      await assembler(tmp, "c", 2 * n, n, cel.l, cel.h, planche);
+      const imagesDe = async (c: Cote, s: Sonde | null, prefixe: string) => {
+        if (!c.video) return c.images!;
+        const cel = caseDe(s!, 560);
+        await extraireCases(c.video, s!.duree, Array.from({ length: n }, (_, i) => ((i + 0.5) / n) * s!.duree), tmp, prefixe, cel.l, cel.h, 0);
+        return Array.from({ length: n }, (_, i) => join(tmp, `${prefixe}-${String(i).padStart(3, "0")}.png`));
+      };
+      texte = await plancheComparaison([
+        { etiquette: `MODÈLE · ${a.source ?? (cm0.video ? basename(cm0.video) : basename(cm0.dossier ?? cm0.images![0]!))}`, couleur: "#FFB347", images: await imagesDe(cm0, sm, "m") },
+        { etiquette: `NOUS · ${a.titre ?? nom}`, couleur: "#7CFC9A", images: await imagesDe(cn0, sn, "n") },
+      ], a.lecture, planche);
     } finally {
       await rm(tmp, { recursive: true, force: true });
     }
-    lignes.push(`Planche (en haut le modèle, en bas nous ; ${n} images chacun, aux mêmes moments relatifs) : ${planche}`);
+    lignes.push(`Planche (en haut le modèle, en bas nous${cm0.video || cn0.video ? `, ${n} images d'une vidéo aux mêmes moments relatifs` : ""}) : ${planche}`);
+    const lec = lectureTexte(a.lecture);
+    if (!lec) lignes.push("Sans `lecture` : la planche n'a pas de bandeau. Donne angle, série, déclencheur, variables et place du produit (les mots du brief) : c'est ce que l'utilisateur juge.");
+    else if (!texte) lignes.push(`Pas de navigateur trouvé : planche faite par ffmpeg, sans étiquettes ni bandeau. La lecture, à lui montrer à côté :\n${lec}`);
 
-    if (a.video ?? true) {
+    let video: string | undefined;
+    if (sm && sn && (a.video ?? true)) {
       const H = 2 * Math.round((a.hauteur ?? 960) / 2);
       const longue = (a.duree ?? "plus_longue") === "plus_longue";
       const total = Math.round((longue ? Math.max(sm.duree, sn.duree) : Math.min(sm.duree, sn.duree)) * 1000) / 1000;
       const son = a.son ?? "nous";
-      const source = son === "modele" ? sm : son === "nous" ? sn : undefined;
+      const src = son === "modele" ? sm : son === "nous" ? sn : undefined;
       const tenir = (d: number) => `tpad=stop_mode=clone:stop_duration=${Math.ceil(Math.max(0, total - d)) + 1}`;
       const filtres = [
         `[0:v]scale=-2:${H},setsar=1,fps=30,${tenir(sm.duree)},pad=iw+8:ih:0:0:color=0x101012[g]`,
@@ -454,17 +476,52 @@ export const outilsAnalyse: Module = (serveur, ctx: Contexte) => {
         `[g][d]hstack=inputs=2,${PIXELS}[v]`,
       ];
       const carte = ["-map", "[v]"];
-      if (source?.audio) {
+      if (src?.audio) {
         filtres.push(`[${son === "modele" ? 0 : 1}:a]aresample=48000,apad[a]`);
         carte.push("-map", "[a]");
       }
-      const video = videoDe(planche);
-      await ffmpeg(["-i", mod, "-i", nous, "-filter_complex", filtres.join(";"), ...carte, "-t", String(total), ...argsEncodage(a.qualite ?? "rapide", !!source?.audio), video]);
-      lignes.push(`Vidéo côte à côte (modèle à gauche, nous à droite, ${s2(total)}, son : ${son === "aucun" ? "aucun" : source?.audio ? son : `aucun (${son === "modele" ? "le modèle" : "notre vidéo"} n'a pas de son)`}) : ${video}`);
+      video = videoDe(planche);
+      await ffmpeg(["-i", cm0.video!, "-i", cn0.video!, "-filter_complex", filtres.join(";"), ...carte, "-t", String(total), ...argsEncodage(a.qualite ?? "rapide", !!src?.audio), video]);
+      lignes.push(`Vidéo côte à côte (modèle à gauche, nous à droite, ${s2(total)}, son : ${son === "aucun" ? "aucun" : src?.audio ? son : `aucun (${son === "modele" ? "le modèle" : "notre vidéo"} n'a pas de son)`}) : ${video}`);
+    }
+    if (a.revue) {
+      const d = await ajouterARevue(ctx, a.revue, {
+        nom, titre: a.titre ?? nom, modele: a.source ?? (cm0.video ? basename(cm0.video) : "carrousel"), genre: cn0.video ? "video" : "carrousel",
+        lecture: a.lecture, planche, video, texte,
+      });
+      lignes.push(`Rangée dans la revue : ${d} (page ${join(d, "index.html")}). Quand le lot est prêt : \`revue_ouvrir\`.`);
     }
     return { content: [{ type: "text", text: lignes.join("\n") }, await imageJpeg(planche)] };
   }));
 };
+
+interface Cote { video?: string; images?: string[]; dossier?: string }
+
+/** Le nom par défaut : la vidéo, sinon le dossier des slides (son parent s'il s'appelle rendu, images…). */
+function nomDe(c: Cote): string {
+  if (c.video) return basename(c.video, extname(c.video));
+  let d = dirname(c.images![0]!);
+  while (/^(rendu|rendus|images|slides|export|tiktok|rendu-tiktok|png|jpg)$/i.test(basename(d)) && dirname(d) !== d) d = dirname(d);
+  return basename(d) || "carrousel";
+}
+
+const tri = new Intl.Collator("fr", { numeric: true }).compare;
+
+/** Un côté de la comparaison : une vidéo, une image, un dossier d'images (dans l'ordre des noms) ou une liste d'images. */
+async function cote(x: string | string[], quoi: string, travail: string): Promise<Cote> {
+  if (Array.isArray(x)) return { images: await Promise.all(x.map((p) => entree(p, EXT_IMAGES, `${quoi} (image)`))) };
+  const ext = extname(x).toLowerCase();
+  if (EXT_VIDEOS.includes(ext)) return { video: await entree(x, EXT_VIDEOS, quoi) };
+  if (EXT_IMAGES.includes(ext)) return { images: [await entree(x, EXT_IMAGES, quoi)] };
+  let dossier: string;
+  try { dossier = await dossierLu(x, travail); } catch (e) { throw new ErreurMontage((e as Error).message); }
+  const noms = (await readdir(dossier)).filter((f) => EXT_IMAGES.includes(extname(f).toLowerCase()) && !f.startsWith(".")
+    // les planches rangées à côté des slides (modele_decortiquer, carrousel_apercu, montage_texte, comparaison) n'en sont pas
+    && !/(^|[-_])(planche|comparaison|controle|apercu)([-_.]|$)/i.test(f)).sort(tri);
+  if (!noms.length) throw new ErreurMontage(`${quoi} : aucune image dans ${dossier}.`);
+  if (noms.length > 20) throw new ErreurMontage(`${quoi} : ${noms.length} images dans ${dossier} (20 au plus) ; donne la liste des slides.`);
+  return { dossier, images: await Promise.all(noms.map((f) => entree(join(dossier, f), EXT_IMAGES, quoi))) };
+}
 
 /** La vidéo qui va avec une planche : même nom, en .mp4. */
 const videoDe = (planche: string) => planche.replace(/\.jpg$/, ".mp4");

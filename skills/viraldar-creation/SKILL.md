@@ -84,7 +84,8 @@ Références, à charger quand l'étape le demande (pas toutes d'un coup) :
 | modèle | `modele_decortiquer` | la vidéo d'un modèle analysée sur sa machine (avec son accord) : planche d'images, coupes détectées, nombre et durée des plans, orientation, transcription horodatée si Whisper est installé |
 | création | `carrousel_modeles` / `carrousel_rendre` / `carrousel_apercu` | modèles HTML (citation, liste, notes, contraste, ecran, revelation, natif = texte de l'éditeur TikTok sur photo) → images au `format` du modèle (9:16, 3:4, 4:5, 1:1…) ; le texte est posé et **vérifié** dans la zone sûre du cas `zone` (`description` par défaut, `sans_description`, `pub`) ; **regarde toujours l'aperçu** |
 | création | `montage_infos`, `montage_format_tiktok`, `montage_decouper`, `montage_assembler`, `montage_diaporama`, `montage_texte`, `montage_couverture` | montage ffmpeg : au `format` du modèle (9:16, 16:9, 4:3, 1:1, 2,35:1), découpe, enchaînement en **coupe franche** (le défaut) avec une **durée par plan** (`duree` ou `images` par plan, `dureePlan` / `imagesParPlan` pour une cadence commune), mouvement sur image fixe (`mouvement`, `amplitude`), diaporama vidéo, voix posée sur le montage (`dureeSurMusique` : le montage dure autant que la voix), texte à l'écran et sous-titres (SRT ou segments) dans la zone sûre, avec temps de lecture contrôlé et planche de contrôle, couverture |
-| création | `montage_comparaison` | **modèle \| nous** côte à côte : planche d'images (`<slug>-comparaison.jpg`) et vidéo (`<slug>-comparaison.mp4`, son au choix) ; à livrer à chaque rendu |
+| création | `montage_comparaison` | **modèle \| nous**, vidéo **ou carrousel** (une vidéo, un dossier de slides ou leur liste) : planche (`<slug>-comparaison.jpg`) avec le bandeau `lecture` (angle, série, déclencheur, variables, place du produit) sous la ligne « nous », et pour deux vidéos la vidéo côte à côte (`<slug>-comparaison.mp4`, son au choix) ; `revue` (le jour de publication) la range dans `revue/<jour>/` ; à livrer à chaque rendu |
+| création | `revue_ouvrir` | ouvre tout le lot d'un jour pour la revue : dans la conversation (Claude Desktop, claude.ai), sa visionneuse d'images (imv, feh, Aperçu…), son lecteur vidéo (mpv, VLC…) ou son navigateur (page avec « OK / À reprendre » et un bilan à te recoller) ; donne la commande pour la rouvrir lui-même |
 | création | `remotion_detecter` / `remotion_modeles` / `remotion_rendre` | Remotion **seulement si l'utilisateur l'a** (`remotion_detecter` te dit de lui demander) ; au premier rendu, Remotion télécharge son navigateur (~100 Mo) : demande-lui avant de passer `telechargerNavigateur: true` |
 | publication | `comptes_tiktok` | ses comptes TikTok reliés à viraldar et leurs droits |
 | publication | `envoyer_brouillon_video` / `envoyer_brouillon_photos` | envoie dans la boîte de réception TikTok de l'utilisateur ; **il publie lui-même depuis l'app** |
@@ -410,8 +411,11 @@ quand. Un créneau = un contenu, à une heure, sur un compte. Son statut suit le
 4. **Passer « en production »** les créneaux que tu commences (`maj_creneaux`, en lot), avec leur `titre` et leur
    `format` précis. Écris le brief (étape 4) : dans `briefs/` et, pour qu'il le retrouve sur le site, dans l'idée
    (`ecrire_idee` : nouvelle idée avec `post`, `compte_cible` et `brief`, puis `maj_creneaux` avec `idee`).
-5. **Produire et comparer** (étape 5), dans `production/<date>-<compte>-<créneau>/` ; montre le rendu **et** la
-   comparaison, corrige.
+5. **Produire et comparer** (étape 5), dans `production/<date>-<compte>-<créneau>/` ; `montage_comparaison` avec la
+   `lecture` du créneau (angle, `format_vise`, `declencheur_vise`, variables, place du produit) et `revue` = le jour de
+   publication. Regarde chaque planche toi-même, corrige, puis **la revue du lot** : `revue_ouvrir` (sans `avec` : la
+   conversation dans Claude Desktop, sa visionneuse ailleurs). Il juge tout le lot d'un coup ; reprends ce qu'il marque
+   « à reprendre » (le bilan de la page se recolle tel quel).
 6. **Passer « prêt »** quand les fichiers sont finis **et validés par lui**, avec la `legende` prête à coller (TikTok
    ne garde pas la légende d'un brouillon vidéo : elle se copie depuis le Planning). Dis-lui où sont les fichiers et ce
    qu'il lui reste à faire : ajouter le son, cocher « Contenu promotionnel », publier à l'heure prévue.
@@ -429,6 +433,8 @@ références ; les fichiers restent dans le dossier de travail.
 
 **Fidélité au modèle (à chaque rendu)**
 - [ ] La comparaison `montage_comparaison` (modèle | nous) est rendue et livrée avec le rendu.
+- [ ] Elle porte sa `lecture` : angle, série, déclencheur, variables, place du produit (les mots du brief), lisibles sous la ligne « nous ».
+- [ ] Le lot du jour est rangé dans la même `revue` et ouvert avec `revue_ouvrir` avant de demander sa validation.
 - [ ] Même orientation et même ratio que le modèle (bandes noires comprises s'il en a).
 - [ ] Même nombre de plans ou de slides, même durée d'un plan, mêmes transitions (coupe franche si le modèle coupe franc).
 - [ ] Hook : même forme que le hook transcrit (syntaxe, longueur, ponctuation, casse), même place, même durée à l'écran.

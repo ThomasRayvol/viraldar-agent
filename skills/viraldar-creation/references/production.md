@@ -152,14 +152,22 @@ leur source).
 ## 6. Comparer au modèle
 
 `montage_comparaison` à **chaque** rendu, livré avec lui : `<slug>-comparaison.jpg` (planche modèle | nous, image par
-image) et, pour une vidéo, `<slug>-comparaison.mp4` côte à côte (son du modèle ou le nôtre). C'est ce qui a le plus
+image ; pour un carrousel, donne le dossier des slides ou leur liste) et, pour une vidéo, `<slug>-comparaison.mp4` côte à
+côte (son du modèle ou le nôtre). Donne toujours la **`lecture`** — angle, série, déclencheur, variables, place du
+produit, avec les mots du brief : elle s'affiche sous la ligne « nous », et c'est là-dessus que l'utilisateur juge
+(la copie teste-t-elle bien ce qu'elle devait tester ?). Avec **`revue`** (le jour de publication), tout le lot d'un
+jour se range dans `revue/<jour>/` sous des noms stables (refaire une comparaison l'écrase), avec une page `index.html` ;
+**`revue_ouvrir`** l'ouvre là où il regarde : dans la conversation (Claude Desktop, claude.ai), sa visionneuse
+d'images ou son lecteur vidéo (trouvés sur sa machine, ou ceux qu'il a réglés : « visionneuse », « lecteur »), ou son
+navigateur. La page a « OK / À reprendre » par contenu et un bilan qu'il te recolle. C'est ce qui a le plus
 servi à l'utilisateur pour juger : il voit d'un coup un hook différent, une cadence plus lente, une police qui n'est
 pas la bonne. Regarde-la toi-même d'abord, avec la liste « Fidélité au modèle » du SKILL.md, et corrige ce qui
 s'écarte avant de la lui montrer. Elle contient le modèle : elle reste sur sa machine, jamais envoyée ni publiée.
 
 ## 7. Contrôler avant de montrer
 
-- [ ] La comparaison rendue et regardée (§ 6) : même format, médias à lui.
+- [ ] La comparaison rendue et regardée (§ 6) : même format, médias à lui ; sa `lecture` (angle, série, déclencheur,
+      variables, place du produit) est sous la ligne « nous », et le lot est dans sa `revue`.
 - [ ] `carrousel_rendre` : aucun avertissement « zone sûre », « réduit » ni « coupé ». `zone_verifiee: true` veut dire
       que chaque ligne de texte rendue est dans la zone du cas choisi.
 - [ ] **Regarde la planche** : `carrousel_apercu` (carrousel) ou `<vidéo>-controle.jpg` rendue par `montage_texte`

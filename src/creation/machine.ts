@@ -10,6 +10,7 @@ import { candidatsNavigateur } from "./apercu.ts";
 import { installationFfmpeg, projetRemotion, trouverFfmpeg } from "./montage.ts";
 import { trouverWhisper, trouverYtDlp } from "./analyse.ts";
 import { languesTesseract, trouverTesseract } from "./diaporama.ts";
+import { resumeVisionneuses } from "./revue.ts";
 
 type Os = "darwin" | "win32" | "linux";
 const OS: Os = process.platform === "darwin" || process.platform === "win32" ? process.platform : "linux";
@@ -127,6 +128,8 @@ export const outilsMachine: Module = (serveur, ctx: Contexte) => {
         l.push(`  pour l'installer : ${typeof p.installer === "string" ? p.installer : p.installer[OS] ?? "voir le site du programme"}.`);
       }
     }
+    l.push(`• Revue (revue_ouvrir) — ${resumeVisionneuses()}. Facultatif : sans visionneuse, la revue s'ouvre dans le navigateur ou dans `
+      + "la conversation. L'utilisateur peut imposer la sienne (réglages « visionneuse » et « lecteur » : VIRALDAR_VISIONNEUSE, VIRALDAR_LECTEUR).");
     const manquent = etats.filter((e) => !e.ou).map((e) => e.p.nom);
     l.push("");
     if (!manquent.length) l.push("Tout est là.");
