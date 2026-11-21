@@ -2,7 +2,7 @@
   "manifest_version": "0.3",
   "name": "viraldar",
   "display_name": "viraldar création",
-  "version": "0.8.7",
+  "version": "0.8.8",
   "description": "Le module création de viraldar : carrousels, montages, analyse d'une vidéo modèle et relevé de tes posts, sur ton ordinateur. La base, la stratégie et le planning viennent du connecteur viraldar (https://mcp.viraldar.rayvol.net/mcp).",
   "long_description": "Le module création de viraldar fabrique sur ton ordinateur : carrousels (Chrome), montages (ffmpeg), analyse d'une vidéo modèle (plans, cadence, voix ; yt-dlp et Whisper s'ils sont installés), comparaison modèle | nous, et relevé des vues de tes propres posts publiés pour la boucle de mesure. Rien de ce que tu crées n'est envoyé chez viraldar. La base de posts viraux, tes mots-clés, ta stratégie et ton planning passent par le connecteur viraldar : ajoute https://mcp.viraldar.rayvol.net/mcp dans Réglages → Connecteurs. L'outil `ma_machine` dit ce qui manque sur ta machine ; la méthode de création est fournie (outil `methode`).",
   "author": { "name": "viraldar", "url": "https://viraldar.rayvol.net" },

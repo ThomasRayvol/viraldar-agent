@@ -3,14 +3,16 @@
 // avec ce qu'il est censé tester sous les yeux (angle, série, déclencheur, variables, place du produit).
 //
 //   plancheComparaison   modèle | nous en une image : une ligne par côté (toutes les slides d'un carrousel, ou N
-//                        images d'une vidéo), numérotées, et le bandeau de lecture sous la ligne « nous ». Rendue par
+//                        images d'une vidéo), numérotées, et la lecture au-dessus et au-dessous ; composée pour un écran 16:9 (un long carrousel se replie en blocs). Rendue par
 //                        Chrome (texte propre, accents, retours à la ligne) ; sans Chrome, ffmpeg seul, sans texte.
 //   ajouterARevue        range la planche (et la vidéo côte à côte) dans <travail>/revue/<revue>/ sous un nom stable,
 //                        avec sa fiche JSON, et refait la page index.html du dossier (toutes les planches, les vidéos,
 //                        la lecture, « OK / à reprendre » et le bilan à recopier à l'agent)
 //   revue_ouvrir         ouvre la revue là où l'utilisateur regarde : dans la conversation (Claude Desktop, claude.ai :
-//                        les planches y sont rendues), dans sa visionneuse d'images (imv, feh, Aperçu…), son lecteur
-//                        vidéo (mpv, VLC…) ou son navigateur (la page) ; et donne la commande pour la rouvrir lui-même.
+//                        les planches y sont rendues), sinon dans sa visionneuse d'images (imv, feh, Aperçu…) ; son lecteur
+//                        vidéo (mpv, VLC…) s'il le demande ; la page dans le navigateur en dernier recours (21/11/2026, le
+//                        propriétaire : « pas pratique », un agent l'avait choisie de lui-même) ; et donne la commande pour la
+//                        rouvrir lui-même. Les retours se donnent dans la conversation.
 //
 // Sécurité : on ne lance que des programmes d'une liste fixe, ou celui que l'UTILISATEUR a réglé (VIRALDAR_VISIONNEUSE,
 // VIRALDAR_LECTEUR ; jamais l'agent), sans shell, avec pour seuls arguments des fichiers du dossier de revue. Le texte
@@ -56,38 +58,79 @@ export async function plancheComparaison(lignes, lecture, sortie, hauteur = 560)
     await plancheFfmpeg(lignes, sortie, Math.min(hauteur, 480));
     return false;
 }
+// La planche se regarde en plein écran (imv, Aperçu…) : on la compose pour un écran 16:9. Le texte de la lecture va
+// au-dessus (angle, série, déclencheur, place du produit) et au-dessous (variables, à regarder) des images, en grille,
+// à une taille qui reste lisible une fois la planche réduite à l'écran ; un long carrousel se replie en plusieurs blocs
+// modèle | nous (les slides 1 à 7, puis 8 à 14…), pour que les images restent grandes. On essaie chaque repli, on garde
+// celui qui montre les images le plus grand.
+const ECRAN = { l: 1920, h: 1080 };
+const HAUT = ["angle", "serie", "declencheur", "produit"];
+const BAS = ["variables", "note"];
 async function plancheChrome(lignes, lecture, sortie, hauteur) {
-    const rang = async (l) => (await Promise.all(l.images.map(async (p, i) => {
+    const figures = await Promise.all(lignes.map((l) => Promise.all(l.images.map(async (p, i) => {
         const o = await readFile(p);
         return `<figure><img src="data:${typeImage(o.subarray(0, 16)) ?? "image/png"};base64,${o.toString("base64")}"><b>${i + 1}</b></figure>`;
-    }))).join("");
-    const bandeau = lectureVide(lecture) ? "" : `<dl>${CHAMPS.filter(([k]) => valeur(lecture, k)).map(([k, n]) => `<div><dt>${n}</dt><dd>${echapper(valeur(lecture, k))}</dd></div>`).join("")}</dl>`;
-    const corps = [];
-    for (const [i, l] of lignes.entries()) {
-        corps.push(`<h2 style="color:${l.couleur}">${echapper(l.etiquette)}</h2><div class="r">${await rang(l)}</div>`);
-        if (i === lignes.length - 1)
-            corps.push(bandeau);
-    }
-    const html = `<!doctype html><html><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src data:; style-src 'unsafe-inline'"><style>
-    *{margin:0;padding:0;box-sizing:border-box} body{background:#1e1e1e;padding:14px 16px 18px;width:max-content;color:#eee;font-family:system-ui,"Noto Sans","Helvetica Neue",Arial,sans-serif}
-    h2{font-size:34px;font-weight:700;margin:6px 0 12px} .r{display:flex;gap:14px;margin-bottom:16px}
+    }))));
+    const grille = (champs, cls) => {
+        const c = lectureVide(lecture) ? [] : CHAMPS.filter(([k]) => champs.includes(k) && valeur(lecture, k));
+        return c.length ? `<dl class="${cls}">${c.map(([k, n]) => `<div><dt>${n}</dt><dd>${echapper(valeur(lecture, k))}</dd></div>`).join("")}</dl>` : "";
+    };
+    const haut = grille(HAUT, "haut"), bas = grille(BAS, "bas");
+    const n = Math.max(...figures.map((f) => f.length));
+    const html = (blocs) => {
+        const par = Math.ceil(n / blocs);
+        const corps = [haut];
+        for (let b = 0; b < blocs; b++) {
+            const de = b * par, a = Math.min(n, de + par);
+            if (de >= n)
+                break;
+            corps.push(`<section>${lignes.map((l, i) => `<h2 style="color:${l.couleur}">${echapper(l.etiquette)}${blocs > 1 ? ` <i>${de + 1}–${a}</i>` : ""}</h2>`
+                + `<div class="r">${figures[i].slice(de, a).join("")}</div>`).join("")}</section>`);
+        }
+        corps.push(bas);
+        return `<!doctype html><html><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src data:; style-src 'unsafe-inline'"><style>
+    *{margin:0;padding:0;box-sizing:border-box} :root{--f:28px}
+    body{background:#1e1e1e;padding:calc(var(--f)*.6) calc(var(--f)*.7);width:max-content;color:#eee;font-family:system-ui,"Noto Sans","Helvetica Neue",Arial,sans-serif}
+    h2{font-size:calc(var(--f)*1.15);font-weight:700;margin:calc(var(--f)*.25) 0 calc(var(--f)*.4)} h2 i{font-style:normal;opacity:.6;font-weight:400}
+    section+section{margin-top:calc(var(--f)*.5);padding-top:calc(var(--f)*.5);border-top:2px solid #333}
+    .r{display:flex;gap:14px;margin-bottom:calc(var(--f)*.4)}
     figure{position:relative;height:${hauteur}px;flex:none} img{display:block;height:100%;width:auto}
     figure b{position:absolute;left:0;bottom:0;background:#000;color:#ffcc00;font-size:30px;min-width:50px;padding:6px 12px;text-align:center}
-    dl{display:flex;flex-wrap:wrap;gap:10px 34px;background:#111;border-left:6px solid #7CFC9A;padding:16px 22px;margin:-2px 0 4px;max-width:100%}
-    dl div{max-width:900px} dt{font-size:18px;text-transform:uppercase;letter-spacing:.06em;color:#9a9aa2;margin-bottom:4px} dd{font-size:28px;line-height:1.3}
+    dl{display:grid;grid-template-columns:repeat(auto-fit,minmax(calc(var(--f)*13),1fr));gap:calc(var(--f)*.4) calc(var(--f)*1.2);background:#111;border-left:6px solid #7CFC9A;padding:calc(var(--f)*.5) calc(var(--f)*.8)}
+    dl.haut{margin-bottom:calc(var(--f)*.5)} dl.bas{margin-top:calc(var(--f)*.2)}
+    dt{font-size:calc(var(--f)*.62);text-transform:uppercase;letter-spacing:.06em;color:#9a9aa2;margin-bottom:.2em} dd{font-size:var(--f);line-height:1.3}
     </style></head><body>${corps.join("")}</body></html>`;
+    };
     const nav = await lancerNavigateur();
     try {
         const page = await nouvellePage(nav, 800, 600);
-        await page.setContent(html, { waitUntil: "load" });
-        // Le bandeau ne doit pas élargir la planche : on le borne à la largeur des lignes d'images.
-        await page.evaluate(() => {
-            const l = Math.max(...[...document.querySelectorAll(".r")].map((r) => r.scrollWidth));
-            const dl = document.querySelector("dl");
-            if (dl)
-                dl.style.width = `${l}px`;
-        });
-        const t = await page.evaluate(() => ({ l: document.body.scrollWidth, h: document.body.scrollHeight }));
+        // Mise en page : la grille de texte prend la largeur des images ; la police vise ~18 px une fois la planche à l'écran.
+        const composer = async (blocs) => {
+            await page.setContent(html(blocs), { waitUntil: "load" });
+            return page.evaluate(([el, eh]) => {
+                const rangs = [...document.querySelectorAll(".r")];
+                const l = Math.max(...rangs.map((r) => r.scrollWidth));
+                for (const d of document.querySelectorAll("dl"))
+                    d.style.width = `${l}px`;
+                // Deux passes : l'échelle à l'écran dépend de la hauteur, qui dépend de la police.
+                for (let i = 0; i < 2; i++) {
+                    const W = document.body.scrollWidth, H = document.body.scrollHeight;
+                    const ech = Math.min(el / W, eh / H);
+                    document.documentElement.style.setProperty("--f", `${Math.max(24, Math.min(56, Math.round(18 / ech)))}px`);
+                }
+                const W = document.body.scrollWidth, H = document.body.scrollHeight;
+                return { l: W, h: H, img: rangs[0].getBoundingClientRect().height * Math.min(el / W, eh / H) };
+            }, [ECRAN.l, ECRAN.h]);
+        };
+        let mieux = { blocs: 1, img: -1 };
+        for (let blocs = 1; blocs <= Math.min(4, n); blocs++) {
+            if (blocs > 1 && Math.ceil(n / blocs) === Math.ceil(n / (blocs - 1)))
+                continue;
+            const r = await composer(blocs);
+            if (r.img > mieux.img * 1.03)
+                mieux = { blocs, img: r.img };
+        }
+        const t = await composer(mieux.blocs);
         await page.setViewportSize({ width: Math.ceil(t.l), height: Math.ceil(t.h) });
         await page.screenshot({ path: sortie, type: "jpeg", quality: 85, fullPage: true });
     }
@@ -260,11 +303,12 @@ export const outilsRevue = (serveur, ctx) => {
     serveur.registerTool("revue_ouvrir", {
         title: "Ouvrir la revue des contenus",
         description: "Ouvre les comparaisons modèle | nous d'un dossier de revue (celles rangées par `montage_comparaison` avec `revue`), pour que "
-            + "l'utilisateur juge tout le lot d'un coup. `avec` : conversation (les planches rendues ici, pour Claude Desktop ou claude.ai), "
-            + "images (sa visionneuse : imv, feh, Aperçu…, ou VIRALDAR_VISIONNEUSE), videos (son lecteur : mpv, VLC…, ou VIRALDAR_LECTEUR ; "
-            + "les vidéos côte à côte), navigateur (la page index.html : planches, vidéos, lecture, « OK / À reprendre » et un bilan à te "
-            + "recopier). auto (défaut) : la conversation dans Claude Desktop / claude.ai, sinon sa visionneuse, sinon le navigateur. "
-            + "Rend aussi la commande pour qu'il la rouvre lui-même. Ne lance rien d'autre que ces programmes, sur ces fichiers.",
+            + "l'utilisateur juge tout le lot d'un coup ; il te donne ses retours ICI, dans la conversation, contenu par contenu. "
+            + "N'indique PAS `avec` : le défaut choisit pour lui (les planches rendues dans la conversation sous Claude Desktop ou claude.ai ; "
+            + "ailleurs sa visionneuse d'images — imv, feh, Aperçu… ou celle qu'il a réglée —, plein écran, une planche après l'autre ; "
+            + "le navigateur seulement s'il n'a aucune visionneuse). `avec` seulement s'il le demande : videos (son lecteur : mpv, VLC…, "
+            + "les vidéos côte à côte), images, conversation, navigateur (une page de secours). Rend aussi la commande pour qu'il la "
+            + "rouvre lui-même. Ne lance rien d'autre que ces programmes, sur ces fichiers.",
         inputSchema: {
             revue: zRevue.optional().describe("Le dossier de revue (AAAA-MM-JJ…) ; par défaut le plus récent."),
             avec: z.enum(AVEC).optional().describe("Où ouvrir (auto par défaut)."),
@@ -317,7 +361,8 @@ export const outilsRevue = (serveur, ctx) => {
         else if (avec === "images") {
             const v = visionneuse();
             const cmd = v ? (lancer(v.exe, [...v.args, ...planches]), commande(v.exe, [...v.args, ...planches])) : ouvrirParDefaut(planches);
-            lignes.push("", `Ouvert dans ${v ? basename(v.exe) : "la visionneuse par défaut"}. Pour la rouvrir lui-même : \`${cmd}\``);
+            lignes.push("", `Ouvert dans ${v ? basename(v.exe) : "la visionneuse par défaut"}, une planche après l'autre. Pour la rouvrir lui-même : \`${cmd}\`. `
+                + "Attends ses retours ici, contenu par contenu, et reprends ce qu'il signale.");
         }
         else if (avec === "videos") {
             if (!videos.length)
@@ -328,7 +373,8 @@ export const outilsRevue = (serveur, ctx) => {
         }
         else {
             const cmd = ouvrirParDefaut([page]);
-            lignes.push("", `Page ouverte dans le navigateur. Pour la rouvrir : \`${cmd}\` ; « Copier le bilan pour l'agent » donne ses verdicts à te recoller.`);
+            lignes.push("", `Page ouverte dans le navigateur (aucune visionneuse d'images trouvée). Pour la rouvrir : \`${cmd}\`. Ses retours viennent ici ; `
+                + "s'il préfère une visionneuse, il en installe une (imv, feh…) ou règle la sienne (réglage « visionneuse »).");
         }
         lignes.push("La revue contient les modèles : elle reste sur cette machine, jamais envoyée ni publiée.");
         return { content: [{ type: "text", text: lignes.join("\n") }, ...contenu] };

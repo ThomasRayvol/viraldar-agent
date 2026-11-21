@@ -157,9 +157,10 @@ côte (son du modèle ou le nôtre). Donne toujours la **`lecture`** — angle, 
 produit, avec les mots du brief : elle s'affiche sous la ligne « nous », et c'est là-dessus que l'utilisateur juge
 (la copie teste-t-elle bien ce qu'elle devait tester ?). Avec **`revue`** (le jour de publication), tout le lot d'un
 jour se range dans `revue/<jour>/` sous des noms stables (refaire une comparaison l'écrase), avec une page `index.html` ;
-**`revue_ouvrir`** l'ouvre là où il regarde : dans la conversation (Claude Desktop, claude.ai), sa visionneuse
-d'images ou son lecteur vidéo (trouvés sur sa machine, ou ceux qu'il a réglés : « visionneuse », « lecteur »), ou son
-navigateur. La page a « OK / À reprendre » par contenu et un bilan qu'il te recolle. C'est ce qui a le plus
+**`revue_ouvrir`**, sans `avec`, l'ouvre là où il regarde : dans la conversation (Claude Desktop, claude.ai), sinon
+dans sa visionneuse d'images (trouvée sur sa machine, ou celle qu'il a réglée : « visionneuse »), une planche plein
+écran après l'autre ; les vidéos côte à côte dans son lecteur s'il le demande. Le navigateur n'est qu'un secours, quand
+il n'a aucune visionneuse. Ses retours viennent dans la conversation. C'est ce qui a le plus
 servi à l'utilisateur pour juger : il voit d'un coup un hook différent, une cadence plus lente, une police qui n'est
 pas la bonne. Regarde-la toi-même d'abord, avec la liste « Fidélité au modèle » du SKILL.md, et corrige ce qui
 s'écarte avant de la lui montrer. Elle contient le modèle : elle reste sur sa machine, jamais envoyée ni publiée.
