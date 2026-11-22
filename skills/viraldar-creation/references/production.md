@@ -177,6 +177,8 @@ s'écarte avant de la lui montrer. Elle contient le modèle : elle reste sur sa 
 - [ ] Une image d'une vidéo faite ailleurs se vérifie aussi : `montage_couverture` à l'instant voulu, puis
       `carrousel_apercu` avec `chemins` et `zone`.
 - [ ] Le texte rendu relu contre le texte validé, mot pour mot ; la citation et sa source exactes.
+- [ ] Son `lecons.md` passé leçon par leçon (`retouches.md` § 2) : une ligne `Ln ok` ou `Ln non : <raison>` dans le
+      rapport.
 - [ ] Les trois questions du § 2.
 - [ ] **Jamais le même fichier sur deux comptes**, jamais deux fois le même post : au moins un élément varie.
 - [ ] Métadonnées : les outils n'en écrivent aucune (images neuves, `-map_metadata -1`) ; une photo de l'utilisateur
@@ -197,7 +199,8 @@ s'écarte avant de la lui montrer. Elle contient le modèle : elle reste sur sa 
   Un post jeune peut déclarer un gagnant, jamais un perdant. Sur les comptes relevés, un post ne progressait presque plus
   après 8 h (+ 4 % de vues en médiane entre un relevé à 6-30 h et un relevé après 72 h, + 11 % au plus, n = 12) : un premier verdict à 8 h est possible,
   le jugement reste à 48 h et 7 j (`lire-les-stats.md`).
-- **Les leçons s'écrivent** (`journal.md`) : une règle, les posts pour et contre, et un statut — à éprouver, pressentie,
+- **Les leçons de fabrication** (ce qu'il a fait reprendre en revue) vont dans `lecons.md` (`retouches.md`). **Les
+  leçons de performance** s'écrivent dans `journal.md` : une règle, les posts pour et contre, et un statut — à éprouver, pressentie,
   confirmée (≥ 3 posts mûrs pour, aucun contre). Une méthode lue ailleurs (formation, vidéo) entre « à éprouver » et
   n'avance qu'avec ses propres posts. Toute nouvelle proposition commence par relire les leçons et dit laquelle elle
   applique ou met à l'épreuve.

@@ -33,7 +33,11 @@ sujet soudé, variables, angle) se fait **chez lui, par toi**, et s'enregistre v
 `references/lire-un-post.md`. Le déclencheur est un texte libre court, jamais une liste fermée.
 
 Parle la langue de l'utilisateur. Travaille dans son dossier (`~/viraldar/<projet>/` par défaut) : tout ce que tu
-décides s'écrit dans des fichiers qu'il peut relire (`fiche.md`, `modeles/`, `briefs/`, `calendrier.md`, `journal.md`).
+décides s'écrit dans des fichiers qu'il peut relire (`fiche.md`, `modeles/`, `briefs/`, `calendrier.md`, `journal.md`, `lecons.md`).
+
+**viraldar apprend sa façon de juger** : chaque retour de revue devient une leçon dans `lecons.md`, relue avant chaque
+brief et chaque rendu, par toi et par tout agent à qui tu délègues ; ses leçons priment sur les règles par défaut de
+ce skill (`references/retouches.md`).
 
 Références, à charger quand l'étape le demande (pas toutes d'un coup) :
 
@@ -47,6 +51,7 @@ Références, à charger quand l'étape le demande (pas toutes d'un coup) :
 | `references/brief.md` | étape 4, le gabarit de brief à remplir avant de produire |
 | `references/production.md` | étapes 4, 5 et 8 : écrire, voix off, format et zone sûre, rendre, comparer, contrôler, varier (le process rodé, avec ses chiffres) |
 | `references/calendrier.md` | étape 7, cadence et plusieurs comptes |
+| `references/retouches.md` | avant de produire et à la fin de chaque revue : son fichier `lecons.md`, ce qu'il a déjà fait reprendre |
 | `references/sources.md` | si l'utilisateur demande d'où vient une règle |
 
 ---
@@ -257,7 +262,8 @@ plan par plan (ou slide par slide), validé par l'utilisateur **avant** de produ
 
 ### 5. Produire et comparer
 
-Charge `references/formats.md` (section production du format choisi) et `references/production.md` (§ 3 à 7).
+Charge `references/formats.md` (section production du format choisi) et `references/production.md` (§ 3 à 7), et
+relis son `lecons.md` (`references/retouches.md`) : ce qu'il a déjà fait reprendre ne doit pas revenir.
 
 - **Format, orientation et zone d'abord** : le ratio du modèle (`format` des outils : 9:16, 3:4, 4:5, 1:1, 16:9, 4:3,
   2,35:1) et, d'après la publication prévue (une légende ? une pub ?), la `zone` (`production.md` § 4). Un modèle en
@@ -415,7 +421,9 @@ quand. Un créneau = un contenu, à une heure, sur un compte. Son statut suit le
    `lecture` du créneau (angle, `format_vise`, `declencheur_vise`, variables, place du produit) et `revue` = le jour de
    publication. Regarde chaque planche toi-même, corrige, puis **la revue du lot** : `revue_ouvrir` **sans `avec`** (la
    conversation dans Claude Desktop, sa visionneuse ailleurs ; jamais le navigateur de toi-même). Il juge tout le lot
-   d'un coup et te donne ses retours dans la conversation, contenu par contenu ; reprends ce qu'il signale.
+   d'un coup et te donne ses retours dans la conversation, contenu par contenu ; reprends ce qu'il signale, puis
+   **écris chaque retour dans `lecons.md`** (`references/retouches.md` § 3) et dis-lui en une ligne ce qui a changé.
+   Avant de produire le lot suivant (ou de déléguer un post), `lecons.md` se relit en entier.
 6. **Passer « prêt »** quand les fichiers sont finis **et validés par lui**, avec la `legende` prête à coller (TikTok
    ne garde pas la légende d'un brouillon vidéo : elle se copie depuis le Planning). Dis-lui où sont les fichiers et ce
    qu'il lui reste à faire : ajouter le son, cocher « Contenu promotionnel », publier à l'heure prévue.
@@ -435,6 +443,7 @@ références ; les fichiers restent dans le dossier de travail.
 - [ ] La comparaison `montage_comparaison` (modèle | nous) est rendue et livrée avec le rendu.
 - [ ] Elle porte sa `lecture` : angle, série, déclencheur, variables, place du produit (les mots du brief), lisibles sous la ligne « nous ».
 - [ ] Le lot du jour est rangé dans la même `revue` et ouvert avec `revue_ouvrir` avant de demander sa validation.
+- [ ] Chaque leçon de son `lecons.md` qui touche ce post est tenue, ou le rapport dit pourquoi non.
 - [ ] Même orientation et même ratio que le modèle (bandes noires comprises s'il en a).
 - [ ] Même nombre de plans ou de slides, même durée d'un plan, mêmes transitions (coupe franche si le modèle coupe franc).
 - [ ] Hook : même forme que le hook transcrit (syntaxe, longueur, ponctuation, casse), même place, même durée à l'écran.
