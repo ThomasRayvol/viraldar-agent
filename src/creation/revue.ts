@@ -102,7 +102,7 @@ async function plancheChrome(lignes: Ligne[], lecture: Lecture | undefined, sort
     *{margin:0;padding:0;box-sizing:border-box} :root{--f:28px}
     body{background:#1e1e1e;padding:calc(var(--f)*.6) calc(var(--f)*.7);width:max-content;color:#eee;font-family:system-ui,"Noto Sans","Helvetica Neue",Arial,sans-serif}
     h2{font-size:calc(var(--f)*1.15);font-weight:700;margin:calc(var(--f)*.25) 0 calc(var(--f)*.4)} h2 i{font-style:normal;opacity:.6;font-weight:400}
-    section+section{margin-top:calc(var(--f)*.5);padding-top:calc(var(--f)*.5);border-top:2px solid #333}
+    section{width:max-content;margin:0 auto} section+section{margin-top:calc(var(--f)*.5);padding-top:calc(var(--f)*.5);border-top:2px solid #333}
     .r{display:flex;gap:14px;margin-bottom:calc(var(--f)*.4)}
     figure{position:relative;height:${hauteur}px;flex:none} img{display:block;height:100%;width:auto}
     figure b{position:absolute;left:0;bottom:0;background:#000;color:#ffcc00;font-size:30px;min-width:50px;padding:6px 12px;text-align:center}
@@ -114,30 +114,47 @@ async function plancheChrome(lignes: Ligne[], lecture: Lecture | undefined, sort
   const nav = await lancerNavigateur();
   try {
     const page = await nouvellePage(nav, 800, 600);
-    // Mise en page : la grille de texte prend la largeur des images ; la police vise ~18 px une fois la planche à l'écran.
-    const composer = async (blocs: number) => {
+    // Mise en page : la police vise ~18 px une fois la planche à l'écran. La grille de texte prend au moins la largeur
+    // des images ; quand elles sont moins larges que l'écran (un carrousel court), le texte s'élargit (moins de lignes,
+    // donc moins de hauteur) et les images se centrent dessous : on essaie plusieurs largeurs, on garde celle qui montre
+    // les images le plus grand. (24/11/2026 : la largeur des images se mesure sur les figures ; mesurée sur la rangée,
+    // elle prenait la largeur du texte sur une ligne, et un carrousel de 6 laissait un grand vide à droite.)
+    const composer = async (blocs: number, force?: number) => {
       await page.setContent(html(blocs), { waitUntil: "load" });
-      return page.evaluate(([el, eh]) => {
+      return page.evaluate(([el, eh, f]) => {
         const rangs = [...document.querySelectorAll<HTMLElement>(".r")];
-        const l = Math.max(...rangs.map((r) => r.scrollWidth));
-        for (const d of document.querySelectorAll<HTMLElement>("dl")) d.style.width = `${l}px`;
-        // Deux passes : l'échelle à l'écran dépend de la hauteur, qui dépend de la police.
-        for (let i = 0; i < 2; i++) {
+        const large = (r: HTMLElement) => {
+          const fs = [...r.querySelectorAll<HTMLElement>("figure")];
+          return fs.length ? fs[fs.length - 1]!.getBoundingClientRect().right - fs[0]!.getBoundingClientRect().left : 0;
+        };
+        const l = Math.max(...rangs.map(large));
+        const essayer = (k: number) => {
+          for (const d of document.querySelectorAll<HTMLElement>("dl")) d.style.width = `${Math.round(l * k)}px`;
+          // Deux passes : l'échelle à l'écran dépend de la hauteur, qui dépend de la police.
+          for (let i = 0; i < 2; i++) {
+            const W = document.body.scrollWidth, H = document.body.scrollHeight;
+            const ech = Math.min(el / W, eh / H);
+            document.documentElement.style.setProperty("--f", `${Math.max(24, Math.min(56, Math.round(18 / ech)))}px`);
+          }
           const W = document.body.scrollWidth, H = document.body.scrollHeight;
-          const ech = Math.min(el / W, eh / H);
-          document.documentElement.style.setProperty("--f", `${Math.max(24, Math.min(56, Math.round(18 / ech)))}px`);
+          return { k, l: W, h: H, img: rangs[0]!.getBoundingClientRect().height * Math.min(el / W, eh / H) };
+        };
+        if (f) return essayer(f);
+        let mieux = essayer(1);
+        for (const k of [1.15, 1.3, 1.5, 1.75, 2, 2.5, 3]) {
+          const r = essayer(k);
+          if (r.img > mieux.img * 1.01) mieux = r;
         }
-        const W = document.body.scrollWidth, H = document.body.scrollHeight;
-        return { l: W, h: H, img: rangs[0]!.getBoundingClientRect().height * Math.min(el / W, eh / H) };
-      }, [ECRAN.l, ECRAN.h] as const);
+        return mieux;
+      }, [ECRAN.l, ECRAN.h, force ?? 0] as const);
     };
-    let mieux = { blocs: 1, img: -1 };
+    let mieux = { blocs: 1, k: 1, img: -1 };
     for (let blocs = 1; blocs <= Math.min(4, n); blocs++) {
       if (blocs > 1 && Math.ceil(n / blocs) === Math.ceil(n / (blocs - 1))) continue;
       const r = await composer(blocs);
-      if (r.img > mieux.img * 1.03) mieux = { blocs, img: r.img };
+      if (r.img > mieux.img * 1.03) mieux = { blocs, k: r.k, img: r.img };
     }
-    const t = await composer(mieux.blocs);
+    const t = await composer(mieux.blocs, mieux.k);
     await page.setViewportSize({ width: Math.ceil(t.l), height: Math.ceil(t.h) });
     await page.screenshot({ path: sortie, type: "jpeg", quality: 85, fullPage: true });
   } finally {
